@@ -70,5 +70,57 @@ var OUGC_Feedback = {
 
 		return false;
 	},
+
+	Report: function(fid)
+	{
+		MyBB.popupWindow('/feedback.php?action=report&fid=' + parseInt(fid) + '&modal=1');
+	},
+
+	Delete: function(fid)
+	{
+		$.prompt(delete_feedback_confirm, {
+			buttons:[
+				{title: yes_confirm, value: true},
+				{title: no_confirm, value: false}
+			],
+			submit: function(e,v,m,f){
+				if(v == true)
+				{
+					var form = $('<form />',
+					{
+						method: 'post',
+						action: 'feedback.php?action=delete',
+						style: 'display: none;'
+					});
+
+					form.append(
+						$('<input />',
+						{
+							name: 'fid',
+							type: 'hidden',
+							value: fid
+						})
+					);
+
+					if(my_post_key)
+					{
+						form.append(
+							$('<input />',
+							{
+								name: 'my_post_key',
+								type: 'hidden',
+								value: my_post_key
+							})
+						);
+					}
+
+					$('body').append(form);
+					form.submit();
+				}
+			}
+		});
+
+		return false;
+	},
 }
 

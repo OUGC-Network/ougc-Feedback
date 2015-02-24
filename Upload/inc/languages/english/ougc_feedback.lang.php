@@ -48,6 +48,46 @@ $l['ougc_feedback_type_buyer'] = 'Buyer';
 $l['ougc_feedback_type_seller'] = 'Seller';
 $l['ougc_feedback_type_trader'] = 'Trader';
 
+// Page
+$l['ougc_feedback_page_title'] = 'Feedback Report';
+$l['ougc_feedback_page_report_for'] = 'Feedback Report for {1}';
+$l['ougc_feedback_page_summary'] = 'Summary';
+$l['ougc_feedback_page_profile'] = 'Profile of {1}';
+$l['ougc_feedback_confirm_delete'] = 'Are you sure you wish to delete this feedback?';
+$l['ougc_feedback_page_empty'] = 'This user currently does not have any feedback with the specified criteria below.';
+$l['ougc_feedback_page_report'] = 'Report';
+$l['ougc_feedback_page_delete'] = 'Delete';
+$l['ougc_feedback_page_last_updated'] = 'Last updated {1}';
+$l['ougc_feedback_page_post_given'] = 'Feedback given for <a href="{1}">{2}\'s post</a> {3}<br />';
+$l['ougc_feedback_page_post_nolink'] = 'Feedback given for {1}\'s post<br />';
+$l['ougc_feedback_page_post_given_thread'] = 'in <a href="{1}">{2}</a>';
+$l['ougc_feedback_no_comment'] = '[No comment]';
+$l['ougc_feedback_page_stats_total'] = 'Total Feedback';
+$l['ougc_feedback_page_stats_members'] = 'Feedback from members';
+$l['ougc_feedback_page_stats_posts'] = 'Feedback from posts';
+
+// Took from reputation feature
+$l['show_all'] = 'Show: All Votes';
+$l['show_positive'] = 'Show: Positive Feedback';
+$l['show_neutral'] = 'Show: Neutral Feedback';
+$l['show_negative'] = 'Show: Negative Feedback';
+$l['show_gived'] = 'Show: Gived Feedback';
+$l['sort_updated'] = 'Sort by: Last Updated';
+$l['sort_username'] = 'Sort by: Username';
+$l['positive_count'] = 'Positives';
+$l['neutral_count'] = 'Neutrals';
+$l['negative_count'] = 'Negatives';
+$l['last_week'] = 'Last week';
+$l['last_month'] = 'Last month';
+$l['last_6months'] = 'Last 6 months';
+$l['all_time'] = 'All Time';
+$l['comments'] = 'Comments';
+
+// Member list
+$l['ougc_feedback_sort_positive'] = 'Sort by: Positive Feedback';
+$l['ougc_feedback_sort_neutral'] = 'Sort by: Neutral Feedback';
+$l['ougc_feedback_sort_negative'] = 'Sort by: Negative Feedback';
+
 // Errors
 $l['ougc_feedback_error_profile_disabled'] = 'Profile feedback is disabled.';
 $l['ougc_feedback_error_profile_multiple_disabled'] = 'Multiple profile feedback is disabled.';

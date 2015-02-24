@@ -155,12 +155,6 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'comments_require'			=> array(
-			   'title'			=> $lang->setting_ougc_feedback_comments_require,
-			   'description'	=> $lang->setting_ougc_feedback_comments_require_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
 			'comments_minlength'		=> array(
 			   'title'			=> $lang->setting_ougc_feedback_comments_minlength,
 			   'description'	=> $lang->setting_ougc_feedback_comments_minlength_desc,
@@ -215,9 +209,69 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'peerpage'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_peerpage,
-			   'description'	=> $lang->setting_ougc_feedback_peerpage_desc,
+			'perpage'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_perpage,
+			   'description'	=> $lang->setting_ougc_feedback_perpage_desc,
+			   'optionscode'	=> 'text',
+			   'value'			=> 10
+			),
+			'maxperday'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_maxperday,
+			   'description'	=> $lang->setting_ougc_feedback_maxperday_desc,
+			   'optionscode'	=> 'text',
+			   'value'			=> 10
+			),
+			'permission_canview'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_canview,
+			   'description'	=> $lang->setting_ougc_feedback_permission_canview_desc,
+			   'optionscode'	=> 'groupselect',
+			   'value'			=> -1
+			),
+			'permission_cangive'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_cangive,
+			   'description'	=> $lang->setting_ougc_feedback_permission_cangive_desc,
+			   'optionscode'	=> 'groupselect',
+			   'value'			=> -1
+			),
+			'permission_canreceive'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_canreceive,
+			   'description'	=> $lang->setting_ougc_feedback_permission_canreceive_desc,
+			   'optionscode'	=> 'groupselect',
+			   'value'			=> -1
+			),
+			'permission_canedit'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_canedit,
+			   'description'	=> $lang->setting_ougc_feedback_permission_canedit_desc,
+			   'optionscode'	=> 'groupselect',
+			   'value'			=> -1
+			),
+			'permission_canremove'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_canremove,
+			   'description'	=> $lang->setting_ougc_feedback_permission_canremove_desc,
+			   'optionscode'	=> 'groupselect',
+			   'value'			=> -1
+			),
+			'permission_moderators'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_moderators,
+			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_desc,
+			   'optionscode'	=> 'groupselect',
+			   'value'			=> '3,4,6'
+			),
+			'permission_moderators_canedit'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_moderators_canedit,
+			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_canedit_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 1
+			),
+			'permission_moderators_canremove'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_moderators_canremove,
+			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_canremove_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 1
+			),
+			'permission_moderators_candelete'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_permission_moderators_candelete,
+			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_candelete_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
@@ -324,6 +378,125 @@ class OUGC_Feedback
 			'profile_add'	=> '<tr>
 	<td class="trow1" colspan="2" align="right"><strong><a href="javascript:OUGC_Feedback.Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\');" title="{$lang->ougc_feedback_profile_add}">{$lang->ougc_feedback_profile_add}</a></strong></td>
 </tr>',
+			'page'	=> '<html>
+<head>
+<title>{$mybb->settings[\'bbname\']} - {$lang->ougc_feedback_page_title}</title>
+{$headerinclude}
+<script type="text/javascript">
+<!--
+	var delete_feedback_confirm = "{$lang->ougc_feedback_confirm_delete}";
+// -->
+</script>
+<script type="text/javascript" src="{$mybb->asset_url}/jscripts/report.js?ver=1804"></script>
+</head>
+<body>
+{$header}
+{$add_feedback}
+<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder clear">
+<tr>
+	<td class="thead"><strong>{$lang->ougc_feedback_page_report_for}</strong></td>
+</tr>
+<tr>
+	<td class="tcat"><strong>{$lang->ougc_feedback_page_summary}</strong></td>
+</tr>
+<tr>
+	<td class="trow1">
+	<table width="100%" cellspacing="0" cellpadding="0" border="0">
+		<tr>
+			<td>
+				<span class="largetext"><strong>{$username}</strong></span><br />
+				<span class="smalltext">
+					({$usertitle})<br />
+					<br />
+					<strong>{$lang->ougc_feedback_page_stats_total}:</strong> <span class="repbox _neutral">{$stats[\'total\']}</span><br /><br />
+					<strong>{$lang->ougc_feedback_page_stats_members}: {$stats[\'members\']}</strong><br />
+					<strong>{$lang->ougc_feedback_page_stats_posts}: {$stats[\'posts\']}</strong>
+				</span>
+			</td>
+			<td align="right" style="width: 300px;">
+					<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder trow2">
+						<tr>
+							<td>&nbsp;</td>
+							<td><span class="smalltext reputation_positive">{$lang->positive_count}</span></td>
+							<td><span class="smalltext reputation_neutral">{$lang->neutral_count}</span></td>
+							<td><span class="smalltext reputation_negative">{$lang->negative_count}</span></td>
+						</tr>
+						<tr>
+							<td style="text-align: right;"><span class="smalltext">{$lang->last_week}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$positive_week}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$neutral_week}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$negative_week}</span></td>
+						</tr>
+						<tr>
+							<td style="text-align: right;"><span class="smalltext">{$lang->last_month}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$positive_month}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$neutral_month}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$negative_month}</span></td>
+						</tr>
+						<tr>
+							<td style="text-align: right;"><span class="smalltext">{$lang->last_6months}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$positive_6months}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$neutral_6months}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$negative_6months}</span></td>
+						</tr>
+						<tr>
+							<td style="text-align: right;"><span class="smalltext">{$lang->all_time}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$positive_count}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$neutral_count}</span></td>
+							<td style="text-align: center;"><span class="smalltext">{$negative_count}</span></td>
+						</tr>
+					</table>
+			</td>
+		</tr>
+	</table>
+	</td>
+</tr>
+<tr>
+	<td class="tcat"><strong>{$lang->comments}</strong></td>
+</tr>
+{$feedback_list}
+<tr>
+	<td class="tfoot" align="right">
+	<form action="{$mybb->settings[\'bburl\']}/feedback.php" method="get">
+		<input type="hidden" name="uid" value="{$user[\'uid\']}" />
+		<select name="show">
+			<option value="all"{$show_selected[\'all\']}>{$lang->show_all}</option>
+			<option value="positive"{$show_selected[\'positive\']}>{$lang->show_positive}</option>
+			<option value="neutral"{$show_selected[\'neutral\']}>{$lang->show_neutral}</option>
+			<option value="negative"{$show_selected[\'negative\']}>{$lang->show_negative}</option>
+			<option value="gived"{$show_selected[\'gived\']}>{$lang->show_gived}</option>
+		</select>
+		<select name="sort">
+			<option value="dateline"{$sort_selected[\'last_updated\']}>{$lang->sort_updated}</option>
+			<option value="username"{$sort_selected[\'username\']}>{$lang->sort_username}</option>
+		</select>
+		{$gobutton}
+	</form>
+	</td>
+</tr>
+</table>
+{$multipage}
+{$footer}
+</body>
+</html>',
+			'page_addlink'	=> '<div class="float_right" style="padding-bottom: 4px;"><a href="javascript:OUGC_Feedback.Add(\'{$user[\'uid\']}\', \'0\', \'1\', \'1\');" class="button rate_user_button"><span>{$lang->ougc_feedback_profile_title}</span></a></div>',
+			'page_empty'	=> '<tr>
+	<td class="trow1" style="text-align: center;">{$lang->ougc_feedback_page_empty}</td>
+</tr>',
+			'page_item'	=> '<tr>
+	<td class="trow1 {$class[\'status\']}" id="fid{$feedback_vote[\'fid\']}">
+		{$report_link}{$delete_link}
+		{$feedback_vote[\'user_username\']} <span class="smalltext">{$last_updated}<br />{$postfeed_given}</span>
+		<br />
+		<strong class="{$class[\'type\']}">{$vote_type} ({$feedback_vote[\'feedback\']}):</strong> {$feedback_vote[\'comment\']}
+	</td>
+</tr>',
+			'page_item_delete'	=> '<div class="float_right postbit_buttons">
+	<a href="{$mybb->settings[\'bburl\']}/feedback.php?action=delete&amp;fid={$feedback_vote[\'fid\']}&amp;my_post_key={$mybb->post_code}" onclick="OUGC_Feedback.Delete(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete}</span></a>
+</div>',
+			'page_item_report'	=> '<div class="float_right postbit_buttons">
+	<a href="javascript:OUGC_Feedback.Report({$feedback_vote[\'fid\']});" class="postbit_report"><span>{$lang->ougc_feedback_page_report}</span></a>
+</div>',
 			/*''	=> '',
 			''	=> '',
 			''	=> '',*/
@@ -546,6 +719,7 @@ class OUGC_Feedback
 	// DB Fields
 	function get_db_fields()
 	{
+		return array();
 		global $db;
 
 		// Create DB table
@@ -554,7 +728,7 @@ class OUGC_Feedback
 			case 'pgsql':
 				$fields = array(
 					'usergroups'	=> array(
-						'feedback_canuser'			=> "smallint NOT NULL DEFAULT '1'",
+						'feedback_canuse'			=> "smallint NOT NULL DEFAULT '1'",
 						'feedback_canview'			=> "smallint NOT NULL DEFAULT '1'",
 						'feedback_canadd'			=> "smallint NOT NULL DEFAULT '1'",
 						'feedback_canedit'			=> "smallint NOT NULL DEFAULT '1'",
@@ -576,7 +750,7 @@ class OUGC_Feedback
 			default:
 				$fields = array(
 					'usergroups'	=> array(
-						'feedback_canuser'			=> "tinyint(1) NOT NULL DEFAULT '1'",
+						'feedback_canuse'			=> "tinyint(1) NOT NULL DEFAULT '1'",
 						'feedback_canview'			=> "tinyint(1) NOT NULL DEFAULT '1'",
 						'feedback_canadd'			=> "tinyint(1) NOT NULL DEFAULT '1'",
 						'feedback_canedit'			=> "tinyint(1) NOT NULL DEFAULT '1'",
@@ -612,33 +786,62 @@ class OUGC_Feedback
 		   'value'			=> 1
 		),*/
 	// table scheme ||| rep_type{buyer|seler|trader} feedback{1|0|-1} tid{} comment{}
-	// permissions: can_add |  | can_manage | can_receive | can_invisible | can_view_invisible
+	// permissions: cangive |  | can_manage | canreceive | can_invisible | can_view_invisible
 	}
 
 	// Permissions helper
-	function permission($key, $uid=null)
+	function permission($key, $user=false)
 	{
 		global $mybb;
 
-		isset($uid) or $uid = $mybb->user['uid'];
-
-		if(isset($this->permissions[$uid][$key]))
+		if($user === false)
 		{
-			return $this->permissions[$uid][$key];
+
+			$user = $mybb->user;
+		}
+		elseif(!is_array($user))
+		{
+			$user = get_user($user);
 		}
 
-		return true;
+		if(isset($this->permissions[$user['uid']][$key]))
+		{
+			return $this->permissions[$user['uid']][$key];
+		}
+
+		switch($key)
+		{
+			case 'ismod':
+				$this->permissions[$user['uid']][$key] = ($mybb->settings['ougc_feedback_permission_moderators'] == -1 || is_member($mybb->settings['ougc_feedback_permission_moderators'], $user));
+				break;
+			case 'cangive':
+			case 'canreceive':
+			case 'canview':
+				$this->permissions[$user['uid']][$key] = ($mybb->settings['ougc_feedback_permission_'.$key] == -1 || is_member($mybb->settings['ougc_feedback_permission_'.$key], $user));
+				break;
+			case '':
+				break;
+		}
+
+		return $this->permissions[$user['uid']][$key];
 		#$mybb->usergroup['feedback_ismod'];
 	}
 
 	// Set a custom permission
-	function set_permission($key, $val, $uid=null)
+	function set_permission($key, $val, $user=false)
 	{
-		global $mybb;
+		if($user === false)
+		{
+			global $mybb;
 
-		isset($uid) or $uid = $mybb->user['uid'];
+			$user = $mybb->user;
+		}
+		elseif(!is_array($user))
+		{
+			$user = get_user($user);
+		}
 
-		$this->permissions[$uid][$key] = $val;
+		$this->permissions[$user['uid']][$key] = $val;
 	}
 
 	// Default status
@@ -805,41 +1008,22 @@ class OUGC_Feedback
 
 		$stats = array_map('my_number_format', $stats);
 
-		if($this->permission('can_add') && $mybb->user['uid'] != $memprofile['uid'])
+		$add_row = '';
+		$trow = 'trow1';
+		if($this->permission('cangive') && $this->permission('canreceive', $memprofile) && $mybb->user['uid'] != $memprofile['uid'])
 		{
-			if(!$mybb->settings['ougc_feedback_allow_profile'])
-			{
-				$this->set_permission('can_add', false);
-			}
-			elseif($mybb->settings['ougc_feedback_allow_profile'] && !$mybb->settings['ougc_feedback_allow_profile_multiple'])
-			{
-				$where[] = "fuid='{$mybb->user['uid']}'";
+			$trow = 'trow2';
+			$pid = '';
 
-				$query = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $where));
+			$uid = $memprofile['uid'];
 
-				if($db->fetch_field($query, 'fid'))
-				{
-					$this->set_permission('can_add', false);
-				}
-			}
+			$mybb->input['type'] = isset($mybb->input['type']) ? $mybb->get_input('type', 1) : 1 ;
+			$mybb->input['feedback'] = isset($mybb->input['feedback']) ? $mybb->get_input('feedback', 1) : 1 ;
 
-			$add_row = '';
-			$trow = 'trow1';
-			if($this->permission('can_add'))
-			{
-				$trow = 'trow2';
-				$pid = '';
-
-				$uid = $memprofile['uid'];
-
-				$mybb->input['type'] = isset($mybb->input['type']) ? $mybb->get_input('type', 1) : 1 ;
-				$mybb->input['feedback'] = isset($mybb->input['feedback']) ? $mybb->get_input('feedback', 1) : 1 ;
-
-				eval('$add_row = "'.$templates->get('ougcfeedback_profile_add').'";');
-			}
+			eval('$add_row = "'.$templates->get('ougcfeedback_profile_add').'";');
 		}
 
-        eval('$ougc_feedback = "'.$templates->get('ougcfeedback_profile').'";');
+		eval('$ougc_feedback = "'.$templates->get('ougcfeedback_profile').'";');
 	}
 
 	// Hook: postbit
@@ -947,7 +1131,7 @@ class OUGC_Feedback
 			return;
 		}
 
-		if(/*$post_type != 3 && */$post['uid'] != $mybb->user['uid'] && $this->permission('can_add') && $this->permission('can_receive', $post['uid']))
+		if(/*$post_type != 3 && */$this->permission('cangive') && $this->permission('canreceive', $post) && $mybb->user['uid'] != $post['uid'])
 		{
 			if(!$post['pid'])
 			{
@@ -958,6 +1142,60 @@ class OUGC_Feedback
 		}
 
 		#$plugins->remove_hook('postbit', array($this, 'hook_postbit'));
+	}
+
+	// Hook: memberlist_end
+	function hook_memberlist_end()
+	{
+		global $mybb;
+
+		if(!$mybb->settings['ougc_feedback_showin_memberlist'])
+		{
+			return;
+		}
+
+		global $templates, $ougc_feedback_header, $ougc_feedback_sort, $sorturl, $lang, $colspan, $sort_selected;
+		$this->load_language();
+
+		++$colspan;
+
+		eval('$ougc_feedback_header = "'.$templates->get('ougcfeedback_memberlist_header').'";');
+
+		eval('$ougc_feedback_sort = "'.$templates->get('ougcfeedback_memberlist_sort').'";');
+	}
+
+	// Hook: memberlist_user
+	function hook_memberlist_user(&$user)
+	{
+		global $mybb;
+
+		if(!$mybb->settings['ougc_feedback_showin_memberlist'])
+		{
+			return;
+		}
+
+		global $templates, $ougc_feedback_bit, $alt_bg;
+		$this->load_language();
+
+		/*static $done = false;
+
+		if(!$done)
+		{
+			global $alttrow;
+
+			$done = true;
+
+			if($alttrow == "trow1")
+			{
+				$alt_bg = "trow2";
+			}
+			else
+			{
+				$alt_bg = "trow1";
+			}
+		}*/
+
+		eval('$ougc_feedback_bit = "'.$templates->get('ougcfeedback_memberlist_user').'";');
 	}
 }
 
@@ -980,7 +1218,10 @@ else
 	$plugins->add_hook('postbit_prev', array($feedback, 'hook_postbit'));
 	$plugins->add_hook('postbit_pm', array($feedback, 'hook_postbit'));
 	$plugins->add_hook('postbit_announcement', array($feedback, 'hook_postbit'));
-
+	$plugins->add_hook('memberlist_end', array($feedback, 'hook_memberlist_end'));
+	#$plugins->add_hook('memberlist_intermediate', array($feedback, 'hook_memberlist_intermediate'));
+	$plugins->add_hook('memberlist_user', array($feedback, 'hook_memberlist_user'));
+//
 	global $templatelist;
 
 	if(isset($templatelist))
