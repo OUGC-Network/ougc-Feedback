@@ -26,9 +26,17 @@
 ****************************************************************************/
 
 var OUGC_Feedback = {
-	Add: function()
+	Add: function(uid, pid, type, feedback)
 	{
-		var postData = $('#ougcfeedback_add_form').serialize();
+		MyBB.popupWindow('/feedback.php?action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&modal=1');
+	},
+
+	DoAdd: function(uid, pid)
+	{
+		// Get form, serialize it and send it
+		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
+
+		postData = postData + '&modal=1';
 
 		$.ajax(
 		{
@@ -38,43 +46,29 @@ var OUGC_Feedback = {
 			data: postData,
 			success: function (request)
 			{
-				if(request.errors)
+				$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeOut('slow', function()
 				{
-					alert(request.errors);
-					return false;
-				}
-
-				if(request.success == 1)
-				{
-					$('#ougcfeedback_profile').replaceWith(request.content);
-
-					return true;
-				}
+					if(parseInt(pid))
+					{
+						$('.ougcfeedback_postbit_' + parseInt(uid)).html(request.content);
+					}
+					else
+					{
+						$('#ougcfeedback_profile').html(request.content);
+					}
+					//$('.ougcfeedback_postbit_' + parseInt(uid)).replaceWith(request.content);
+					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).html(request.modal);
+					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeIn('slow');
+					$('.modal').fadeIn('slow');
+				});
 			},
 			error: function (xhr)
 			{
 				alert(xhr.responseText);
-				return false;
 			}
 		});
 
-		$.modal.close();
-
-		$('#ougcfeedback_add_form').preventDefault();
-		$('#ougcfeedback_add_form').unbind();
+		return false;
 	},
-	Modal: function()
-	{
-		var _zIndex = 9999;
-		if(typeof modal_zindex !== 'undefined')
-		{
-			_zIndex = modal_zindex;
-		}
-
-		$('#feedback_add').modal({
-			keepelement: true,
-			zIndex: _zIndex
-		});
-	}
 }
 

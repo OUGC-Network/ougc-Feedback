@@ -38,32 +38,63 @@ $feedback->load_language();
 
 if($mybb->get_input('action') == 'add')
 {
-	if(!$feedback->permission('can_add'))
-	{
-		error_no_permission();
-	}
-
 	$feedback_data = array(
 		'uid'		=> $mybb->get_input('uid', 1),
 		'fuid'		=> $mybb->user['uid'],
-		'pid'		=> 0,
+		'pid'		=> $mybb->get_input('pid', 1),
 		'type'		=> $mybb->get_input('type', 1),
 		'feedback'	=> $mybb->get_input('feedback', 1),
-		'comment'	=> '',
+		'comment'	=> $mybb->get_input('comment'),
 		'status'	=> $feedback->default_status()
 	);
 
-	// We assume this is a post feedback
-	if($mybb->get_input('pid', 1))
+	// This user doesn't have permission to give feedback
+	if(!$feedback->permission('can_add'))
 	{
-		$feedback_data['pid'] = $mybb->get_input('pid', 1);
+		$feedback->set_error($lang->error_nopermission_user_ajax);
 	}
-	// We assume this is an profile feedback
-	else
+
+	if(!($to_user = get_user($feedback_data['uid'])))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_user);
+	}
+
+	if(!$mybb->user['uid'])
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_user);
+	}
+
+	if($to_user['uid'] == $mybb->user['uid'])
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_self_user);
+	}
+
+	if($feedback_data['pid'] > 0 && !($post = get_post($feedback_data['pid'])))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+	}
+
+	if(!in_array($feedback_data['type'], array(1, 2, 3)))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_type);
+	}
+
+	if(!in_array($feedback_data['feedback'], array(-1, 0, 1)))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_feedback);
+	}
+
+	if(!in_array($feedback->default_status(), array(-1, 1)))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_status);
+	}
+
+	// We assume this is a profile feedback
+	if(!$feedback_data['pid'])
 	{
 		if(!$mybb->settings['ougc_feedback_allow_profile'])
 		{
-			error($lang->ougc_feedback_error_profile_disabled);
+			$feedback->set_error($lang->ougc_feedback_error_profile_disabled);
 		}
 		elseif($mybb->settings['ougc_feedback_allow_profile'] && !$mybb->settings['ougc_feedback_allow_profile_multiple'])
 		{
@@ -80,36 +111,64 @@ if($mybb->get_input('action') == 'add')
 
 			if($db->fetch_field($query, 'fid'))
 			{
-				error($lang->ougc_feedback_error_profile_multiple_disabled);
+				$feedback->set_error($lang->ougc_feedback_error_profile_multiple_disabled);
 			}
 		}
 	}
 
-	if($mybb->get_input('comment'))
-	{
-		$feedback_data['comment'] = $mybb->get_input('comment');
-	}
-
+	// Set handler data
 	$feedback->set_data($feedback_data);
 
-	if(!$feedback->validate_feedback())
+	// POST request
+	if($mybb->request_method == 'post')
 	{
-		$feedback->trow_error();
+		// Verify incoming POST request
+		verify_post_check($mybb->get_input('my_post_key'));
+
+		if(!$feedback_data['comment'])
+		{
+			$feedback->set_error($lang->ougc_feedback_error_invalid_comment);
+		}
+
+		// Insert feedback
+		$insert_data = $feedback->insert_feedback();
+
+		// Throw success message
+		$feedback->set_error($lang->ougc_feedback_success_feedback_added);
+		$modal = $feedback->throw_error($lang->ougc_feedback_profile_add, false);
+
+		if($feedback_data['pid'])
+		{
+			$feedback->hook_postbit($post);
+			$content = $post['ougc_feedback'];
+		}
+		else
+		{
+			$memprofile = &$to_user;
+			$feedback->hook_member_profile_end();
+			$content = $ougc_feedback;
+		}
+
+		header('Content-type: application/json; charset='.$lang->settings['charset']);
+		echo json_encode(array('content' => $content, 'modal' => $modal));
+		exit;
 	}
 
-	$insert_data = $feedback->insert_feedback();
+	// Validate, throw error if not valid
+	if(!$feedback->validate_feedback())
+	{
+		$feedback->throw_error();
+	}
 
-	$memprofile = get_user($mybb->get_input('uid', 1));
-	$feedback->hook_member_profile_end();
+	if($feedback->permission('can_comment'))
+	{
+		$mybb->input['comment'] = $mybb->get_input('comment');
+		eval('$comment_row = "'.$templates->get('ougcfeedback_form_comment', 1, 0).'";');
+	}
 
-	header("Content-type: application/json; charset={$lang->settings['charset']}");
-	echo json_encode(array(
-		'success'			=> 1,
-		'pid'				=> $mybb->get_input('pid', 1),
-		'content'			=> str_replace('<br />', '', $ougc_feedback),
-	));
+	eval('$form = "'.$templates->get('ougcfeedback_form', 1, 0).'";');
 
-	exit;
+	exit($form);
 }
 elseif($mybb->get_input('action') == 'edit')
 {

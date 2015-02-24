@@ -52,8 +52,12 @@ $l['ougc_feedback_type_trader'] = 'Trader';
 $l['ougc_feedback_error_profile_disabled'] = 'Profile feedback is disabled.';
 $l['ougc_feedback_error_profile_multiple_disabled'] = 'Multiple profile feedback is disabled.';
 $l['ougc_feedback_error_invalid_user'] = 'Invalid user.';
+$l['ougc_feedback_error_invalid_self_user'] = 'You cannot add to your own feedback.';
 $l['ougc_feedback_error_invalid_post'] = 'Invalid post.';
 $l['ougc_feedback_error_invalid_type'] = 'Invalid feedback type selected.';
 $l['ougc_feedback_error_invalid_feedback'] = 'Invalid feedback value selected.';
 $l['ougc_feedback_error_invalid_status'] = 'Invalid feedback status selected.';
 $l['ougc_feedback_error_invalid_comment'] = 'Invalid feedback comment entered.';
+
+// Success
+$l['ougc_feedback_success_feedback_added'] = 'Your feedback was successfully added.';
