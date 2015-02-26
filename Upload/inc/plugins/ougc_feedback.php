@@ -86,7 +86,52 @@ class OUGC_Feedback
 {
 	function __construct()
 	{
-		
+		global $plugins, $templatelist, $settings;
+
+		// Tell MyBB when to run the hook
+		if(defined('IN_ADMINCP'))
+		{
+			$plugins->add_hook('admin_config_settings_start', array($this, 'load_language'));
+			$plugins->add_hook('admin_style_templates_set', array($this, 'load_language'));
+			$plugins->add_hook('admin_config_settings_change', array($this, 'hook_admin_config_settings_change'));
+		}
+		else
+		{
+			$plugins->add_hook('global_intermediate', array($this, 'hook_global_intermediate'));
+			$plugins->add_hook('member_profile_end', array($this, 'hook_member_profile_end'));
+			$plugins->add_hook('postbit', array($this, 'hook_postbit'));
+			$plugins->add_hook('postbit_prev', array($this, 'hook_postbit'));
+			$plugins->add_hook('postbit_pm', array($this, 'hook_postbit'));
+			$plugins->add_hook('postbit_announcement', array($this, 'hook_postbit'));
+			//$plugins->add_hook('memberlist_end', array($this, 'hook_memberlist_end'));
+			//$plugins->add_hook('memberlist_intermediate', array($this, 'hook_memberlist_intermediate'));
+			//$plugins->add_hook('memberlist_user', array($this, 'hook_memberlist_user'));
+
+			if(isset($templatelist))
+			{
+				$templatelist .= ',';
+			}
+			else
+			{
+				$templatelist = '';
+			}
+
+			$templatelist .= 'ougcfeedback_js';
+
+			switch(THIS_SCRIPT)
+			{
+				case 'member.php':
+					$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment';
+					break;
+				case 'showthread.php':
+					$templatelist .= ',ougcfeedback_postbit';
+					break;
+			}
+		}
+
+		$settings['ougc_feedback_allow_profile_multiple'] = false;
+		$settings['ougc_feedback_allow_thread_firstpost'] = true;
+		$settings['ougc_feedback_allow_thread_firstpost'] = true;
 	}
 
 	// Plugin API:_info() routine
@@ -125,24 +170,24 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'allow_profile_multiple'	=> array(
+			/*'allow_profile_multiple'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_profile_multiple,
 			   'description'	=> $lang->setting_ougc_feedback_allow_profile_multiple_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
-			),
+			),*/
 			'allow_thread'				=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_thread,
 			   'description'	=> $lang->setting_ougc_feedback_allow_thread_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'allow_thread_firstpost'				=> array(
+			/*'allow_thread_firstpost'				=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_thread_firstpost,
 			   'description'	=> $lang->setting_ougc_feedback_allow_thread_firstpost_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
-			),
+			),*/
 			'allow_thread_forums'		=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_thread_forums,
 			   'description'	=> $lang->setting_ougc_feedback_allow_thread_forums_desc,
@@ -173,7 +218,7 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'allow_email_notifications'	=> array(
+			/*'allow_email_notifications'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_email_notifications,
 			   'description'	=> $lang->setting_ougc_feedback_allow_email_notifications_desc,
 			   'optionscode'	=> 'yesno',
@@ -190,7 +235,7 @@ class OUGC_Feedback
 			   'description'	=> $lang->setting_ougc_feedback_allow_email_alert_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
-			),
+			),*/
 			'showin_profile'			=> array(
 			   'title'			=> $lang->setting_ougc_feedback_showin_profile,
 			   'description'	=> $lang->setting_ougc_feedback_showin_profile_desc,
@@ -203,12 +248,12 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'showin_memberlist'			=> array(
+			/*'showin_memberlist'			=> array(
 			   'title'			=> $lang->setting_ougc_feedback_showin_memberlist,
 			   'description'	=> $lang->setting_ougc_feedback_showin_memberlist_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
-			),
+			),*/
 			'perpage'					=> array(
 			   'title'			=> $lang->setting_ougc_feedback_perpage,
 			   'description'	=> $lang->setting_ougc_feedback_perpage_desc,
@@ -497,9 +542,11 @@ class OUGC_Feedback
 			'page_item_report'	=> '<div class="float_right postbit_buttons">
 	<a href="javascript:OUGC_Feedback.Report({$feedback_vote[\'fid\']});" class="postbit_report"><span>{$lang->ougc_feedback_page_report}</span></a>
 </div>',
-			/*''	=> '',
-			''	=> '',
-			''	=> '',*/
+			/*'memberlist_header'	=> '<td class="tcat" width="10%" align="center"><span class="smalltext"><a href="{$sorturl}&amp;sort=feedbacks&amp;order=descending"><strong>{$lang->ougc_feedback_profile_title}</strong></a> {$orderarrow[\'feedback\']}</span></td>',
+			'memberlist_sort'	=> '<option value="positive_feedback"{$sort_selected[\'positive_feedback\']}>{$lang->ougc_feedback_memberlist_sort_positive}</option>
+<option value="neutral_feedback"{$sort_selected[\'neutral_feedback\']}>{$lang->ougc_feedback_memberlist_sort_neutral}</option>
+<option value="negative_feedback"{$sort_selected[\'negative_feedback\']}>{$lang->ougc_feedback_memberlist_sort_negative}</option>',
+			'memberlist_user'	=> '<td class="{$alt_bg}" align="center">{$user[\'uid\']}{$user[\'feedback\']}</td>',*/
 		));
 
 		$this->_deactivate();
@@ -509,9 +556,9 @@ class OUGC_Feedback
 		find_replace_templatesets('postbit', '#'.preg_quote('{$post[\'button_rep\']}').'#i', '{$post[\'button_rep\']}{$post[\'ougc_feedback_button\']}');
 		find_replace_templatesets('postbit_classic', '#'.preg_quote('{$post[\'button_rep\']}').'#i', '{$post[\'button_rep\']}{$post[\'ougc_feedback_button\']}');
 		find_replace_templatesets('postbit_author_user', '#'.preg_quote('{$post[\'warninglevel\']}').'#i', '{$post[\'warninglevel\']}<!--OUGC_FEEDBACK-->');
-		find_replace_templatesets('memberlist_user', '#'.preg_quote('{$referral_bit}').'#i', '{$referral_bit}{$ougc_feedback_bit}');
-		find_replace_templatesets('memberlist', '#'.preg_quote('{$referral_header}').'#i', '{$referral_header}{$ougc_feedback_header}');
-		find_replace_templatesets('memberlist', '#'.preg_quote('{$lang->sort_by_referrals}</option>').'#i', '{$lang->sort_by_referrals}</option>{$ougc_feedback_sort}');
+		//find_replace_templatesets('memberlist_user', '#'.preg_quote('{$referral_bit}').'#i', '{$referral_bit}{$ougc_feedback_bit}');
+		//find_replace_templatesets('memberlist', '#'.preg_quote('{$referral_header}').'#i', '{$referral_header}{$ougc_feedback_header}');
+		//find_replace_templatesets('memberlist', '#'.preg_quote('{$lang->sort_by_referrals}</option>').'#i', '{$lang->sort_by_referrals}</option>{$ougc_feedback_sort}');
 		find_replace_templatesets('headerinclude', '#'.preg_quote('{$stylesheets}').'#i', '{$stylesheets}{$ougc_feedback_js}');
 
 		// Insert/update version into cache
@@ -1144,6 +1191,7 @@ class OUGC_Feedback
 		#$plugins->remove_hook('postbit', array($this, 'hook_postbit'));
 	}
 
+	/*
 	// Hook: memberlist_end
 	function hook_memberlist_end()
 	{
@@ -1177,7 +1225,7 @@ class OUGC_Feedback
 		global $templates, $ougc_feedback_bit, $alt_bg;
 		$this->load_language();
 
-		/*static $done = false;
+		static $done = false;
 
 		if(!$done)
 		{
@@ -1193,67 +1241,13 @@ class OUGC_Feedback
 			{
 				$alt_bg = "trow1";
 			}
-		}*/
+		}
 
 		eval('$ougc_feedback_bit = "'.$templates->get('ougcfeedback_memberlist_user').'";');
 	}
+	*/
 }
 
 global $feedback;
 
 $feedback = new OUGC_Feedback;
-
-// Tell MyBB when to run the hook
-if(defined('IN_ADMINCP'))
-{
-	$plugins->add_hook('admin_config_settings_start', array($feedback, 'load_language'));
-	$plugins->add_hook('admin_style_templates_set', array($feedback, 'load_language'));
-	$plugins->add_hook('admin_config_settings_change', array($feedback, 'hook_admin_config_settings_change'));
-}
-else
-{
-	$plugins->add_hook('global_intermediate', array($feedback, 'hook_global_intermediate'));
-	$plugins->add_hook('member_profile_end', array($feedback, 'hook_member_profile_end'));
-	$plugins->add_hook('postbit', array($feedback, 'hook_postbit'));
-	$plugins->add_hook('postbit_prev', array($feedback, 'hook_postbit'));
-	$plugins->add_hook('postbit_pm', array($feedback, 'hook_postbit'));
-	$plugins->add_hook('postbit_announcement', array($feedback, 'hook_postbit'));
-	$plugins->add_hook('memberlist_end', array($feedback, 'hook_memberlist_end'));
-	#$plugins->add_hook('memberlist_intermediate', array($feedback, 'hook_memberlist_intermediate'));
-	$plugins->add_hook('memberlist_user', array($feedback, 'hook_memberlist_user'));
-//
-	global $templatelist;
-
-	if(isset($templatelist))
-	{
-		$templatelist .= ',';
-	}
-	else
-	{
-		$templatelist = '';
-	}
-
-	$templatelist .= 'ougcfeedback_js';
-
-	switch(THIS_SCRIPT)
-	{
-		case 'member.php':
-			$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment';
-			break;
-		case 'showthread.php':
-			$templatelist .= ',ougcfeedback_postbit';
-			break;
-	}
-}
-
-		/*$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 1, 'feedback' => 1, 'comment' => '', 'dateline' => TIME_NOW));
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 1, 'feedback' => -1, 'comment' => '', 'dateline' => TIME_NOW));
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 1, 'feedback' => 0, 'comment' => '', 'dateline' => TIME_NOW));
-
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 2, 'feedback' => 1, 'comment' => '', 'dateline' => TIME_NOW));
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 2, 'feedback' => -1, 'comment' => '', 'dateline' => TIME_NOW));
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 2, 'feedback' => 0, 'comment' => '', 'dateline' => TIME_NOW));
-
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 3, 'feedback' => 1, 'comment' => '', 'dateline' => TIME_NOW));
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 3, 'feedback' => -1, 'comment' => '', 'dateline' => TIME_NOW));
-		$db->insert_query('ougc_feedback', array('uid' => (int)$memprofile['uid'], 'fuid' => (int)$mybb->user['uid'], 'type' => 3, 'feedback' => 0, 'comment' => '', 'dateline' => TIME_NOW));*/

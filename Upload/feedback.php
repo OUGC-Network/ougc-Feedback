@@ -75,28 +75,65 @@ if($mybb->get_input('action') == 'add')
 		$feedback->set_error($lang->ougc_feedback_error_invalid_self_user);
 	}
 
-	if($feedback_data['pid'] > 0 && !($post = get_post($feedback_data['pid'])))
+	if($feedback_data['pid'])
 	{
-		$feedback->set_error($lang->ougc_feedback_error_invalid_post);
-	}
+		if(!($post = get_post($feedback_data['pid'])))
+		{
+			$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+		}
+		else
+		{
+			if($post['uid'] != $feedback_data['uid'])
+			{
+				$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+			}
 
-	if(!in_array($feedback_data['type'], array(1, 2, 3)))
-	{
-		$feedback->set_error($lang->ougc_feedback_error_invalid_type);
-	}
+			if(($post['visible'] == 0 && !is_moderator($post['fid'], 'canviewunapprove')) || ($post['visible'] == -1 && !is_moderator($post['fid'], 'canviewdeleted')))
+			{
+				$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+			}
 
-	if(!in_array($feedback_data['feedback'], array(-1, 0, 1)))
-	{
-		$feedback->set_error($lang->ougc_feedback_error_invalid_feedback);
-	}
+			$thread = get_thread($post['tid']);
 
-	if(!in_array($feedback_data['status'], array(-1, 0, 1)))
-	{
-		$feedback->set_error($lang->ougc_feedback_error_invalid_status);
-	}
+			if(!($thread = get_thread($post['tid'])) || !($forum = get_forum($post['fid'])))
+			{
+				$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+			}
+			else
+			{
+				if(substr($thread['closed'], 0, 6) == 'moved|' || $forum['type'] != 'f')
+				{
+					$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+				}
 
-	// We assume this is a profile feedback if there is no PID
-	if(!$feedback_data['pid'])
+				if($mybb->settings['ougc_feedback_allow_thread_firstpost'] && $thread['firstpost'] != $thread['pid'])
+				{
+					$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+				}
+
+				if(($thread['visible'] != 1 && !is_moderator($post['fid'])) || ($thread['visible'] == 0 && !is_moderator($post['fid'], 'canviewunapprove')) || ($thread['visible'] == -1 && !is_moderator($post['fid'], 'canviewdeleted')))
+				{
+					$feedback->set_error($lang->ougc_feedback_error_invalid_post);
+				}
+
+				$forumpermissions = forum_permissions($post['fid']);
+
+				// Does the user have permission to view this thread?
+				if(!$forumpermissions['canview'] || !$forumpermissions['canviewthreads'])
+				{
+					$feedback->set_error($lang->error_nopermission_user_ajax);
+				}
+
+				if(isset($forumpermissions['canonlyviewownthreads']) && $forumpermissions['canonlyviewownthreads'] && $thread['uid'] != $mybb->user['uid'])
+				{
+					$feedback->set_error($lang->error_nopermission_user_ajax);
+				}
+
+				check_forum_password($forum['fid']); // this should at least stop the script
+			}
+		}
+	}
+	else
 	{
 		if(!$mybb->settings['ougc_feedback_allow_profile'])
 		{
@@ -120,6 +157,21 @@ if($mybb->get_input('action') == 'add')
 				$feedback->set_error($lang->ougc_feedback_error_profile_multiple_disabled);
 			}
 		}
+	}
+
+	if(!in_array($feedback_data['type'], array(1, 2, 3)))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_type);
+	}
+
+	if(!in_array($feedback_data['feedback'], array(-1, 0, 1)))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_feedback);
+	}
+
+	if(!in_array($feedback_data['status'], array(-1, 0, 1)))
+	{
+		$feedback->set_error($lang->ougc_feedback_error_invalid_status);
 	}
 
 	// Set handler data

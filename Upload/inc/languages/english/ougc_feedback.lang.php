@@ -84,9 +84,9 @@ $l['all_time'] = 'All Time';
 $l['comments'] = 'Comments';
 
 // Member list
-$l['ougc_feedback_sort_positive'] = 'Sort by: Positive Feedback';
-$l['ougc_feedback_sort_neutral'] = 'Sort by: Neutral Feedback';
-$l['ougc_feedback_sort_negative'] = 'Sort by: Negative Feedback';
+//$l['ougc_feedback_memberlist_sort_positive'] = 'Sort by: Positive Feedback';
+//$l['ougc_feedback_memberlist_sort_neutral'] = 'Sort by: Neutral Feedback';
+//$l['ougc_feedback_memberlist_sort_negative'] = 'Sort by: Negative Feedback';
 
 // Errors
 $l['ougc_feedback_error_profile_disabled'] = 'Profile feedback is disabled.';
