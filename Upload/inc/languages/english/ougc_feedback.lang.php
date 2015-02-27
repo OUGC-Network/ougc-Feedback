@@ -83,6 +83,12 @@ $l['last_6months'] = 'Last 6 months';
 $l['all_time'] = 'All Time';
 $l['comments'] = 'Comments';
 
+// Notifications
+$l['ougc_feedback_notification_pm_subject'] = 'You have received new feedback!';
+$l['ougc_feedback_notification_pm_message'] = 'Hi {1}! This is a automatic message to notify you that your profile has been updated with a new user feedback.
+
+Cheers, {2}.';
+
 // Member list
 //$l['ougc_feedback_memberlist_sort_positive'] = 'Sort by: Positive Feedback';
 //$l['ougc_feedback_memberlist_sort_neutral'] = 'Sort by: Neutral Feedback';

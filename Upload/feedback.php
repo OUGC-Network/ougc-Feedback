@@ -106,7 +106,7 @@ if($mybb->get_input('action') == 'add')
 					$feedback->set_error($lang->ougc_feedback_error_invalid_post);
 				}
 
-				if($mybb->settings['ougc_feedback_allow_thread_firstpost'] && $thread['firstpost'] != $thread['pid'])
+				if($mybb->settings['ougc_feedback_allow_thread_firstpost'] && $thread['firstpost'] != $post['pid'])
 				{
 					$feedback->set_error($lang->ougc_feedback_error_invalid_post);
 				}
@@ -199,6 +199,12 @@ if($mybb->get_input('action') == 'add')
 		{
 			// Insert feedback
 			$insert_data = $feedback->insert_feedback();
+
+			$feedback->send_pm(array(
+				'subject'		=> $lang->sprintf($lang->ougc_feedback_notification_pm_subject, $user['username'], $mybb->settings['bbname']),
+				'message'		=> $lang->ougc_feedback_notification_pm_message,
+				'touid'			=> $feedback_data['uid']
+			), -1, true);
 
 			// Throw success message
 			$feedback->set_error($lang->ougc_feedback_success_feedback_added);

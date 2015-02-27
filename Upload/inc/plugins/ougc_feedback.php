@@ -223,16 +223,16 @@ class OUGC_Feedback
 			   'description'	=> $lang->setting_ougc_feedback_allow_email_notifications_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
-			),
+			),*/
 			'allow_pm_notifications'	=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_email_pm,
-			   'description'	=> $lang->setting_ougc_feedback_allow_email_pm_desc,
+			   'title'			=> $lang->setting_ougc_feedback_allow_pm_notifications,
+			   'description'	=> $lang->setting_ougc_feedback_allow_pm_notifications_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'allow_alert_notifications'	=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_email_alert,
-			   'description'	=> $lang->setting_ougc_feedback_allow_email_alert_desc,
+			/*'allow_alert_notifications'	=> array(
+			   'title'			=> $lang->setting_ougc_feedback_allow_alert_notifications,
+			   'description'	=> $lang->setting_ougc_feedback_allow_alert_notifications_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),*/
@@ -389,12 +389,12 @@ class OUGC_Feedback
   </div>
 </div>',
 			'error_nomodal'	=> '',
-			'postbit'	=> '<div class="ougcfeedback_postbit_{$post[\'uid\']}">
+			'postbit'	=> '<span class="ougcfeedback_postbit_{$post[\'uid\']}">
 	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: {$stats[\'total\']} <span class="smalltext">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)</span>
 	<br />{$lang->ougc_feedback_profile_positibve} {$lang->ougc_feedback_profile_title}: <span style="color: green;">{$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})</span>
 	<br />{$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: <span style="color: gray;">{$stats[\'neutral\']} ({$stats[\'neutral_percent\']}% - {$stats[\'neutral_users\']} {$lang->ougc_feedback_profile_users})</span>
 	<br />{$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: <span style="color: red;">{$stats[\'negative\']} ({$stats[\'negative_percent\']}% - {$stats[\'negative_users\']} {$lang->ougc_feedback_profile_users})</span>
-</div>',
+</span>',
 			'postbit_button'	=> '<a href="javascript:OUGC_Feedback.Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\');" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add"><span>{$lang->ougc_feedback_profile_add}</span></a>',
 			'profile'	=> '<div id="ougcfeedback_profile">
 	<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
@@ -978,6 +978,68 @@ class OUGC_Feedback
 		}
 
 		return $insert_data;
+	}
+
+	// Send a Private Message to a user  (Copied from MyBB 1.7)
+	function send_pm($pm, $fromid=0, $admin_override=false)
+	{
+		global $mybb;
+
+		if(!$mybb->settings['ougc_feedback_allow_pm_notifications'] || !$mybb->settings['enablepms'] || !is_array($pm))
+		{
+			return false;
+		}
+
+		if (!$pm['subject'] ||!$pm['message'] || !$pm['touid'] || (!$pm['receivepms'] && !$admin_override))
+		{
+			return false;
+		}
+
+		global $lang, $session;
+		$lang->load('messages');
+
+		require_once MYBB_ROOT."inc/datahandlers/pm.php";
+
+		$pmhandler = new PMDataHandler();
+
+		$user = get_user($pm['touid']);
+
+		// Build our final PM array
+		$pm = array(
+			'subject'		=> $pm['subject'],
+			'message'		=> $lang->sprintf($pm['message'], $user['username'], $mybb->settings['bbname']),
+			'icon'			=> -1,
+			'fromid'		=> ($fromid == 0 ? (int)$mybb->user['uid'] : ($fromid < 0 ? 0 : $fromid)),
+			'toid'			=> array($pm['touid']),
+			'bccid'			=> array(),
+			'do'			=> '',
+			'pmid'			=> '',
+			'saveasdraft'	=> 0,
+			'options'	=> array(
+				'signature'			=> 0,
+				'disablesmilies'	=> 0,
+				'savecopy'			=> 0,
+				'readreceipt'		=> 0
+			)
+		);
+
+		if(isset($mybb->session))
+		{
+			$pm['ipaddress'] = $mybb->session->packedip;
+		}
+
+		// Admin override
+		$pmhandler->admin_override = (int)$admin_override;
+
+		$pmhandler->set_data($pm);
+
+		if($pmhandler->validate_pm())
+		{
+			$pmhandler->insert_pm();
+			return true;
+		}
+
+		return false;
 	}
 
 	// Hook: admin_config_settings_change
