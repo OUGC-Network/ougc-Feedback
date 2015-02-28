@@ -388,11 +388,10 @@ class OUGC_Feedback
   </div>
 </div>',
 			'error_nomodal'	=> '',
-			'postbit'	=> '<span class="ougcfeedback_postbit_{$post[\'uid\']}">
-	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: {$stats[\'total\']} <span class="smalltext">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)</span>
-	<br />{$lang->ougc_feedback_profile_positibve} {$lang->ougc_feedback_profile_title}: <span style="color: green;">{$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})</span>
-	<br />{$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: <span style="color: gray;">{$stats[\'neutral\']} ({$stats[\'neutral_percent\']}% - {$stats[\'neutral_users\']} {$lang->ougc_feedback_profile_users})</span>
-	<br />{$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: <span style="color: red;">{$stats[\'negative\']} ({$stats[\'negative_percent\']}% - {$stats[\'negative_users\']} {$lang->ougc_feedback_profile_users})</span>
+			'postbit'	=> '<span class="ougcfeedback_postbit_{$post[\'uid\']}" title="{$lang->ougc_feedback_profile_positibve} {$lang->ougc_feedback_profile_title}: {$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})
+{$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: {$stats[\'neutral\']} ({$stats[\'neutral_percent\']}% - {$stats[\'neutral_users\']} {$lang->ougc_feedback_profile_users})
+{$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: {$stats[\'negative\']} ({$stats[\'negative_percent\']}% - {$stats[\'negative_users\']} {$lang->ougc_feedback_profile_users})">
+	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: {$stats[\'total\']} <span class="smalltext">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}" title="{$lang->ougc_feedback_profile_view}">{$lang->ougc_feedback_profile_view}</a>)</span>
 </span>',
 			'postbit_button'	=> '<a href="javascript:OUGC_Feedback.Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\');" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add"><span>{$lang->ougc_feedback_profile_add}</span></a>',
 			'profile'	=> '<div id="ougcfeedback_profile">
@@ -897,21 +896,39 @@ class OUGC_Feedback
 	}
 
 	// Send an error to the browser
-	function throw_error($title='', $exit=true)
+	function error($message='', $return=false)
 	{
-		global $mybb, $templates, $lang, $theme;
+		global $templates, $lang, $theme;
 
 		$title = $title ? $title : $lang->error;
-		$message = $this->error;
+		$message = $message ? $message : $lang->message;
 
-		eval('$error = "'.$templates->get('ougcfeedback_error'.($mybb->get_input('nomodal', 1) ? '_nomodal' : ''), 1, 0).'";');
+		$this->set_error($message);
 
-		if($exit)
+		eval('$error = "'.$templates->get('ougcfeedback_error', 1, 0).'";');
+
+		if($return)
 		{
-			exit($error);
+			return $error;
 		}
 
-		return $error;
+		exit($error);
+	}
+
+	// Send an error to the browser
+	function success($message='', $data)
+	{
+		global $lang;
+
+		header('Content-type: application/json; charset='.$lang->settings['charset']);
+
+		$modal = $feedback->error($message, true);
+
+		$data = array_merge($data, array('modal' => $modal));
+
+		echo json_encode($data);
+
+		exit;
 	}
 
 	// Set error
