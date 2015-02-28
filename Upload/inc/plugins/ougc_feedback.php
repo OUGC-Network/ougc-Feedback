@@ -129,7 +129,6 @@ class OUGC_Feedback
 			}
 		}
 
-		$settings['ougc_feedback_allow_profile_multiple'] = false;
 		$settings['ougc_feedback_allow_thread_firstpost'] = true;
 		$settings['ougc_feedback_allow_thread_firstpost'] = true;
 	}
@@ -170,12 +169,12 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			/*'allow_profile_multiple'	=> array(
+			'allow_profile_multiple'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_profile_multiple,
 			   'description'	=> $lang->setting_ougc_feedback_allow_profile_multiple_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
-			),*/
+			),
 			'allow_thread'				=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_thread,
 			   'description'	=> $lang->setting_ougc_feedback_allow_thread_desc,

@@ -77,6 +77,11 @@ if($mybb->get_input('action') == 'add')
 
 	if($feedback_data['pid'])
 	{
+		if(!$mybb->settings['ougc_feedback_allow_thread'])
+		{
+			$feedback->set_error($lang->ougc_feedback_error_profile_thread);
+		}
+
 		if(!($post = get_post($feedback_data['pid'])))
 		{
 			$feedback->set_error($lang->ougc_feedback_error_invalid_post);
@@ -132,6 +137,20 @@ if($mybb->get_input('action') == 'add')
 				check_forum_password($forum['fid']); // this should at least stop the script
 			}
 		}
+
+		$where = array("uid='{$feedback_data['uid']}'", "fuid!='0'", "fuid='{$feedback_data['fuid']}'", "pid='{$feedback_data['pid']}'");
+
+		if(!$feedback->permission('ismod'))
+		{
+			$where[] = "status='1'";
+		}
+
+		$query = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $where));
+
+		if($db->fetch_field($query, 'fid'))
+		{
+			$feedback->set_error($lang->ougc_feedback_error_profile_multiple_disabled);
+		}
 	}
 	else
 	{
@@ -141,14 +160,12 @@ if($mybb->get_input('action') == 'add')
 		}
 		elseif($mybb->settings['ougc_feedback_allow_profile'] && !$mybb->settings['ougc_feedback_allow_profile_multiple'])
 		{
-			$where = array("uid='{$feedback_data['uid']}'", "fuid!='0'");
+			$where = array("uid='{$feedback_data['uid']}'", "fuid!='0'", "fuid='{$feedback_data['fuid']}'");
 
 			if(!$feedback->permission('ismod'))
 			{
 				$where[] = "status='1'";
 			}
-
-			$where[] = "fuid='{$feedback_data['fuid']}'";
 
 			$query = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $where));
 

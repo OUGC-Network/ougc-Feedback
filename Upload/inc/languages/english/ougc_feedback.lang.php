@@ -96,6 +96,7 @@ Cheers, {2}.';
 
 // Errors
 $l['ougc_feedback_error_profile_disabled'] = 'Profile feedback is disabled.';
+$l['ougc_feedback_error_profile_thread'] = 'Thread feedback is disabled.';
 $l['ougc_feedback_error_profile_multiple_disabled'] = 'Multiple profile feedback is disabled.';
 $l['ougc_feedback_error_invalid_user'] = 'Invalid user.';
 $l['ougc_feedback_error_invalid_self_user'] = 'You cannot add to your own feedback.';
