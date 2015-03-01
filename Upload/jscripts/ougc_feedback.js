@@ -104,36 +104,9 @@ var OUGC_Feedback = {
 		return true;
 	},
 
-	Report: function(pid)
+	Report: function(fid)
 	{
-		MyBB.popupWindow('/report.php?modal=1&type=feedback&pid=' + parseInt(pid));
-		/*var postData = 'action=report&fid=' + parseInt(fid);
-
-		$.ajax(
-		{
-			type: 'get',
-			dataType: 'json',
-			url: 'feedback.php',
-			data: postData,
-			success: function (request)
-			{
-				if(request.error)
-				{
-					alert(request.error);
-					return false;
-				}
-
-				$('.modal').html(request.modal);
-				$('.modal').fadeIn('slow');
-			},
-			error: function (xhr)
-			{
-				MyBB.popupWindow('/feedback.php?action=report&fid=' + parseInt(fid));
-				return false;
-			}
-		});
-
-		return true;*/
+		MyBB.popupWindow('/report.php?modal=1&type=feedback&pid=' + parseInt(fid));
 	},
 
 	Delete: function(fid)
