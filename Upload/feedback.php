@@ -55,7 +55,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		$feedback->error($lang->error_nopermission_user_ajax);
 	}
 
-	if(!$feedback->permission('cangive'))
+	if(!$mybb->usergroup['ougc_feedback_cangive'])
 	{
 		$feedback->error($lang->error_nopermission_user_ajax);
 	}
@@ -65,7 +65,9 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		$feedback->error($lang->ougc_feedback_error_invalid_user);
 	}
 
-	if(!$feedback->permission('canreceive', $user))
+	$user_perms = usergroup_permissions($user['usergroup'].','.$user['additionalgroups']);
+
+	if(!$user_perms['ougc_feedback_canreceive'])
 	{
 		$feedback->error($lang->error_nopermission_user_ajax);
 	}
@@ -134,7 +136,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
 		$where = array("uid='{$feedback_data['uid']}'", "fuid!='0'", "fuid='{$feedback_data['fuid']}'", "pid='{$feedback_data['pid']}'");
 
-		if(!$feedback->permission('ismod'))
+		if(!$mybb->usergroup['ougc_feedback_ismod'])
 		{
 			$where[] = "status='1'";
 		}
@@ -157,7 +159,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		{
 			$where = array("uid='{$feedback_data['uid']}'", "fuid!='0'", "fuid='{$feedback_data['fuid']}'");
 
-			if(!$feedback->permission('ismod'))
+			if(!$mybb->usergroup['ougc_feedback_ismod'])
 			{
 				$where[] = "status='1'";
 			}
@@ -219,29 +221,21 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 			if($feedback_data['pid'])
 			{
 				$feedback->hook_postbit($post);
-				$content = $post['ougc_feedback'];
+				$replacement = $post['ougc_feedback'];
 			}
 			else
 			{
 				$memprofile = &$user;
 				$feedback->hook_member_profile_end();
-				$content = $ougc_feedback;
+				$replacement = $ougc_feedback;
 			}
 
-			$data = array('content' => $content);
-
-			$feedback->success($lang->ougc_feedback_success_feedback_added, $data);
+			$feedback->success($lang->ougc_feedback_success_feedback_added, $replacement);
 		}
 		else
 		{
-			$feedback->error($lang->ougc_feedback_success_feedback_added); // doesn't work
+			$feedback->error($lang->ougc_feedback_success_feedback_added);
 		}
-	}
-
-	// Validate, throw error if not valid
-	if(!$feedback->validate_feedback())
-	{
-		$feedback->throw_error();
 	}
 
 	if($mybb->settings['ougc_feedback_allow_comments'])
@@ -253,6 +247,9 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 	eval('$form = "'.$templates->get('ougcfeedback_form', 1, 0).'";');
 
 	exit($form);
+
+	// Send an error to the browser
+	//$feedback->send_form($form);
 }
 elseif($mybb->get_input('action') == 'delete')
 {
@@ -264,13 +261,15 @@ elseif($mybb->get_input('action') == 'remove')
 }
 elseif($mybb->get_input('action') == 'report')
 {
-	
+	eval('$form = "'.$templates->get('ougcfeedback_form', 1, 0).'";');
+
+	exit($form);
 }
 
 require_once MYBB_ROOT.'inc/class_parser.php';
 $parser = new postParser;
 
-if(!$mybb->usergroup['canviewprofiles'] || !$feedback->permission('canview'))
+if(!$mybb->usergroup['canviewprofiles'] || !$mybb->usergroup['ougc_feedback_canview'])
 {
 	error_no_permission();
 }
@@ -319,7 +318,7 @@ $usertitle = htmlspecialchars_uni($usertitle);
 
 // Start building a where clause
 $where = array("f.uid='{$user['uid']}'");
-if(!$feedback->permission('ismod'))
+if(!$mybb->usergroup['ougc_feedback_ismod'])
 {
 		$where[] = "f.status='1'";
 }
@@ -638,7 +637,10 @@ if(!$feedback_list)
 }
 
 $add_feedback = '';
-if($feedback->permission('cangive') && $feedback->permission('canreceive', $user) && $mybb->user['uid'] != $user['uid'])
+
+$user_perms = usergroup_permissions($user['usergroup'].','.$user['additionalgroups']);
+
+if($mybb->usergroup['ougc_feedback_cangive'] && $user_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $user['uid'])
 {
 	eval('$add_feedback = "'.$templates->get('ougcfeedback_page_addlink').'";');
 }

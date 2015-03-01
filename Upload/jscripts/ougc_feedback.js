@@ -28,15 +28,39 @@
 var OUGC_Feedback = {
 	Add: function(uid, pid, type, feedback)
 	{
-		MyBB.popupWindow('/feedback.php?action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&modal=1');
+		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback);
+
+		$.ajax(
+		{
+			type: 'get',
+			dataType: 'json',
+			url: 'feedback.php',
+			data: postData,
+			success: function (request)
+			{
+				if(request.error)
+				{
+					alert(request.error);
+					return false;
+				}
+
+				$('.modal').html(request.modal);
+				$('.modal').fadeIn('slow');
+			},
+			error: function (xhr)
+			{
+				MyBB.popupWindow('/feedback.php?action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback));
+				return false;
+			}
+		});
+
+		return true;
 	},
 
 	DoAdd: function(uid, pid)
 	{
 		// Get form, serialize it and send it
 		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
-
-		postData = postData + '&modal=1';
 
 		$.ajax(
 		{
@@ -46,17 +70,25 @@ var OUGC_Feedback = {
 			data: postData,
 			success: function (request)
 			{
+				if(request.error)
+				{
+					alert(request.error);
+					return false;
+				}
+
 				$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeOut('slow', function()
 				{
 					if(parseInt(pid))
 					{
-						$('.ougcfeedback_postbit_' + parseInt(uid)).html(request.content);
+						$('.ougcfeedback_postbit_' + parseInt(uid)).html(request.replacement);
+						$('#ougcfeedback_postbit_button_' + parseInt(pid)).fadeOut('slow');
 					}
 					else
 					{
-						$('#ougcfeedback_profile').html(request.content);
+						$('#ougcfeedback_profile').html(request.replacement);
+						$('#ougcfeedback_profile_add').fadeOut('slow');
 					}
-					//$('.ougcfeedback_postbit_' + parseInt(uid)).replaceWith(request.content);
+					//$('.ougcfeedback_postbit_' + parseInt(uid)).replaceWith(request.replacement);
 					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).html(request.modal);
 					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeIn('slow');
 					$('.modal').fadeIn('slow');
@@ -65,15 +97,43 @@ var OUGC_Feedback = {
 			error: function (xhr)
 			{
 				alert(xhr.responseText);
+				return false;
 			}
 		});
 
-		return false;
+		return true;
 	},
 
-	Report: function(fid)
+	Report: function(pid)
 	{
-		MyBB.popupWindow('/feedback.php?action=report&fid=' + parseInt(fid) + '&modal=1');
+		MyBB.popupWindow('/report.php?modal=1&type=feedback&pid=' + parseInt(pid));
+		/*var postData = 'action=report&fid=' + parseInt(fid);
+
+		$.ajax(
+		{
+			type: 'get',
+			dataType: 'json',
+			url: 'feedback.php',
+			data: postData,
+			success: function (request)
+			{
+				if(request.error)
+				{
+					alert(request.error);
+					return false;
+				}
+
+				$('.modal').html(request.modal);
+				$('.modal').fadeIn('slow');
+			},
+			error: function (xhr)
+			{
+				MyBB.popupWindow('/feedback.php?action=report&fid=' + parseInt(fid));
+				return false;
+			}
+		});
+
+		return true;*/
 	},
 
 	Delete: function(fid)

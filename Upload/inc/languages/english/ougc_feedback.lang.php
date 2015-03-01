@@ -94,6 +94,10 @@ Cheers, {2}.';
 //$l['ougc_feedback_memberlist_sort_neutral'] = 'Sort by: Neutral Feedback';
 //$l['ougc_feedback_memberlist_sort_negative'] = 'Sort by: Negative Feedback';
 
+// Report center
+$l['ougc_feedback_report_info'] = '<a href="{1}">Feedback</a> from {2}';
+$l['ougc_feedback_report_info_profile'] = '<br /><span class="smalltext">On {1}\'s profile</span';
+
 // Errors
 $l['ougc_feedback_error_profile_disabled'] = 'Profile feedback is disabled.';
 $l['ougc_feedback_error_profile_thread'] = 'Thread feedback is disabled.';
