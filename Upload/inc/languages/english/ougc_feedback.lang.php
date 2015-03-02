@@ -56,7 +56,9 @@ $l['ougc_feedback_page_profile'] = 'Profile of {1}';
 $l['ougc_feedback_confirm_delete'] = 'Are you sure you wish to delete this feedback?';
 $l['ougc_feedback_page_empty'] = 'This user currently does not have any feedback with the specified criteria below.';
 $l['ougc_feedback_page_report'] = 'Report';
-$l['ougc_feedback_page_delete'] = 'Delete';
+$l['ougc_feedback_page_edit'] = 'Edit';
+$l['ougc_feedback_page_delete'] = 'Remove';
+$l['ougc_feedback_page_delete_hard'] = 'Delete';
 $l['ougc_feedback_page_last_updated'] = 'Last updated {1}';
 $l['ougc_feedback_page_post_given'] = 'Feedback given for <a href="{1}">{2}\'s post</a> {3}<br />';
 $l['ougc_feedback_page_post_nolink'] = 'Feedback given for {1}\'s post<br />';
@@ -65,6 +67,9 @@ $l['ougc_feedback_no_comment'] = '[No comment]';
 $l['ougc_feedback_page_stats_total'] = 'Total Feedback';
 $l['ougc_feedback_page_stats_members'] = 'Feedback from members';
 $l['ougc_feedback_page_stats_posts'] = 'Feedback from posts';
+$l['ougc_feedback_page_type_buyer'] = '[Buyer] ';
+$l['ougc_feedback_page_type_seller'] = '[Seller] ';
+$l['ougc_feedback_page_type_trader'] = '[Trader] ';
 
 // Took from reputation feature
 $l['show_all'] = 'Show: All Votes';
@@ -88,6 +93,10 @@ $l['ougc_feedback_notification_pm_subject'] = 'You have received new feedback!';
 $l['ougc_feedback_notification_pm_message'] = 'Hi {1}! This is a automatic message to notify you that your profile has been updated with a new user feedback.
 
 Cheers, {2}.';
+$l['ougc_feedback_notification_mail_subject'] = 'You have received new feedback!';
+$l['ougc_feedback_notification_mail_message'] = 'Hi {1}! This is a automatic message to notify you that your profile has been updated with a new user feedback.
+
+Cheers, {2}.';
 
 // Member list
 //$l['ougc_feedback_memberlist_sort_positive'] = 'Sort by: Positive Feedback';
@@ -109,6 +118,7 @@ $l['ougc_feedback_error_invalid_type'] = 'Invalid feedback type selected.';
 $l['ougc_feedback_error_invalid_feedback'] = 'Invalid feedback value selected.';
 $l['ougc_feedback_error_invalid_status'] = 'Invalid feedback status selected.';
 $l['ougc_feedback_error_invalid_comment'] = 'Invalid feedback comment entered.';
+$l['ougc_feedback_error_invalid_maxperday'] = 'You have already given as many feedback  as you are allowed to for today.';
 
 // Success
 $l['ougc_feedback_success_feedback_added'] = 'Your feedback was successfully added.';

@@ -38,24 +38,14 @@ $l['ougc_feedback_pluginlibrary_old'] = 'This plugin requires PluginLibrary vers
 // Settings
 $l['setting_ougc_feedback_allow_profile'] = 'Allow Profile Feedback';
 $l['setting_ougc_feedback_allow_profile_desc'] = 'Allow feedback from profiles.';
-//$l['setting_ougc_feedback_allow_profile_multiple'] = 'Allow Multiple Profile Feedback';
-//$l['setting_ougc_feedback_allow_profile_multiple_desc'] = 'Whether if to allow multiple profile feedback from the same user.';
-$l['setting_ougc_feedback_allow_thread'] = 'Allow Thread Feedback';
-$l['setting_ougc_feedback_allow_thread_desc'] = 'Allow feedback from threads.';
-//$l['setting_ougc_feedback_allow_thread_firstpost'] = 'Allow Thread Feedback Only In First Post';
-//$l['setting_ougc_feedback_allow_thread_firstpost_desc'] = 'Whether if to allow only feedback from first post or from all posts.';
-$l['setting_ougc_feedback_allow_thread_forums'] = 'Allow Thread Feedback Forums';
-$l['setting_ougc_feedback_allow_thread_forums_desc'] = 'Please select the forums where thread feedback is allowed.';
-$l['setting_ougc_feedback_allow_comments'] = 'Allow Feedback Comments';
-$l['setting_ougc_feedback_allow_comments_desc'] = 'Whether if to allow comments in feedbacks.';
+$l['setting_ougc_feedback_allow_profile_multiple'] = 'Allow Multiple Profile Feedback';
+$l['setting_ougc_feedback_allow_profile_multiple_desc'] = 'Whether if to allow multiple profile feedback from the same user.';
 $l['setting_ougc_feedback_comments_minlength'] = 'Comments Minimum Length';
 $l['setting_ougc_feedback_comments_minlength_desc'] = 'The minimum comments length for comments.';
 $l['setting_ougc_feedback_comments_maxlength'] = 'Comments Maximum Length';
 $l['setting_ougc_feedback_comments_maxlength_desc'] = 'The maximum comments length for comments.';
-$l['setting_ougc_feedback_allow_enable_center'] = 'Enable The Report Center';
-$l['setting_ougc_feedback_allow_enable_center_desc'] = 'Whether if to enable the report center functionality.';
-//$l['setting_ougc_feedback_allow_email_notifications'] = 'Allow Email Notification';
-//$l['setting_ougc_feedback_allow_email_notifications_desc'] = 'Allow users to be notified via e-mail.';
+$l['setting_ougc_feedback_allow_email_notifications'] = 'Allow Email Notification';
+$l['setting_ougc_feedback_allow_email_notifications_desc'] = 'Allow users to be notified via e-mail.';
 $l['setting_ougc_feedback_allow_pm_notifications'] = 'Allow PM Notification';
 $l['setting_ougc_feedback_allow_pm_notifications_desc'] = 'Allow users to be notified via PM.';
 //$l['setting_ougc_feedback_allow_alert_notifications'] = 'Allow Alert Notification';
@@ -68,8 +58,6 @@ $l['setting_ougc_feedback_showin_postbit_desc'] = 'Whether if to show feedback s
 //$l['setting_ougc_feedback_showin_memberlist_desc'] = 'Whether if to show feedback status in the member list page.';
 $l['setting_ougc_feedback_perpage'] = 'Pagination Per-Page Setting';
 $l['setting_ougc_feedback_perpage_desc'] = 'Maximum number of items to show per page in pagination enabled features.';
-$l['setting_ougc_feedback_maxperday'] = 'Maximum Feedbacks Per Day';
-$l['setting_ougc_feedback_maxperday_desc'] = 'The maximum number of times an user can give feedback per day.';
 
 // Permissions
 $l['ougc_feedback_permission_canview'] = 'Can view feedback page?';
@@ -83,3 +71,8 @@ $l['ougc_feedback_permission_ismod'] = 'Can moderate feedback?';
 $l['ougc_feedback_permission_mod_canedit'] = 'Can this moderator edit feedbacks?';
 $l['ougc_feedback_permission_mod_canremove'] = 'Can this moderator remove feedbacks?';
 $l['ougc_feedback_permission_mod_candelete'] = 'Can this moderator hard delete feedbacks?';
+
+ 
+// Forums
+$l['ougc_feedback_permission_allow_threads'] = 'Yes, allow feedback for threads';
+$l['ougc_feedback_permission_allow_posts'] = 'Yes, allow feedback for posts';

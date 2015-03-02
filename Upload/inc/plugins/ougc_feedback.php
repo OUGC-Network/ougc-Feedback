@@ -96,6 +96,8 @@ class OUGC_Feedback
 			$plugins->add_hook('admin_config_settings_change', array($this, 'hook_admin_config_settings_change'));
 			$plugins->add_hook('admin_formcontainer_end', array($this, 'hook_admin_formcontainer_end'));
 			$plugins->add_hook('admin_user_groups_edit_commit', array($this, 'hook_admin_user_groups_edit_commit'));
+			$plugins->add_hook('admin_forum_management_edit_commit', array($this, 'hook_admin_forum_management_edit_commit'));
+			$plugins->add_hook('admin_forum_management_add_commit', array($this, 'hook_admin_forum_management_edit_commit'));
 		}
 		else
 		{
@@ -132,9 +134,6 @@ class OUGC_Feedback
 					break;
 			}
 		}
-
-		$settings['ougc_feedback_allow_thread_firstpost'] = true;
-		$settings['ougc_feedback_allow_thread_firstpost'] = true;
 	}
 
 	// Plugin API:_info() routine
@@ -179,30 +178,6 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
-			'allow_thread'				=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_thread,
-			   'description'	=> $lang->setting_ougc_feedback_allow_thread_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
-			/*'allow_thread_firstpost'				=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_thread_firstpost,
-			   'description'	=> $lang->setting_ougc_feedback_allow_thread_firstpost_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),*/
-			'allow_thread_forums'		=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_thread_forums,
-			   'description'	=> $lang->setting_ougc_feedback_allow_thread_forums_desc,
-			   'optionscode'	=> 'forumselect',
-			   'value'			=> -1
-			),
-			'allow_comments'			=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_comments,
-			   'description'	=> $lang->setting_ougc_feedback_allow_comments_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
 			'comments_minlength'		=> array(
 			   'title'			=> $lang->setting_ougc_feedback_comments_minlength,
 			   'description'	=> $lang->setting_ougc_feedback_comments_minlength_desc,
@@ -215,18 +190,12 @@ class OUGC_Feedback
 			   'optionscode'	=> 'text',
 			   'value'			=> 100
 			),
-			/*'enable_report_center'		=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_enable_center,
-			   'description'	=> $lang->setting_ougc_feedback_allow_enable_center_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
 			'allow_email_notifications'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_email_notifications,
 			   'description'	=> $lang->setting_ougc_feedback_allow_email_notifications_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
-			),*/
+			),
 			'allow_pm_notifications'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_pm_notifications,
 			   'description'	=> $lang->setting_ougc_feedback_allow_pm_notifications_desc,
@@ -261,7 +230,7 @@ class OUGC_Feedback
 			   'title'			=> $lang->setting_ougc_feedback_perpage,
 			   'description'	=> $lang->setting_ougc_feedback_perpage_desc,
 			   'optionscode'	=> 'text',
-			   'value'			=> 10
+			   'value'			=> 20
 			),
 			/*'maxperday'					=> array(
 			   'title'			=> $lang->setting_ougc_feedback_maxperday,
@@ -531,14 +500,20 @@ class OUGC_Feedback
 </tr>',
 			'page_item'	=> '<tr>
 	<td class="trow1 {$class[\'status\']}" id="fid{$feedback_vote[\'fid\']}">
-		{$report_link}{$delete_link}
+		{$report_link}{$edit_link}{$delete_link}{$delete_hard_link}
 		{$feedback_vote[\'user_username\']} <span class="smalltext">{$last_updated}<br />{$postfeed_given}</span>
 		<br />
 		<strong class="{$class[\'type\']}">{$vote_type} ({$feedback_vote[\'feedback\']}):</strong> {$feedback_vote[\'comment\']}
 	</td>
 </tr>',
+			'page_item_edit'	=> '<div class="float_right postbit_buttons">
+	<a href="{$mybb->settings[\'bburl\']}/feedback.php?action=edit&amp;fid={$feedback_vote[\'fid\']}" onclick="OUGC_Feedback.Edit(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_edit"><span>{$lang->ougc_feedback_page_edit}</span></a>
+</div>',
 			'page_item_delete'	=> '<div class="float_right postbit_buttons">
 	<a href="{$mybb->settings[\'bburl\']}/feedback.php?action=delete&amp;fid={$feedback_vote[\'fid\']}&amp;my_post_key={$mybb->post_code}" onclick="OUGC_Feedback.Delete(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete}</span></a>
+</div>',
+			'page_item_delete_hard'	=> '<div class="float_right postbit_buttons">
+	<a href="{$mybb->settings[\'bburl\']}/feedback.php?action=delete&amp;fid={$feedback_vote[\'fid\']}&amp;hard=1&amp;my_post_key={$mybb->post_code}" onclick="OUGC_Feedback.Delete(\'{$feedback_vote[\'fid\']}\', \'1\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete_hard}</span></a>
 </div>',
 			'page_item_report'	=> '<div class="float_right postbit_buttons">
 	<a href="javascript:OUGC_Feedback.Report({$feedback_vote[\'fid\']});" class="postbit_report"><span>{$lang->ougc_feedback_page_report}</span></a>
@@ -669,6 +644,7 @@ class OUGC_Feedback
 			}
 		}
 
+		$cache->update_forums();
 		$cache->update_usergroups();
 	}
 
@@ -724,15 +700,16 @@ class OUGC_Feedback
 			$PL->cache_delete('ougc_plugins');
 		}
 
+		$cache->update_forums();
 		$cache->update_usergroups();
 	}
 
 	// Load language file
-	function load_language()
+	function load_language($force=false)
 	{
 		global $lang;
 
-		isset($lang->setting_group_ougc_feedback) or $lang->load('ougc_feedback');
+		(isset($lang->setting_group_ougc_feedback) && !$force) or $lang->load('ougc_feedback');
 	}
 
 	// Build plugin info
@@ -789,6 +766,10 @@ class OUGC_Feedback
 						'ougc_feedback_mod_canremove'	=> "smallint NOT NULL DEFAULT '0'",
 						'ougc_feedback_mod_candelete'	=> "smallint NOT NULL DEFAULT '0'",
 					),
+					'forums'	=> array(
+						'ougc_feedback_allow_threads'	=> "smallint NOT NULL DEFAULT '1'",
+						'ougc_feedback_allow_posts'		=> "smallint NOT NULL DEFAULT '1'",
+					),
 					'users'			=> array(
 						'ougc_feedback_notification'	=> "varchar(5) NOT NULL DEFAULT ''",
 					)
@@ -808,6 +789,10 @@ class OUGC_Feedback
 						'ougc_feedback_mod_canedit'		=> "tinyint(1) NOT NULL DEFAULT '0'",
 						'ougc_feedback_mod_canremove'	=> "tinyint(1) NOT NULL DEFAULT '0'",
 						'ougc_feedback_mod_candelete'	=> "tinyint(1) NOT NULL DEFAULT '0'",
+					),
+					'forums'	=> array(
+						'ougc_feedback_allow_threads'	=> "tinyint(1) NOT NULL DEFAULT '1'",
+						'ougc_feedback_allow_posts'		=> "tinyint(1) NOT NULL DEFAULT '1'",
 					),
 					'users'			=> array(
 						'ougc_feedback_notification'	=> "varchar(5) NOT NULL DEFAULT ''",
@@ -926,7 +911,7 @@ class OUGC_Feedback
 		return $insert_data;
 	}
 
-	// Send a Private Message to a user  (Copied from MyBB 1.7)
+	// Send a Private Message to an user (Copied from MyBB 1.7)
 	function send_pm($pm, $fromid=0, $admin_override=false)
 	{
 		global $mybb;
@@ -988,6 +973,71 @@ class OUGC_Feedback
 		return false;
 	}
 
+	// Send a e-mail to an user
+	function send_email($email)
+	{
+		global $mybb, $db, $lang;
+
+		// Load language
+		if($email['language'] != $mybb->user['language'] && $lang->language_exists($email['language']))
+		{
+			$reset_lang = true;
+			$lang->set_language($email['language']);
+			$this->load_language(true);
+		}
+
+		foreach(array('subject', 'message') as $key)
+		{
+			$lang_string = $email[$key];
+			if(is_array($email[$key]))
+			{
+				$num_args = count($email[$key]);
+
+				for($i = 1; $i < $num_args; $i++)
+				{
+					$lang->{$email[$key][0]} = str_replace('{'.$i.'}', $email[$key][$i], $lang->{$email[$key][0]});
+				}
+
+				$lang_string = $email[$key][0];
+			}
+
+			$email[$key] = $lang->{$lang_string};
+		}
+
+		if(!$email['subject'] || !$email['message'] || !$email['to'])
+		{
+			return false;
+		}
+
+		my_mail($email['to'], $email['subject'], $email['message'], $email['from'], '', '', false, 'text', '', '');
+
+		// Log the message
+		if($mybb->settings['mail_logging'])
+		{
+			$entry = array(
+				'subject'	=> $db->escape_string($email['subject']),
+				'message'	=> $db->escape_string($email['message']),
+				'dateline'	=> TIME_NOW,
+				'fromuid'	=> 0,
+				'fromemail'	=> $db->escape_string($email['from']),
+				'touid'		=> $email['touid'],
+				'toemail'	=> $db->escape_string($email['to']),
+				'tid'		=> 0,
+				'ipaddress'	=> $db->escape_binary($mybb->session->packedip),
+				'type'		=> 1
+			);
+
+			$db->insert_query('maillogs', $entry);
+		}
+
+		// Reset language
+		if(isset($reset_lang))
+		{
+			$lang->set_language($mybb->user['language']);
+			$this->load_language(true);
+		}
+	}
+
 	// Hook: admin_config_settings_change
 	function hook_admin_config_settings_change()
 	{
@@ -1022,10 +1072,26 @@ class OUGC_Feedback
 					$lang_var = 'ougc_feedback_permission_'.str_replace('ougc_feedback_', '', $name);
 					$perms[] = $form->generate_check_box($name, 1, $lang->{$lang_var}, array('checked' => $mybb->get_input($name, 1)));
 				}
-				
 			}
 
 			$form_container->output_row($lang->setting_group_ougc_feedback, '', '<div class="group_settings_bit">'.implode('</div><div class="group_settings_bit">', $perms).'</div>');
+		}
+
+		if($run_module == 'forum' && ($form_container->_title == $lang->additional_forum_options || $form_container->_title == "<div class=\"float_right\" style=\"font-weight: normal;\"><a href=\"#\" onclick=\"$('#additional_options_link').toggle(); $('#additional_options').fadeToggle('fast'); return false;\">{$lang->hide_additional_options}</a></div>".$lang->additional_forum_options))
+		{
+			global $form, $mybb, $forum_data;
+			$this->load_language();
+
+			$perms = array();
+
+			$db_fields = $this->get_db_fields();
+			foreach($db_fields['forums'] as $name => $definition)
+			{
+				$lang_var = 'ougc_feedback_permission_'.str_replace('ougc_feedback_', '', $name);
+				$perms[] = $form->generate_check_box($name, 1, $lang->{$lang_var}, array('checked' => isset($forum_data[$name]) ? (int)$forum_data[$name] : 1));
+			}
+
+			$form_container->output_row($lang->setting_group_ougc_feedback, '', '<div class="forum_settings_bit">'.implode('</div><div class="forum_settings_bit">', $perms).'</div>');
 		}
 	}
 
@@ -1042,6 +1108,23 @@ class OUGC_Feedback
 		}
 
 		$updated_group = array_merge($updated_group, $array_data);
+	}
+
+	// Hook: admin_forum_management_edit_commit
+	function hook_admin_forum_management_edit_commit()
+	{
+		global $db, $mybb, $fid, $plugins;
+
+		$array_data = array();
+		$db_fields = $this->get_db_fields();
+		foreach($db_fields['forums'] as $name => $definition)
+		{
+			$array_data[$name] = $mybb->get_input($name, 1);
+		}
+
+		$db->update_query('forums', $array_data, "fid='{$fid}'");
+
+		$mybb->cache->update_forums();
 	}
 
 	// Hook: global_intermediate
@@ -1243,14 +1326,19 @@ class OUGC_Feedback
 			$post['user_details'] = str_replace('<!--OUGC_FEEDBACK-->', $post['ougc_feedback'], $post['user_details']);
 		}
 
-		if(!($mybb->settings['ougc_feedback_allow_thread'] && $post['pid'] && ($mybb->settings['ougc_feedback_allow_thread_forums'] = -1 || my_strpos(','.$mybb->settings['ougc_feedback_allow_thread_forums'].',', ','.$post['fid'].',') !== false)))
+		global $plugins, $thread, $forum;
+
+		if(!$forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'])
 		{
 			return;
 		}
 
-		global $plugins, $thread;
+		if($forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'] && $thread['firstpost'] != $post['pid'])
+		{
+			return;
+		}
 
-		if($mybb->settings['ougc_feedback_allow_thread_firstpost'] && $thread['firstpost'] != $post['pid'])
+		if(!$forum['ougc_feedback_allow_threads'] && $forum['ougc_feedback_allow_posts'] && $thread['firstpost'] == $post['pid'])
 		{
 			return;
 		}

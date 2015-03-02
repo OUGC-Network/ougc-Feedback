@@ -30,7 +30,7 @@
 define('IN_MYBB', 1);
 define('THIS_SCRIPT', 'feedback.php');
 
-$templatelist = '';
+$templatelist = 'ougcfeedback_page_item_edit, ougcfeedback_page_item_delete, ougcfeedback_page_item_delete_hard, ougcfeedback_page_item_report, ougcfeedback_page_item, ougcfeedback_page_addlink, ougcfeedback_page';
 
 require_once './global.php';
 
@@ -79,11 +79,6 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
 	if($feedback_data['pid'])
 	{
-		if(!$mybb->settings['ougc_feedback_allow_thread'])
-		{
-			$feedback->error($lang->ougc_feedback_error_profile_thread);
-		}
-
 		if(!($post = get_post($feedback_data['pid'])))
 		{
 			$feedback->error($lang->ougc_feedback_error_invalid_post);
@@ -104,12 +99,22 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 			$feedback->error($lang->ougc_feedback_error_invalid_post);
 		}
 
-		if(substr($thread['closed'], 0, 6) == 'moved|' || $forum['type'] != 'f')
+		if(!$forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'])
 		{
 			$feedback->error($lang->ougc_feedback_error_invalid_post);
 		}
 
-		if($mybb->settings['ougc_feedback_allow_thread_firstpost'] && $thread['firstpost'] != $post['pid'])
+		if($forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'] && $thread['firstpost'] != $post['pid'])
+		{
+			$feedback->error($lang->ougc_feedback_error_invalid_post);
+		}
+
+		if(!$forum['ougc_feedback_allow_threads'] && $forum['ougc_feedback_allow_posts'] && $thread['firstpost'] == $post['pid'])
+		{
+			$feedback->error($lang->ougc_feedback_error_invalid_post);
+		}
+
+		if(substr($thread['closed'], 0, 6) == 'moved|' || $forum['type'] != 'f')
 		{
 			$feedback->error($lang->ougc_feedback_error_invalid_post);
 		}
@@ -188,6 +193,18 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		$feedback->error($lang->ougc_feedback_error_invalid_status);
 	}
 
+	if($mybb->usergroup['ougc_feedback_maxperday'])
+	{
+		$timesearch = TIME_NOW-(60*60*24);
+		$query = $db->simple_select('ougc_feedback', 'COUNT(fid) AS feedbacks', "fuid='{$mybb->user['uid']}' AND dateline>'{$timesearch}'");
+		$numtoday = $db->fetch_field($query, 'feedbacks');
+
+		if($numtoday >= $mybb->usergroup['ougc_feedback_maxperday'])
+		{
+			$feedback->error($lang->ougc_feedback_error_invalid_maxperday);
+		}
+	}
+
 	// Set handler data
 	$feedback->set_data($feedback_data);
 
@@ -197,7 +214,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		// Verify incoming POST request
 		verify_post_check($mybb->get_input('my_post_key'));
 
-		if(!$mybb->settings['ougc_feedback_allow_comments'])
+		if($mybb->settings['ougc_feedback_comments_maxlength'] < 1)
 		{
 			$feedback_data['comment'] = '';
 		}
@@ -212,11 +229,32 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 			// Insert feedback
 			$insert_data = $feedback->insert_feedback();
 
-			$feedback->send_pm(array(
-				'subject'		=> $lang->sprintf($lang->ougc_feedback_notification_pm_subject, $user['username'], $mybb->settings['bbname']),
-				'message'		=> $lang->ougc_feedback_notification_pm_message,
-				'touid'			=> $feedback_data['uid']
-			), -1, true);
+
+			if(strpos(','.$user['ougc_feedback_notification'].',', ',1,'))
+			{
+				$feedback->send_pm(array(
+					'subject'		=> $lang->ougc_feedback_notification_pm_subject,
+					'message'		=> $lang->sprintf($lang->ougc_feedback_notification_pm_message, $user['username'], $mybb->settings['bbname']),
+					'touid'			=> $feedback_data['uid']
+				), -1, true);
+			}
+
+			if(strpos(','.$user['ougc_feedback_notification'].',', ',`2,'))
+			{
+				$feedback->send_email(array(
+					'to'		=> $user['email'],
+					'subject'	=> 'ougc_feedback_notification_mail_subject',
+					'message'	=> array('ougc_feedback_notification_mail_message', $user['username'], $mybb->settings['bbname']),
+					'from'		=> $mybb->settings['adminemail'],
+					'touid'		=> $user['uid'],
+					'language'	=> $user['language']
+				));
+			}
+
+			/*if(strpos(','.$user['ougc_feedback_notification'].',', ',`3,'))
+			{
+				$feedback->send_alert(array());
+			}*/
 
 			if($feedback_data['pid'])
 			{
@@ -238,7 +276,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		}
 	}
 
-	if($mybb->settings['ougc_feedback_allow_comments'])
+	if($mybb->settings['ougc_feedback_comments_maxlength'] > 0)
 	{
 		$mybb->input['comment'] = $mybb->get_input('comment');
 		eval('$comment_row = "'.$templates->get('ougcfeedback_form_comment', 1, 0).'";');
@@ -258,12 +296,6 @@ elseif($mybb->get_input('action') == 'delete')
 elseif($mybb->get_input('action') == 'remove')
 {
 	
-}
-elseif($mybb->get_input('action') == 'report')
-{
-	eval('$form = "'.$templates->get('ougcfeedback_form', 1, 0).'";');
-
-	exit($form);
 }
 
 require_once MYBB_ROOT.'inc/class_parser.php';
@@ -565,19 +597,32 @@ foreach($feedback_cache as $feedback_vote)
 		$postfeed_given = $lang->sprintf($lang->ougc_feedback_page_post_given, $link, $user['username'], $thread_link);
 	}
 
+	switch($feedback_vote['type'])
+	{
+		case 1:
+			$vote_type = $lang->ougc_feedback_page_type_buyer;
+			break;
+		case 2:
+			$vote_type = $lang->ougc_feedback_page_type_seller;
+			break;
+		case 3:
+			$vote_type = $lang->ougc_feedback_page_type_trader;
+			break;
+	}
+
 	switch($feedback_vote['feedback'])
 	{
 		case -1:
 			$class = array('status' => 'trow_reputation_negative', 'type' => 'reputation_negative');
-			$vote_type = $lang->ougc_feedback_profile_negative;
+			$vote_type .= $lang->ougc_feedback_profile_negative;
 			break;
 		case 0:
 			$class = array('status' => 'trow_reputation_neutral', 'type' => 'reputation_neutral');
-			$vote_type = $lang->ougc_feedback_profile_neutral;
+			$vote_type .= $lang->ougc_feedback_profile_neutral;
 			break;
 		case 1:
 			$class = array('status' => 'trow_reputation_positive', 'type' => 'reputation_positive');
-			$vote_type = $lang->ougc_feedback_profile_positibve;
+			$vote_type .= $lang->ougc_feedback_profile_positibve;
 			break;
 	}
 
@@ -616,17 +661,21 @@ foreach($feedback_cache as $feedback_vote)
 		$feedback_vote['comment'] = $lang->ougc_feedback_no_comment;
 	}
 
-	$delete_link = '';
-	if($feedback_vote['fuid'] == $mybb->user['uid'])
+	$edit_link = $delete_link = $delete_hard_link = '';
+	if(($feedback_vote['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canedit']) || ($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_canedit']))
 	{
-		eval('$delete_link .= "'.$templates->get('ougcfeedback_page_item_delete').'";');
+		eval('$edit_link = "'.$templates->get('ougcfeedback_page_item_edit').'";');
+	}
+	if(($feedback_vote['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canremove']) || ($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_canremove']))
+	{
+		eval('$delete_link = "'.$templates->get('ougcfeedback_page_item_delete').'";');
+	}
+	if($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_candelete'])
+	{
+		eval('$delete_hard_link = "'.$templates->get('ougcfeedback_page_item_delete_hard').'";');
 	}
 
-	$report_link = '';
-	if($mybb->user['uid'] && $mybb->settings['ougc_feedback_enable_report_center'])
-	{
-		eval('$report_link .= "'.$templates->get('ougcfeedback_page_item_report').'";');
-	}
+	eval('$report_link .= "'.$templates->get('ougcfeedback_page_item_report').'";');
 
 	eval('$feedback_list .= "'.$templates->get('ougcfeedback_page_item').'";');
 }
