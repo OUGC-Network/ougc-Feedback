@@ -364,7 +364,7 @@ class OUGC_Feedback
 			'postbit'	=> '<span class="ougcfeedback_postbit_{$post[\'uid\']}" title="{$lang->ougc_feedback_profile_positibve} {$lang->ougc_feedback_profile_title}: {$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})
 {$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: {$stats[\'neutral\']} ({$stats[\'neutral_percent\']}% - {$stats[\'neutral_users\']} {$lang->ougc_feedback_profile_users})
 {$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: {$stats[\'negative\']} ({$stats[\'negative_percent\']}% - {$stats[\'negative_users\']} {$lang->ougc_feedback_profile_users})">
-	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: {$stats[\'total\']} <span class="smalltext">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}" title="{$lang->ougc_feedback_profile_view}">{$lang->ougc_feedback_profile_view}</a>)</span>
+	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: {$stats[\'total\']} <span class="smalltext">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)</span>
 </span>',
 			'postbit_button'	=> '<a id="ougcfeedback_postbit_button_{$post[\'pid\']}" href="javascript:OUGC_Feedback.Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\');" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add"><span>{$lang->ougc_feedback_profile_add}</span></a>',
 			'profile'	=> '<div id="ougcfeedback_profile">
@@ -567,12 +567,12 @@ class OUGC_Feedback
 		find_replace_templatesets('postbit', '#'.preg_quote('{$post[\'ougc_feedback_button\']}').'#i', '', 0);
 		find_replace_templatesets('postbit_classic', '#'.preg_quote('{$post[\'ougc_feedback_button\']}').'#i', '', 0);
 		find_replace_templatesets('postbit_author_user', '#'.preg_quote('<!--OUGC_FEEDBACK-->').'#i', '', 0);
-		find_replace_templatesets('memberlist_user', '#'.preg_quote('{$ougc_feedback_bit}').'#i', '', 0);
+		//find_replace_templatesets('memberlist_user', '#'.preg_quote('{$ougc_feedback_bit}').'#i', '', 0);
 		//find_replace_templatesets('memberlist', '#'.preg_quote('{$ougc_feedback_header}').'#i', '', 0);
 		//find_replace_templatesets('memberlist', '#'.preg_quote('{$ougc_feedback_sort}').'#i', '', 0);
-		//find_replace_templatesets('headerinclude', '#'.preg_quote('{$ougc_feedback_js}').'#i', '', 0);
-		find_replace_templatesets('postbit', '#'.preg_quote('{$post[\'ougc_feedback\']}').'#i', '', 0);
-		find_replace_templatesets('postbit_classic', '#'.preg_quote('{$post[\'ougc_feedback\']}').'#i', '', 0);
+		find_replace_templatesets('headerinclude', '#'.preg_quote('{$ougc_feedback_js}').'#i', '', 0);
+		//find_replace_templatesets('postbit', '#'.preg_quote('{$post[\'ougc_feedback\']}').'#i', '', 0);
+		//find_replace_templatesets('postbit_classic', '#'.preg_quote('{$post[\'ougc_feedback\']}').'#i', '', 0);
 	}
 
 	// Plugin API:_install() routine
