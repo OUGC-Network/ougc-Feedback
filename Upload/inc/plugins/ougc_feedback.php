@@ -1257,18 +1257,19 @@ class OUGC_Feedback
 
 				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded')
 				{
-					$where[] = "p.{$pids}";
+					$uids = array();
 
-					$query = $db->query("
-						SELECT f.*, p.uid as post_uid
-						FROM ".TABLE_PREFIX."ougc_feedback f
-						LEFT JOIN ".TABLE_PREFIX."users u ON (u.uid=f.uid)
-						LEFT JOIN ".TABLE_PREFIX."posts p ON (p.uid=u.uid)
-						WHERE ".implode(' AND ', $where)."
-					");
+					$query = $db->simple_select('users u LEFT JOIN '.TABLE_PREFIX.'posts p ON (p.uid=u.uid)', 'u.uid', "p.{$pids}");
+					while($uid = $db->fetch_field($query, 'uid'))
+					{
+						$uids[$uid] = $uid;
+					}
+					$where[] = 'f.uid IN ('.implode(' AND ', $uids).')';
+
+					$query = $db->simple_select('ougc_feedback f', 'f.*', implode(' AND ', $where));
 					while($feedback = $db->fetch_array($query))
 					{
-						$query_cache[$feedback['post_uid']][] = $feedback;
+						$query_cache[$feedback['uid']][] = $feedback;
 					}
 				}
 				else
