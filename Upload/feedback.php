@@ -583,18 +583,20 @@ if(!empty($post_cache))
 $feedback_list = '';
 foreach($feedback_cache as $feedback_vote)
 {
-	$postfeed_given = $lang->sprintf($lang->ougc_feedback_page_post_nolink, $user['username']);
+	$postfeed_given = '';
 	if($feedback_vote['pid'])
 	{
-		$post = $post_reputation[$feedback_vote['pid']];
+		$postfeed_given = $lang->sprintf($lang->ougc_feedback_page_post_nolink, $user['username']);
+		if($post = $post_reputation[$feedback_vote['pid']])
+		{
+			$thread_link = get_thread_link($post['tid']);
+			$subject = htmlspecialchars_uni($parser->parse_badwords($post['subject']));
 
-		$thread_link = get_thread_link($post['tid']);
-		$subject = htmlspecialchars_uni($parser->parse_badwords($post['subject']));
+			$thread_link = $lang->sprintf($lang->ougc_feedback_page_post_given_thread, $thread_link, $subject);
+			$link = get_post_link($feedback_vote['pid']).'#pid'.$feedback_vote['pid'];
 
-		$thread_link = $lang->sprintf($lang->ougc_feedback_page_post_given_thread, $thread_link, $subject);
-		$link = get_post_link($feedback_vote['pid']).'#pid'.$feedback_vote['pid'];
-
-		$postfeed_given = $lang->sprintf($lang->ougc_feedback_page_post_given, $link, $user['username'], $thread_link);
+			$postfeed_given = $lang->sprintf($lang->ougc_feedback_page_post_given, $link, $user['username'], $thread_link);
+		}
 	}
 
 	switch($feedback_vote['type'])
