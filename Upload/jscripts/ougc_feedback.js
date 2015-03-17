@@ -26,33 +26,19 @@
 ****************************************************************************/
 
 var OUGC_Feedback = {
-	Add: function(uid, pid, type, feedback)
+	unBind: function()
 	{
-		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback);
-
-		$.ajax(
+		$('#ougcfeedback_form').submit(function(e)
 		{
-			type: 'get',
-			dataType: 'json',
-			url: 'feedback.php',
-			data: postData,
-			success: function (request)
-			{
-				if(request.error)
-				{
-					alert(request.error);
-				}
-				else
-				{
-					$('.modal').html(request.modal);
-					$('.modal').fadeIn('slow');
-				}
-			},
-			error: function (xhr)
-			{
-				MyBB.popupWindow('/feedback.php?action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback));
-			}
+			e.preventDefault();
+			e.unbind();
 		});
+	},
+	Add: function(uid, pid, type, feedback, reload)
+	{
+		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload);
+
+		MyBB.popupWindow('/feedback.php?' + postData);
 	},
 
 	DoAdd: function(uid, pid)
@@ -74,35 +60,42 @@ var OUGC_Feedback = {
 				}
 				else
 				{
-					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeOut('slow', function()
+					$.modal.close();
+					$(request.modal).appendTo('body').modal({ fadeDuration: 250}).fadeIn('slow');
+
+					if(request.reload)
 					{
-						if(parseInt(pid))
+						location.reload(true);
+						/*$.ajax({
+							url: '',
+							context: document.body,
+							success: function(s, x){
+								$(this).html(s);
+							}
+						});*/
+					}
+					else
+					{
+						$('.ougcfeedback_info_' + parseInt(uid)).html(request.replacement);
+
+						if(request.hide_add)
 						{
-							$('.ougcfeedback_postbit_' + parseInt(uid)).html(request.replacement);
-							$('#ougcfeedback_postbit_button_' + parseInt(pid)).fadeOut('slow');
+							$('.ougcfeedback_add_' + parseInt(uid)).fadeOut('slow');
 						}
-						else
-						{
-							$('#ougcfeedback_profile').html(request.replacement);
-							$('#ougcfeedback_profile_add').fadeOut('slow');
-						}
-						//$('.ougcfeedback_postbit_' + parseInt(uid)).replaceWith(request.replacement);
-						$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).html(request.modal);
-						$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeIn('slow');
-						$('.modal').fadeIn('slow');
-					});
+					}
 				}
 			},
 			error: function (xhr)
 			{
-				alert(xhr.responseText);
+				$.modal.close();
+				$(xhr.responseText).appendTo('body').modal({ fadeDuration: 250}).fadeIn('slow');
 			}
 		});
 	},
 
 	Report: function(fid)
 	{
-		MyBB.popupWindow('/report.php?modal=1&type=feedback&pid=' + parseInt(fid));
+		MyBB.popupWindow('/report.php?type=feedback&pid=' + parseInt(fid));
 	},
 
 	Delete: function(fid)
@@ -150,4 +143,3 @@ var OUGC_Feedback = {
 		});
 	},
 }
-

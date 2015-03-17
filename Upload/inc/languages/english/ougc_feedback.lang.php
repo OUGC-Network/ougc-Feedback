@@ -47,6 +47,7 @@ $l['ougc_feedback_modal_comment'] = 'Comment:';
 $l['ougc_feedback_type_buyer'] = 'Buyer';
 $l['ougc_feedback_type_seller'] = 'Seller';
 $l['ougc_feedback_type_trader'] = 'Trader';
+$l['ougc_feedback_go_back'] = 'Go Back';
 
 // Page
 $l['ougc_feedback_page_title'] = 'Feedback Report';
@@ -111,6 +112,7 @@ $l['ougc_feedback_report_info_profile'] = '<br /><span class="smalltext">On {1}\
 $l['ougc_feedback_error_profile_disabled'] = 'Profile feedback is disabled.';
 $l['ougc_feedback_error_profile_thread'] = 'Thread feedback is disabled.';
 $l['ougc_feedback_error_profile_multiple_disabled'] = 'Multiple profile feedback is disabled.';
+$l['ougc_feedback_error_post_multiple_disabled'] = 'Multiple post feedback is disabled.';
 $l['ougc_feedback_error_invalid_user'] = 'Invalid user.';
 $l['ougc_feedback_error_invalid_self_user'] = 'You cannot add to your own feedback.';
 $l['ougc_feedback_error_invalid_post'] = 'Invalid post.';

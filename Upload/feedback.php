@@ -38,6 +38,8 @@ $PL or require_once PLUGINLIBRARY;
 
 $feedback->load_language();
 
+$mybb->input['reload'] = $mybb->get_input('reload', 1);
+
 if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 {
 	$feedback_data = array(
@@ -49,6 +51,9 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		'comment'	=> $mybb->get_input('comment'),
 		'status'	=> $feedback->default_status()
 	);
+
+	// Set handler data
+	$feedback->set_data($feedback_data);
 
 	if(!$mybb->user['uid'])
 	{
@@ -76,6 +81,8 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 	{
 		$feedback->error($lang->ougc_feedback_error_invalid_self_user);
 	}
+
+	$hide_add = 0;
 
 	if($feedback_data['pid'])
 	{
@@ -150,13 +157,20 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
 		if($db->fetch_field($query, 'fid'))
 		{
-			$feedback->error($lang->ougc_feedback_error_profile_multiple_disabled);
+			$feedback->set_go_back_button(false);
+			$feedback->error($lang->ougc_feedback_error_post_multiple_disabled);
+		}
+
+		if($mybb->settings['ougc_feedback_postbit_hide_button'])
+		{
+			$hide_add = 1;
 		}
 	}
 	else
 	{
 		if(!$mybb->settings['ougc_feedback_allow_profile'])
 		{
+			$feedback->set_go_back_button(false);
 			$feedback->error($lang->ougc_feedback_error_profile_disabled);
 		}
 
@@ -173,8 +187,11 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
 			if($db->fetch_field($query, 'fid'))
 			{
+				$feedback->set_go_back_button(false);
 				$feedback->error($lang->ougc_feedback_error_profile_multiple_disabled);
 			}
+
+			$hide_add = (int)$mybb->settings['ougc_feedback_profile_hide_add'];
 		}
 	}
 
@@ -201,12 +218,10 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
 		if($numtoday >= $mybb->usergroup['ougc_feedback_maxperday'])
 		{
+			$feedback->set_go_back_button(false);
 			$feedback->error($lang->ougc_feedback_error_invalid_maxperday);
 		}
 	}
-
-	// Set handler data
-	$feedback->set_data($feedback_data);
 
 	// POST request
 	if($mybb->request_method == 'post')
@@ -228,7 +243,6 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		{
 			// Insert feedback
 			$insert_data = $feedback->insert_feedback();
-
 
 			if(strpos(','.$user['ougc_feedback_notification'].',', ',1,'))
 			{
@@ -268,7 +282,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 				$replacement = $ougc_feedback;
 			}
 
-			$feedback->success($lang->ougc_feedback_success_feedback_added, $replacement);
+			$feedback->success($lang->ougc_feedback_success_feedback_added, '', $replacement, $hide_add);
 		}
 		else
 		{
@@ -691,9 +705,31 @@ $add_feedback = '';
 
 $user_perms = usergroup_permissions($user['usergroup'].','.$user['additionalgroups']);
 
-if($mybb->usergroup['ougc_feedback_cangive'] && $user_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $user['uid'])
+if($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_feedback_cangive'] && $user_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $user['uid'])
 {
-	eval('$add_feedback = "'.$templates->get('ougcfeedback_page_addlink').'";');
+	$show = true;
+
+	if(!$mybb->settings['ougc_feedback_allow_profile_multiple'] && $mybb->settings['ougc_feedback_profile_hide_add'])
+	{
+		$where = array("uid='{$user['uid']}'", "fuid!='0'", "fuid='{$mybb->user['uid']}'");
+
+		if(!$mybb->usergroup['ougc_feedback_ismod'])
+		{
+			$where[] = "status='1'";
+		}
+
+		$query = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $where));
+
+		if($db->fetch_field($query, 'fid'))
+		{
+			$show = false;
+		}
+	}
+
+	if($show)
+	{
+		eval('$add_feedback = "'.$templates->get('ougcfeedback_page_addlink').'";');
+	}
 }
 
 eval('$page = "'.$templates->get('ougcfeedback_page').'";');
