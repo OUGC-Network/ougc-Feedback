@@ -677,7 +677,7 @@ foreach($feedback_cache as $feedback_vote)
 		eval('$delete_hard_link = "'.$templates->get('ougcfeedback_page_item_delete_hard').'";');
 	}
 
-	eval('$report_link .= "'.$templates->get('ougcfeedback_page_item_report').'";');
+	eval('$report_link = "'.$templates->get('ougcfeedback_page_item_report').'";');
 
 	eval('$feedback_list .= "'.$templates->get('ougcfeedback_page_item').'";');
 }

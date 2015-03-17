@@ -41,20 +41,18 @@ var OUGC_Feedback = {
 				if(request.error)
 				{
 					alert(request.error);
-					return false;
 				}
-
-				$('.modal').html(request.modal);
-				$('.modal').fadeIn('slow');
+				else
+				{
+					$('.modal').html(request.modal);
+					$('.modal').fadeIn('slow');
+				}
 			},
 			error: function (xhr)
 			{
 				MyBB.popupWindow('/feedback.php?action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback));
-				return false;
 			}
 		});
-
-		return true;
 	},
 
 	DoAdd: function(uid, pid)
@@ -73,35 +71,33 @@ var OUGC_Feedback = {
 				if(request.error)
 				{
 					alert(request.error);
-					return false;
 				}
-
-				$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeOut('slow', function()
+				else
 				{
-					if(parseInt(pid))
+					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeOut('slow', function()
 					{
-						$('.ougcfeedback_postbit_' + parseInt(uid)).html(request.replacement);
-						$('#ougcfeedback_postbit_button_' + parseInt(pid)).fadeOut('slow');
-					}
-					else
-					{
-						$('#ougcfeedback_profile').html(request.replacement);
-						$('#ougcfeedback_profile_add').fadeOut('slow');
-					}
-					//$('.ougcfeedback_postbit_' + parseInt(uid)).replaceWith(request.replacement);
-					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).html(request.modal);
-					$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeIn('slow');
-					$('.modal').fadeIn('slow');
-				});
+						if(parseInt(pid))
+						{
+							$('.ougcfeedback_postbit_' + parseInt(uid)).html(request.replacement);
+							$('#ougcfeedback_postbit_button_' + parseInt(pid)).fadeOut('slow');
+						}
+						else
+						{
+							$('#ougcfeedback_profile').html(request.replacement);
+							$('#ougcfeedback_profile_add').fadeOut('slow');
+						}
+						//$('.ougcfeedback_postbit_' + parseInt(uid)).replaceWith(request.replacement);
+						$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).html(request.modal);
+						$('.modal_' + parseInt(uid) + '_' + parseInt(pid)).fadeIn('slow');
+						$('.modal').fadeIn('slow');
+					});
+				}
 			},
 			error: function (xhr)
 			{
 				alert(xhr.responseText);
-				return false;
 			}
 		});
-
-		return true;
 	},
 
 	Report: function(fid)
@@ -152,8 +148,6 @@ var OUGC_Feedback = {
 				}
 			}
 		});
-
-		return false;
 	},
 }
 
