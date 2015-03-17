@@ -826,7 +826,7 @@ class OUGC_Feedback
 	}
 
 	// Send an error to the browser
-	function error($message, $success=false, $replacement='', $hide_add=1)
+	function error($message, $title='', $success=false, $replacement='', $hide_add=1)
 	{
 		global $templates, $lang, $theme, $mybb;
 		$this->load_language();
