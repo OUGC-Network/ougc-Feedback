@@ -156,6 +156,7 @@ class OUGC_Feedback
 			'version'				=> '1.0',
 			'versioncode'			=> 1000,
 			'compatibility'			=> '18*',
+			'codename'				=> 'ougc_feedback',
 			'pl'			=> array(
 				'version'	=> 12,
 				'url'		=> 'http://mods.mybb.com/view/pluginlibrary'
@@ -910,7 +911,7 @@ class OUGC_Feedback
 		!isset($data['pid']) or $this->data['pid'] = (int)$data['pid'];
 		!isset($data['type']) or $this->data['type'] = (int)$data['type'];
 		!isset($data['feedback']) or $this->data['feedback'] = (int)$data['feedback'];
-		!isset($data['comment']) or $this->data['comment'] = $db->escape_string($data['comment']);
+		!isset($data['comment']) or $this->data['comment'] = (string)$data['comment'];
 		!isset($data['status']) or $this->data['status'] = (int)$data['status'];
 		!isset($data['dateline']) or $this->data['dateline'] = TIME_NOW;
 	}
@@ -1307,7 +1308,7 @@ class OUGC_Feedback
 					$where[] = "f.status='1'";
 				}
 
-				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded')
+				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded' && !empty($pids))
 				{
 					$uids = array();
 
