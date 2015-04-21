@@ -110,8 +110,8 @@ class OUGC_Feedback
 			//$plugins->add_hook('memberlist_end', array($this, 'hook_memberlist_end'));
 			//$plugins->add_hook('memberlist_intermediate', array($this, 'hook_memberlist_intermediate'));
 			//$plugins->add_hook('memberlist_user', array($this, 'hook_memberlist_user'));
+			$plugins->add_hook('report_start', array($this, 'hook_report_start'));
 			$plugins->add_hook('report_type', array($this, 'hook_report_type'));
-			$plugins->add_hook('report_do_report_end', array($this, 'hook_report_do_report_end'));
 			$plugins->add_hook('modcp_reports_report', array($this, 'hook_modcp_reports_report'));
 
 			if(isset($templatelist))
@@ -419,6 +419,7 @@ class OUGC_Feedback
 	var delete_feedback_confirm = "{$lang->ougc_feedback_confirm_delete}";
 // -->
 </script>
+<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/report.js?ver=1804"></script>
 </head>
 <body>
 {$header}
@@ -1457,6 +1458,17 @@ class OUGC_Feedback
 		#$plugins->remove_hook('postbit', array($this, 'hook_postbit'));
 	}
 
+	// Hook: report_start
+	function hook_report_start()
+	{
+		global $mybb;
+
+		if($mybb->get_input('type') == 'feedback')
+		{
+			$this->load_language();
+		}
+	}
+
 	// Hook: report_type
 	function hook_report_type()
 	{
@@ -1471,15 +1483,15 @@ class OUGC_Feedback
 
 		// Any member can report a reputation comment but let's make sure it exists first
 		$query = $db->simple_select('ougc_feedback', '*', "fid='{$mybb->get_input('pid', 1)}'");
+		$feedback = $db->fetch_array($query);
 
-		if(!$db->num_rows($query))
+		if(empty($feedback))
 		{
 			$error = $lang->error_invalid_report;
 		}
 		else
 		{
 			$verified = true;
-			$feedback = $db->fetch_array($query);
 
 			$id = $feedback['fid']; // id is the feedback id
 			$id2 = $feedback['fuid']; // id2 is the user who gave the feedback
@@ -1487,16 +1499,6 @@ class OUGC_Feedback
 
 			$report_type_db = "type='feedback'";
 		}
-	}
-
-	// Hook: report_do_report_end
-	function hook_report_do_report_end()
-	{
-		global $lang, $templates, $report_title, $theme;
-
-		eval('echo "'.$templates->get('report_thanks', 1, 0).'";');
-
-		exit;
 	}
 
 	// Hook: modcp_reports_report
