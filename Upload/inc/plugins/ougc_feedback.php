@@ -1101,7 +1101,7 @@ class OUGC_Feedback
 	{
 		global $run_module, $form_container, $lang;
 
-		if($run_module == 'user' && $form_container->_title == $lang->users_permissions)
+		if($run_module == 'user' && isset($form_container->_title) && $form_container->_title == $lang->users_permissions)
 		{
 			global $form, $mybb;
 			$this->load_language();
