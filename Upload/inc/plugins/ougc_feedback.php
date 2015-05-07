@@ -1125,7 +1125,7 @@ class OUGC_Feedback
 			$form_container->output_row($lang->setting_group_ougc_feedback, '', '<div class="group_settings_bit">'.implode('</div><div class="group_settings_bit">', $perms).'</div>');
 		}
 
-		if($run_module == 'forum' && ($form_container->_title == $lang->additional_forum_options || $form_container->_title == "<div class=\"float_right\" style=\"font-weight: normal;\"><a href=\"#\" onclick=\"$('#additional_options_link').toggle(); $('#additional_options').fadeToggle('fast'); return false;\">{$lang->hide_additional_options}</a></div>".$lang->additional_forum_options))
+		if($run_module == 'forum' && isset($form_container->_title) && ($form_container->_title == $lang->additional_forum_options || $form_container->_title == "<div class=\"float_right\" style=\"font-weight: normal;\"><a href=\"#\" onclick=\"$('#additional_options_link').toggle(); $('#additional_options').fadeToggle('fast'); return false;\">{$lang->hide_additional_options}</a></div>".$lang->additional_forum_options))
 		{
 			global $form, $mybb, $forum_data;
 			$this->load_language();
@@ -1309,7 +1309,7 @@ class OUGC_Feedback
 					$where[] = "f.status='1'";
 				}
 
-				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded' && !empty($pids))
+				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded' && !empty($pids) && THIS_SCRIPT != 'newreply.php')
 				{
 					$uids = array();
 
@@ -1318,24 +1318,19 @@ class OUGC_Feedback
 					{
 						$uids[$uid] = $uid;
 					}
-					$where[] = 'f.uid IN ('.implode(',', $uids).')';
-
-					$query = $db->simple_select('ougc_feedback f', 'f.feedback,f.uid,f.fuid', implode(' AND ', $where));
-					while($feedback = $db->fetch_array($query))
-					{
-						$uid = (int)$feedback['uid'];
-						unset($feedback['uid']);
-						$query_cache[$uid][] = $feedback;
-					}
+					$where[] = "f.uid IN ('".implode("','", $uids)."')";
 				}
 				else
 				{
 					$where[] = "f.uid='{$post['uid']}'";
-					$query = $db->simple_select('ougc_feedback f', 'f.*', implode(' AND ', $where));
-					while($feedback = $db->fetch_array($query))
-					{
-						$query_cache[$post['uid']][] = $feedback;
-					}
+				}
+
+				$query = $db->simple_select('ougc_feedback f', 'f.feedback,f.uid,f.fuid', implode(' AND ', $where));
+				while($feedback = $db->fetch_array($query))
+				{
+					$uid = (int)$feedback['uid'];
+					unset($feedback['uid']);
+					$query_cache[$uid][] = $feedback;
 				}
 			}
 
@@ -1426,26 +1421,18 @@ class OUGC_Feedback
 				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded')
 				{
 					$where[] = "p.{$pids}";
-
-					$query = $db->query("
-						SELECT f.pid
-						FROM ".TABLE_PREFIX."ougc_feedback f
-						LEFT JOIN ".TABLE_PREFIX."posts p ON (p.pid=f.pid)
-						WHERE ".implode(' AND ', $where)."
-					");
-					while($pid = (int)$db->fetch_field($query, 'pid'))
-					{
-						$button_query_cache[$pid] = $pid;
-					}
+					$join = 'LEFT JOIN '.TABLE_PREFIX.'posts p ON (p.pid=f.pid)';
 				}
 				else
 				{
 					$where[] = "f.pid='{$post['pid']}'";
-					$query = $db->simple_select('ougc_feedback f', 'f.pid', implode(' AND ', $where));
-					while($feedback = $db->fetch_field($query, 'pid'))
-					{
-						$button_query_cache[$post['pid']][] = $feedback;
-					}
+					$join = '';
+				}
+
+				$query = $db->simple_select('ougc_feedback f'.$join, 'f.pid', implode(' AND ', $where));
+				while($pid = $db->fetch_field($query, 'pid'))
+				{
+					$query_cache[$pid][] = $pid;
 				}
 			}
 
