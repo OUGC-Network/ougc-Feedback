@@ -1302,11 +1302,11 @@ class OUGC_Feedback
 			{
 				global $plugins;
 
-				$where = array("f.fuid!='0'");
+				$where = array("fuid!='0'");
 
 				if(!$mybb->usergroup['ougc_feedback_ismod'])
 				{
-					$where[] = "f.status='1'";
+					$where[] = "status='1'";
 				}
 
 				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded' && !empty($pids) && THIS_SCRIPT != 'newreply.php')
@@ -1316,16 +1316,16 @@ class OUGC_Feedback
 					$query = $db->simple_select('users u LEFT JOIN '.TABLE_PREFIX.'posts p ON (p.uid=u.uid)', 'u.uid', "p.{$pids}");
 					while($uid = $db->fetch_field($query, 'uid'))
 					{
-						$uids[$uid] = $uid;
+						$uids[$uid] = (int)$uid;
 					}
-					$where[] = "f.uid IN ('".implode("','", $uids)."')";
+					$where[] = "uid IN ('".implode("','", $uids)."')";
 				}
 				else
 				{
-					$where[] = "f.uid='{$post['uid']}'";
+					$where[] = "uid='{$post['uid']}'";
 				}
 
-				$query = $db->simple_select('ougc_feedback f', 'f.feedback,f.uid,f.fuid', implode(' AND ', $where));
+				$query = $db->simple_select('ougc_feedback', 'feedback,uid,fuid', implode(' AND ', $where));
 				while($feedback = $db->fetch_array($query))
 				{
 					$uid = (int)$feedback['uid'];
@@ -1418,10 +1418,10 @@ class OUGC_Feedback
 					$where[] = "f.status='1'";
 				}
 
-				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded')
+				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded' && !empty($pids) && THIS_SCRIPT != 'newreply.php')
 				{
 					$where[] = "p.{$pids}";
-					$join = 'LEFT JOIN '.TABLE_PREFIX.'posts p ON (p.pid=f.pid)';
+					$join = ' LEFT JOIN '.TABLE_PREFIX.'posts p ON (p.pid=f.pid)';
 				}
 				else
 				{
