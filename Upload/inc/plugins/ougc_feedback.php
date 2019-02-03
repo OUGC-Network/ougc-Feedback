@@ -4,9 +4,9 @@
  *
  *	OUGC Feedback plugin (/inc/plugins/ougc_feedback.php)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012 Omar Gonzalez
+ *	Copyright: © 2012-2019 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://omarg.me
  *
  *	Adds a powerful feedback system to your forum.
  *
@@ -315,7 +315,7 @@ class OUGC_Feedback
 			'js'	=> '<script type="text/javascript" src="{$mybb->asset_url}/jscripts/ougc_feedback.js?ver=1805"></script>',
 			'form'	=> '<div class="modal">
 	<div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback_data[\'uid\']}_{$feedback_data[\'pid\']}">
-	<form method="post" action="{$mybb->settings[\'bburl\']}/feedback.php" id="ougcfeedback_form" class="feedback_{$feedback_data[\'uid\']}_{$feedback_data[\'pid\']}" onsubmit="javascript: return OUGC_Feedback.DoAdd(\'{$feedback_data[\'uid\']}\', \'{$feedback_data[\'pid\']}\');">
+	<form method="post" action="{$mybb->settings[\'bburl\']}/feedback.php" id="ougcfeedback_form" class="feedback_{$feedback_data[\'uid\']}_{$feedback_data[\'pid\']}" onsubmit="javascript: return OUGC_Plugins.Feedback_DoAdd(\'{$feedback_data[\'uid\']}\', \'{$feedback_data[\'pid\']}\');">
 		<input name="action" type="hidden" value="add" />
 		<input name="uid" type="hidden" value="{$feedback_data[\'uid\']}" />
 		<input name="pid" type="hidden" value="{$feedback_data[\'pid\']}" />
@@ -350,7 +350,7 @@ class OUGC_Feedback
 		</table>
 	</form>
 	<script>
-		OUGC_Feedback.unBind();
+		OUGC_Plugins.Feedback_unBind();
 	</script>
   </div>
 </div>',
@@ -372,7 +372,7 @@ class OUGC_Feedback
   </div>
 </div>',
 			'modal_tfoot'	=> '<tr>
-		<td class="tfoot" align="center"><input name="submit" type="button" class="button" value="{$lang->ougc_feedback_go_back}" onclick="return OUGC_Feedback.Add(\'{$this->data[\'uid\']}\', \'{$this->data[\'pid\']}\', \'1\', \'1\'); return false;" /></td>
+		<td class="tfoot" align="center"><input name="submit" type="button" class="button" value="{$lang->ougc_feedback_go_back}" onclick="return OUGC_Plugins.Feedback_Add(\'{$this->data[\'uid\']}\', \'{$this->data[\'pid\']}\', \'1\', \'1\'); return false;" /></td>
 </tr>',
 			'modal_error'	=> '<blockquote>{$message}</blockquote>',
 			'postbit'	=> '<span class="ougcfeedback_info_{$post[\'uid\']}" title="{$lang->ougc_feedback_profile_positibve} {$lang->ougc_feedback_profile_title}: {$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})
@@ -381,7 +381,7 @@ class OUGC_Feedback
 	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: {$stats[\'total\']}{$view_all}</span>
 </span>',
 			'postbit_view_all'	=> '&nbsp;<span class="smalltext">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)',
-			'postbit_button'	=> '<a href="javascript: void(0);" onclick="return OUGC_Feedback.Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add ougcfeedback_add_{$post[\'uid\']}"><span>{$lang->ougc_feedback_profile_add}</span></a>',
+			'postbit_button'	=> '<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add ougcfeedback_add_{$post[\'uid\']}"><span>{$lang->ougc_feedback_profile_add}</span></a>',
 			'profile'	=> '<div class="ougcfeedback_info_{$memprofile[\'uid\']}">
 	<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
 		<tr>
@@ -408,7 +408,7 @@ class OUGC_Feedback
 </div>',
 			'profile_view_all'	=> '<span class="smalltext float_right">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$memprofile[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)',
 			'profile_add'	=> '<tr class="ougcfeedback_add_{$memprofile[\'uid\']}">
-	<td class="trow1" colspan="2" align="right"><strong><a href="javascript: void(0);" onclick="return OUGC_Feedback.Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}">{$lang->ougc_feedback_profile_add}</a></strong></td>
+	<td class="trow1" colspan="2" align="right"><strong><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}">{$lang->ougc_feedback_profile_add}</a></strong></td>
 </tr>',
 			'page'	=> '<html>
 <head>
@@ -511,7 +511,7 @@ class OUGC_Feedback
 {$footer}
 </body>
 </html>',
-			'page_addlink'	=> '<div class="float_right" style="padding-bottom: 4px;"><a href="javascript: void(0);" onclick="return OUGC_Feedback.Add(\'{$user[\'uid\']}\', \'0\', \'1\', \'1\', \'1\'); return false;" class="button rate_user_button"><span>{$lang->ougc_feedback_profile_title}</span></a></div>',
+			'page_addlink'	=> '<div class="float_right" style="padding-bottom: 4px;"><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$user[\'uid\']}\', \'0\', \'1\', \'1\', \'1\'); return false;" class="button rate_user_button"><span>{$lang->ougc_feedback_profile_title}</span></a></div>',
 			'page_empty'	=> '<tr>
 	<td class="trow1" style="text-align: center;">{$lang->ougc_feedback_page_empty}</td>
 </tr>',
@@ -524,16 +524,16 @@ class OUGC_Feedback
 	</td>
 </tr>',
 			'page_item_edit'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Feedback.Edit(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_edit"><span>{$lang->ougc_feedback_page_edit}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Edit(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_edit"><span>{$lang->ougc_feedback_page_edit}</span></a>
 </div>',
 			'page_item_delete'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Feedback.Delete(\'{$feedback_vote[\'fid\']}\', \'{$mybb->post_code}\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Delete(\'{$feedback_vote[\'fid\']}\', \'{$mybb->post_code}\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete}</span></a>
 </div>',
 			'page_item_delete_hard'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Feedback.Delete(\'{$feedback_vote[\'fid\']}\', \'{$mybb->post_code}\', \'1\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete_hard}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Delete(\'{$feedback_vote[\'fid\']}\', \'{$mybb->post_code}\', \'1\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete_hard}</span></a>
 </div>',
 			'page_item_report'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Feedback.Report(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_report"><span>{$lang->ougc_feedback_page_report}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Report(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_report"><span>{$lang->ougc_feedback_page_report}</span></a>
 </div>',
 			/*'memberlist_header'	=> '<td class="tcat" width="10%" align="center"><span class="smalltext"><a href="{$sorturl}&amp;sort=feedbacks&amp;order=descending"><strong>{$lang->ougc_feedback_profile_title}</strong></a> {$orderarrow[\'feedback\']}</span></td>',
 			'memberlist_sort'	=> '<option value="positive_feedback"{$sort_selected[\'positive_feedback\']}>{$lang->ougc_feedback_memberlist_sort_positive}</option>

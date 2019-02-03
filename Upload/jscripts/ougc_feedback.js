@@ -2,9 +2,9 @@
  *
  *	OUGC Feedback plugin (/jscripts/ougc_feedback.js)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012 Omar Gonzalez
+ *	Copyright: © 2012-2019 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://omarg.me
  *
  *	Adds a powerful feedback system to your forum.
  *
@@ -25,8 +25,10 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-var OUGC_Feedback = {
-	unBind: function()
+var OUGC_Plugins = OUGC_Plugins || {};
+
+$.extend(true, OUGC_Plugins, {
+	Feedback_unBind: function()
 	{
 		$('#ougcfeedback_form').submit(function(e)
 		{
@@ -34,14 +36,14 @@ var OUGC_Feedback = {
 			e.unbind();
 		});
 	},
-	Add: function(uid, pid, type, feedback, reload)
+	Feedback_Add: function(uid, pid, type, feedback, reload)
 	{
 		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload);
 
 		MyBB.popupWindow('/feedback.php?' + postData);
 	},
 
-	DoAdd: function(uid, pid)
+	Feedback_DoAdd: function(uid, pid)
 	{
 		// Get form, serialize it and send it
 		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
@@ -93,12 +95,12 @@ var OUGC_Feedback = {
 		});
 	},
 
-	Report: function(fid)
+	Feedback_Report: function(fid)
 	{
 		MyBB.popupWindow('/report.php?type=feedback&pid=' + parseInt(fid));
 	},
 
-	Delete: function(fid)
+	Feedback_Delete: function(fid)
 	{
 		$.prompt(delete_feedback_confirm, {
 			buttons:[
@@ -141,5 +143,5 @@ var OUGC_Feedback = {
 				}
 			}
 		});
-	},
+	}
 }

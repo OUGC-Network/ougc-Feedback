@@ -4,9 +4,9 @@
  *
  *	OUGC Feedback plugin (/feedback.php)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012 Omar Gonzalez
+ *	Copyright: © 2012-2019 Omar Gonzalez
  *
- *	Website: http://omarg.me
+ *	Website: https://omarg.me
  *
  *	Adds a powerful feedback system to your forum.
  *
