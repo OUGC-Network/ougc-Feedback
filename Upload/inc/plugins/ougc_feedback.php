@@ -4,7 +4,7 @@
  *
  *	OUGC Feedback plugin (/inc/plugins/ougc_feedback.php)
  *	Author: Omar Gonzalez
- *	Copyright: � 2012-2019 Omar Gonzalez
+ *	Copyright: © 2012-2019 Omar Gonzalez
  *
  *	Website: https://omarg.me
  *
@@ -33,133 +33,92 @@ defined('IN_MYBB') or die('Direct initialization of this file is not allowed.');
 // PLUGINLIBRARY
 defined('PLUGINLIBRARY') or define('PLUGINLIBRARY', MYBB_ROOT.'inc/plugins/pluginlibrary.php');
 
-// Plugin API
-function ougc_feedback_info()
+// Tell MyBB when to run the hook
+if(defined('IN_ADMINCP'))
 {
-	global $feedback;
-
-	return $feedback->_info();
+	$plugins->add_hook('admin_config_settings_start', array('OUGC_Feedback', 'load_language'));
+	$plugins->add_hook('admin_style_templates_set', array('OUGC_Feedback', 'load_language'));
+	$plugins->add_hook('admin_config_settings_change', array('OUGC_Feedback', 'hook_admin_config_settings_change'));
+	$plugins->add_hook('admin_formcontainer_end', array('OUGC_Feedback', 'hook_admin_formcontainer_end'));
+	$plugins->add_hook('admin_user_groups_edit_commit', array('OUGC_Feedback', 'hook_admin_user_groups_edit_commit'));
+	$plugins->add_hook('admin_forum_management_edit_commit', array('OUGC_Feedback', 'hook_admin_forum_management_edit_commit'));
+	$plugins->add_hook('admin_forum_management_add_commit', array('OUGC_Feedback', 'hook_admin_forum_management_edit_commit'));
+	$plugins->add_hook('report_content_types', array('OUGC_Feedback', 'hook_report_content_types'));
 }
-
-// _activate() routine
-function ougc_feedback_activate()
+else
 {
-	global $feedback;
+	global $templatelist, $settings;
 
-	return $feedback->_activate();
-}
+	$plugins->add_hook('global_intermediate', array('OUGC_Feedback', 'hook_global_intermediate'));
+	$plugins->add_hook('member_profile_end', array('OUGC_Feedback', 'hook_member_profile_end'));
+	$plugins->add_hook('postbit', array('OUGC_Feedback', 'hook_postbit'));
+	$plugins->add_hook('postbit_prev', array('OUGC_Feedback', 'hook_postbit'));
+	$plugins->add_hook('postbit_pm', array('OUGC_Feedback', 'hook_postbit'));
+	$plugins->add_hook('postbit_announcement', array('OUGC_Feedback', 'hook_postbit'));
+	//$plugins->add_hook('memberlist_end', array('OUGC_Feedback', 'hook_memberlist_end'));
+	//$plugins->add_hook('memberlist_intermediate', array('OUGC_Feedback', 'hook_memberlist_intermediate'));
+	//$plugins->add_hook('memberlist_user', array('OUGC_Feedback', 'hook_memberlist_user'));
+	$plugins->add_hook('report_start', array('OUGC_Feedback', 'hook_report_start'));
+	$plugins->add_hook('report_type', array('OUGC_Feedback', 'hook_report_type'));
+	$plugins->add_hook('modcp_reports_report', array('OUGC_Feedback', 'hook_modcp_reports_report'));
 
-// _deactivate() routine
-function ougc_feedback_deactivate()
-{
-	global $feedback;
+	if(isset($templatelist))
+	{
+		$templatelist .= ',';
+	}
+	else
+	{
+		$templatelist = '';
+	}
 
-	return $feedback->_deactivate();
-}
+	$templatelist .= 'ougcfeedback_js';
 
-// _install() routine
-function ougc_feedback_install()
-{
-	global $feedback;
-
-	return $feedback->_install();
-}
-
-// _is_installed() routine
-function ougc_feedback_is_installed()
-{
-	global $feedback;
-
-	return $feedback->_is_installed();
-}
-
-// _uninstall() routine
-function ougc_feedback_uninstall()
-{
-	global $feedback;
-
-	return $feedback->_uninstall();
+	switch(THIS_SCRIPT)
+	{
+		case 'member.php':
+			$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment';
+			break;
+		case 'showthread.php':
+			$templatelist .= ',ougcfeedback_postbit';
+			break;
+	}
 }
 
 // Plugin class
 class OUGC_Feedback
 {
+	static private $plugin_info;
+	static private $error;
+	static private $go_back_button;
+	static private $data;
+	static private $fid;
+
 	function __construct()
 	{
-		global $plugins, $templatelist, $settings;
-
-		// Tell MyBB when to run the hook
-		if(defined('IN_ADMINCP'))
-		{
-			$plugins->add_hook('admin_config_settings_start', array($this, 'load_language'));
-			$plugins->add_hook('admin_style_templates_set', array($this, 'load_language'));
-			$plugins->add_hook('admin_config_settings_change', array($this, 'hook_admin_config_settings_change'));
-			$plugins->add_hook('admin_formcontainer_end', array($this, 'hook_admin_formcontainer_end'));
-			$plugins->add_hook('admin_user_groups_edit_commit', array($this, 'hook_admin_user_groups_edit_commit'));
-			$plugins->add_hook('admin_forum_management_edit_commit', array($this, 'hook_admin_forum_management_edit_commit'));
-			$plugins->add_hook('admin_forum_management_add_commit', array($this, 'hook_admin_forum_management_edit_commit'));
-		}
-		else
-		{
-			$plugins->add_hook('global_intermediate', array($this, 'hook_global_intermediate'));
-			$plugins->add_hook('member_profile_end', array($this, 'hook_member_profile_end'));
-			$plugins->add_hook('postbit', array($this, 'hook_postbit'));
-			$plugins->add_hook('postbit_prev', array($this, 'hook_postbit'));
-			//$plugins->add_hook('postbit_pm', array($this, 'hook_postbit'));
-			//$plugins->add_hook('postbit_announcement', array($this, 'hook_postbit'));
-			//$plugins->add_hook('memberlist_end', array($this, 'hook_memberlist_end'));
-			//$plugins->add_hook('memberlist_intermediate', array($this, 'hook_memberlist_intermediate'));
-			//$plugins->add_hook('memberlist_user', array($this, 'hook_memberlist_user'));
-			$plugins->add_hook('report_start', array($this, 'hook_report_start'));
-			$plugins->add_hook('report_type', array($this, 'hook_report_type'));
-			$plugins->add_hook('modcp_reports_report', array($this, 'hook_modcp_reports_report'));
-
-			if(isset($templatelist))
-			{
-				$templatelist .= ',';
-			}
-			else
-			{
-				$templatelist = '';
-			}
-
-			$templatelist .= 'ougcfeedback_js';
-
-			switch(THIS_SCRIPT)
-			{
-				case 'member.php':
-					$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment';
-					break;
-				case 'showthread.php':
-					$templatelist .= ',ougcfeedback_postbit';
-					break;
-			}
-		}
-
-
-		$this->set_go_back_button();
+		self::set_go_back_button();
 	}
 
 	// Plugin API:_info() routine
 	function _info()
 	{
+		static $done = false; if(!$done) {$done = true; self::_activate();};
 		global $lang;
 
-		$this->load_language();
+		self::load_language();
 
 		return array(
 			'name'					=> 'OUGC Feedback',
-			'description'			=> $lang->setting_group_ougc_feedback_desc,
-			'website'				=> 'http://omarg.me',
+			'description'			=> $lang->ougc_feedback_desc,
+			'website'				=> 'https://omarg.me/thread?public/plugins/mybb-ougc-feedback',
 			'author'				=> 'Omar G.',
-			'authorsite'			=> 'http://omarg.me',
-			'version'				=> '1.0',
-			'versioncode'			=> 1000,
+			'authorsite'			=> 'https://omarg.me',
+			'version'				=> '1.8.19',
+			'versioncode'			=> 1819,
 			'compatibility'			=> '18*',
 			'codename'				=> 'ougc_feedback',
 			'pl'			=> array(
-				'version'	=> 12,
-				'url'		=> 'http://mods.mybb.com/view/pluginlibrary'
+				'version'	=> 13,
+				'url'		=> 'https://community.mybb.com/mods.php?action=view&pid=573'
 			)
 		);
 	}
@@ -167,8 +126,8 @@ class OUGC_Feedback
 	// Plugin API:_activate() routine
 	function _activate()
 	{
-		global $PL, $lang, $cache;
-		$this->load_pluginlibrary();
+		global $PL, $lang, $cache, $db;
+		self::load_pluginlibrary();
 
 		$PL->settings('ougc_feedback', $lang->setting_group_ougc_feedback, $lang->setting_group_ougc_feedback_desc, array(
 			'allow_profile'				=> array(
@@ -183,17 +142,53 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),
+			'showin_profile'			=> array(
+			   'title'			=> $lang->setting_ougc_feedback_showin_profile,
+			   'description'	=> $lang->setting_ougc_feedback_showin_profile_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 1
+			),
+			'showin_postbit'			=> array(
+			   'title'			=> $lang->setting_ougc_feedback_showin_postbit,
+			   'description'	=> $lang->setting_ougc_feedback_showin_postbit_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 1
+			),
+			'postbit_hide_button'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_postbit_hide_button,
+			   'description'	=> $lang->setting_ougc_feedback_postbit_hide_button_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 0
+			),
+			'profile_hide_add'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_profile_hide_add,
+			   'description'	=> $lang->setting_ougc_feedback_profile_hide_add_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 0
+			),
 			'comments_minlength'		=> array(
 			   'title'			=> $lang->setting_ougc_feedback_comments_minlength,
 			   'description'	=> $lang->setting_ougc_feedback_comments_minlength_desc,
-			   'optionscode'	=> 'text',
+			   'optionscode'	=> 'numeric',
 			   'value'			=> 15
 			),
 			'comments_maxlength'		=> array(
 			   'title'			=> $lang->setting_ougc_feedback_comments_maxlength,
 			   'description'	=> $lang->setting_ougc_feedback_comments_maxlength_desc,
-			   'optionscode'	=> 'text',
+			   'optionscode'	=> 'numeric',
 			   'value'			=> 100
+			),
+			/*'showin_memberlist'			=> array(
+			   'title'			=> $lang->setting_ougc_feedback_showin_memberlist,
+			   'description'	=> $lang->setting_ougc_feedback_showin_memberlist_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 1
+			),*/
+			'perpage'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_perpage,
+			   'description'	=> $lang->setting_ougc_feedback_perpage_desc,
+			   'optionscode'	=> 'numeric',
+			   'value'			=> 20
 			),
 			'allow_email_notifications'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_email_notifications,
@@ -213,112 +208,17 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),*/
-			'showin_profile'			=> array(
-			   'title'			=> $lang->setting_ougc_feedback_showin_profile,
-			   'description'	=> $lang->setting_ougc_feedback_showin_profile_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
-			'showin_postbit'			=> array(
-			   'title'			=> $lang->setting_ougc_feedback_showin_postbit,
-			   'description'	=> $lang->setting_ougc_feedback_showin_postbit_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
-			/*'showin_memberlist'			=> array(
-			   'title'			=> $lang->setting_ougc_feedback_showin_memberlist,
-			   'description'	=> $lang->setting_ougc_feedback_showin_memberlist_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),*/
-			'perpage'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_perpage,
-			   'description'	=> $lang->setting_ougc_feedback_perpage_desc,
-			   'optionscode'	=> 'text',
-			   'value'			=> 20
-			),
-			'postbit_hide_button'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_postbit_hide_button,
-			   'description'	=> $lang->setting_ougc_feedback_postbit_hide_button_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 0
-			),
-			'profile_hide_add'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_profile_hide_add,
-			   'description'	=> $lang->setting_ougc_feedback_profile_hide_add_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 0
-			),
-			/*'maxperday'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_maxperday,
-			   'description'	=> $lang->setting_ougc_feedback_maxperday_desc,
-			   'optionscode'	=> 'text',
-			   'value'			=> 10
-			),
-			'permission_canview'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_canview,
-			   'description'	=> $lang->setting_ougc_feedback_permission_canview_desc,
-			   'optionscode'	=> 'groupselect',
-			   'value'			=> -1
-			),
-			'permission_cangive'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_cangive,
-			   'description'	=> $lang->setting_ougc_feedback_permission_cangive_desc,
-			   'optionscode'	=> 'groupselect',
-			   'value'			=> -1
-			),
-			'permission_canreceive'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_canreceive,
-			   'description'	=> $lang->setting_ougc_feedback_permission_canreceive_desc,
-			   'optionscode'	=> 'groupselect',
-			   'value'			=> -1
-			),
-			'permission_canedit'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_canedit,
-			   'description'	=> $lang->setting_ougc_feedback_permission_canedit_desc,
-			   'optionscode'	=> 'groupselect',
-			   'value'			=> -1
-			),
-			'permission_canremove'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_canremove,
-			   'description'	=> $lang->setting_ougc_feedback_permission_canremove_desc,
-			   'optionscode'	=> 'groupselect',
-			   'value'			=> -1
-			),
-			'permission_moderators'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_moderators,
-			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_desc,
-			   'optionscode'	=> 'groupselect',
-			   'value'			=> '3,4,6'
-			),
-			'permission_moderators_canedit'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_moderators_canedit,
-			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_canedit_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
-			'permission_moderators_canremove'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_moderators_canremove,
-			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_canremove_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
-			'permission_moderators_candelete'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_permission_moderators_candelete,
-			   'description'	=> $lang->setting_ougc_feedback_permission_moderators_candelete_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),*/
 		));
 
-		$PL->templates('ougcfeedback', '<lang:setting_group_ougc_feedback>', array(
-			'js'	=> '<script type="text/javascript" src="{$mybb->asset_url}/jscripts/ougc_feedback.js?ver=1805"></script>',
+		$PL->templates('ougcfeedback', 'OUGC Feedback', array(
+			'js'	=> '<script type="text/javascript" src="{$mybb->asset_url}/jscripts/ougc_feedback.js?ver=1819"></script>',
 			'form'	=> '<div class="modal">
-	<div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback_data[\'uid\']}_{$feedback_data[\'pid\']}">
-	<form method="post" action="{$mybb->settings[\'bburl\']}/feedback.php" id="ougcfeedback_form" class="feedback_{$feedback_data[\'uid\']}_{$feedback_data[\'pid\']}" onsubmit="javascript: return OUGC_Plugins.Feedback_DoAdd(\'{$feedback_data[\'uid\']}\', \'{$feedback_data[\'pid\']}\');">
-		<input name="action" type="hidden" value="add" />
-		<input name="uid" type="hidden" value="{$feedback_data[\'uid\']}" />
-		<input name="pid" type="hidden" value="{$feedback_data[\'pid\']}" />
+	<div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback[\'uid\']}_{$feedback[\'pid\']}">
+	<form method="post" action="{$mybb->settings[\'bburl\']}/feedback.php" id="ougcfeedback_form" class="feedback_{$feedback[\'uid\']}_{$feedback[\'pid\']}" onsubmit="javascript: return OUGC_Plugins.{$method};">
+		<input name="action" type="hidden" value="{$mybb->input[\'action\']}" />
+		<input name="uid" type="hidden" value="{$feedback[\'uid\']}" />
+		<input name="pid" type="hidden" value="{$feedback[\'pid\']}" />
+		<input name="fid" type="hidden" value="{$feedback[\'fid\']}" />
 		<input name="my_post_key" type="hidden" value="{$mybb->post_code}" />
 		<input name="reload" type="hidden" value="{$mybb->input[\'reload\']}" />
 		<table width="100%" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" border="0" class="tborder">
@@ -328,17 +228,17 @@ class OUGC_Feedback
 			<tr>
 				<td class="trow1" width="40%"><strong>{$lang->ougc_feedback_modal_type}</strong></td>
 				<td class="trow1"><select name="type">
-	<option value="1">{$lang->ougc_feedback_type_buyer}</option>
-	<option value="2">{$lang->ougc_feedback_type_seller}</option>
-	<option value="3">{$lang->ougc_feedback_type_trader}</option>
+	<option value="1"{$type_slected[\'buyer\']}>{$lang->ougc_feedback_type_buyer}</option>
+	<option value="2"{$type_slected[\'seller\']}>{$lang->ougc_feedback_type_seller}</option>
+	<option value="3"{$type_slected[\'trader\']}>{$lang->ougc_feedback_type_trader}</option>
 </select></td>
 			</tr>
 			<tr>
 				<td class="trow2" width="40%"><strong>{$lang->ougc_feedback_modal_feedback}</strong></td>
 				<td class="trow2"><select name="feedback">
-	<option value="1">{$lang->ougc_feedback_profile_positibve}</option>
-	<option value="0">{$lang->ougc_feedback_profile_neutral}</option>
-	<option value="-1">{$lang->ougc_feedback_profile_negative}</option>
+	<option value="1"{$feedback_slected[\'positibve\']}>{$lang->ougc_feedback_profile_positive}</option>
+	<option value="0"{$feedback_slected[\'neutral\']}>{$lang->ougc_feedback_profile_neutral}</option>
+	<option value="-1"{$feedback_slected[\'negative\']}>{$lang->ougc_feedback_profile_negative}</option>
 </select></td>
 			</tr>
 			{$comment_row}
@@ -372,16 +272,15 @@ class OUGC_Feedback
   </div>
 </div>',
 			'modal_tfoot'	=> '<tr>
-		<td class="tfoot" align="center"><input name="submit" type="button" class="button" value="{$lang->ougc_feedback_go_back}" onclick="return OUGC_Plugins.Feedback_Add(\'{$this->data[\'uid\']}\', \'{$this->data[\'pid\']}\', \'1\', \'1\'); return false;" /></td>
+		<td class="tfoot" align="center"><input name="submit" type="button" class="button" value="{$lang->ougc_feedback_go_back}" onclick="return OUGC_Plugins.Feedback_Add(\'{self::data[\'uid\']}\', \'{self::data[\'pid\']}\', \'{$mybb->input[\'type\']}\', \'{$mybb->input[\'feedback\']}\', \'{$mybb->input[\'reload\']}\', \'{$mybb->input[\'comment\']}\', \'1\'); return false;" /></td>
 </tr>',
 			'modal_error'	=> '<blockquote>{$message}</blockquote>',
-			'postbit'	=> '<span class="ougcfeedback_info_{$post[\'uid\']}" title="{$lang->ougc_feedback_profile_positibve} {$lang->ougc_feedback_profile_title}: {$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})
+			'postbit'	=> '<span class="ougcfeedback_info_{$post[\'uid\']}" title="{$lang->ougc_feedback_profile_positive} {$lang->ougc_feedback_profile_title}: {$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})
 {$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: {$stats[\'neutral\']} ({$stats[\'neutral_percent\']}% - {$stats[\'neutral_users\']} {$lang->ougc_feedback_profile_users})
 {$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: {$stats[\'negative\']} ({$stats[\'negative_percent\']}% - {$stats[\'negative_users\']} {$lang->ougc_feedback_profile_users})">
-	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: {$stats[\'total\']}{$view_all}</span>
+	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: <a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}"><strong class="{$class}">{$average}</strong></a></span>
 </span>',
-			'postbit_view_all'	=> '&nbsp;<span class="smalltext">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)',
-			'postbit_button'	=> '<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add ougcfeedback_add_{$post[\'uid\']}"><span>{$lang->ougc_feedback_profile_add}</span></a>',
+			'postbit_button'	=> '<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\', \'0\', \'\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add ougcfeedback_add_{$post[\'uid\']}"><span>{$lang->ougc_feedback_profile_add}</span></a>',
 			'profile'	=> '<div class="ougcfeedback_info_{$memprofile[\'uid\']}">
 	<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
 		<tr>
@@ -392,7 +291,7 @@ class OUGC_Feedback
 			<td class="trow1">{$stats[\'total\']}</td>
 		</tr>
 		<tr style="color: green;">
-			<td class="trow2" style="width: 30%;"><strong>{$lang->ougc_feedback_profile_positibve}:</strong></td>
+			<td class="trow2" style="width: 30%;"><strong>{$lang->ougc_feedback_profile_positive}:</strong></td>
 			<td class="trow2">{$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})</td>
 		</tr>
 		<tr style="color: gray;">
@@ -408,7 +307,7 @@ class OUGC_Feedback
 </div>',
 			'profile_view_all'	=> '<span class="smalltext float_right">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$memprofile[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)',
 			'profile_add'	=> '<tr class="ougcfeedback_add_{$memprofile[\'uid\']}">
-	<td class="trow1" colspan="2" align="right"><strong><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}">{$lang->ougc_feedback_profile_add}</a></strong></td>
+	<td class="trow1" colspan="2" align="right"><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="button small_button">{$lang->ougc_feedback_profile_add}</a></td>
 </tr>',
 			'page'	=> '<html>
 <head>
@@ -417,6 +316,7 @@ class OUGC_Feedback
 <script type="text/javascript">
 <!--
 	var delete_feedback_confirm = "{$lang->ougc_feedback_confirm_delete}";
+	var restore_feedback_confirm = "{$lang->ougc_feedback_confirm_restore}";
 // -->
 </script>
 <script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/report.js?ver=1804"></script>
@@ -440,7 +340,7 @@ class OUGC_Feedback
 				<span class="smalltext">
 					({$usertitle})<br />
 					<br />
-					<strong>{$lang->ougc_feedback_page_stats_total}:</strong> <span class="repbox _neutral">{$stats[\'total\']}</span><br /><br />
+					<strong>{$lang->ougc_feedback_page_stats_total}:</strong> <span class="ougc_feedback_repbox {$total_class}">{$user[\'ougc_feedback\']}</span><br /><br />
 					<strong>{$lang->ougc_feedback_page_stats_members}: {$stats[\'members\']}</strong><br />
 					<strong>{$lang->ougc_feedback_page_stats_posts}: {$stats[\'posts\']}</strong>
 				</span>
@@ -511,29 +411,32 @@ class OUGC_Feedback
 {$footer}
 </body>
 </html>',
-			'page_addlink'	=> '<div class="float_right" style="padding-bottom: 4px;"><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$user[\'uid\']}\', \'0\', \'1\', \'1\', \'1\'); return false;" class="button rate_user_button"><span>{$lang->ougc_feedback_profile_title}</span></a></div>',
+			'page_addlink'	=> '<div class="float_right" style="padding-bottom: 4px;"><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$user[\'uid\']}\', \'0\', \'1\', \'1\', \'1\', \'\'); return false;" class="button rate_user_button"><span>{$lang->ougc_feedback_profile_title}</span></a></div>',
 			'page_empty'	=> '<tr>
 	<td class="trow1" style="text-align: center;">{$lang->ougc_feedback_page_empty}</td>
 </tr>',
 			'page_item'	=> '<tr>
-	<td class="trow1 {$class[\'status\']}" id="fid{$feedback_vote[\'fid\']}">
-		{$report_link}{$edit_link}{$delete_link}{$delete_hard_link}
-		{$feedback_vote[\'user_username\']} <span class="smalltext">{$last_updated}<br />{$postfeed_given}</span>
+	<td class="trow1 {$class[\'status\']}" id="fid{$feedback[\'fid\']}">
+		{$report_link}{$edit_link}{$delete_hard_link}{$delete_link}
+		{$feedback[\'user_username\']} <span class="smalltext">{$last_updated}<br />{$postfeed_given}</span>
 		<br />
-		<strong class="{$class[\'type\']}">{$vote_type} ({$feedback_vote[\'feedback\']}):</strong> {$feedback_vote[\'comment\']}
+		<strong class="{$class[\'type\']}">{$vote_type} ({$feedback[\'feedback\']}):</strong> {$feedback[\'comment\']}
 	</td>
 </tr>',
 			'page_item_edit'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Edit(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_edit"><span>{$lang->ougc_feedback_page_edit}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Edit(\'{$feedback[\'fid\']}\'); return false;" class="postbit_edit"><span>{$lang->ougc_feedback_page_edit}</span></a>
 </div>',
 			'page_item_delete'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Delete(\'{$feedback_vote[\'fid\']}\', \'{$mybb->post_code}\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Delete(\'{$feedback[\'fid\']}\', \'{$mybb->post_code}\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete}</span></a>
 </div>',
 			'page_item_delete_hard'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Delete(\'{$feedback_vote[\'fid\']}\', \'{$mybb->post_code}\', \'1\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete_hard}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Delete(\'{$feedback[\'fid\']}\', \'{$mybb->post_code}\', \'1\'); return false;" class="postbit_qdelete"><span>{$lang->ougc_feedback_page_delete_hard}</span></a>
 </div>',
 			'page_item_report'	=> '<div class="float_right postbit_buttons">
-	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Report(\'{$feedback_vote[\'fid\']}\'); return false;" class="postbit_report"><span>{$lang->ougc_feedback_page_report}</span></a>
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Report(\'{$feedback[\'fid\']}\'); return false;" class="postbit_report"><span>{$lang->ougc_feedback_page_report}</span></a>
+</div>',
+			'page_item_restore'	=> '<div class="float_right postbit_buttons">
+	<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Restore(\'{$feedback[\'fid\']}\', \'{$mybb->post_code}\'); return false;" class="postbit_qrestore"><span>{$lang->ougc_feedback_page_restore}</span></a>
 </div>',
 			/*'memberlist_header'	=> '<td class="tcat" width="10%" align="center"><span class="smalltext"><a href="{$sorturl}&amp;sort=feedbacks&amp;order=descending"><strong>{$lang->ougc_feedback_profile_title}</strong></a> {$orderarrow[\'feedback\']}</span></td>',
 			'memberlist_sort'	=> '<option value="positive_feedback"{$sort_selected[\'positive_feedback\']}>{$lang->ougc_feedback_memberlist_sort_positive}</option>
@@ -542,7 +445,58 @@ class OUGC_Feedback
 			'memberlist_user'	=> '<td class="{$alt_bg}" align="center">{$user[\'uid\']}{$user[\'feedback\']}</td>',*/
 		));
 
-		$this->_deactivate();
+		$PL->stylesheet('ougc_feedback', '/***************************************************************************
+ *
+ *	OUGC Feedback plugin (~/ougc_feedback.css)
+ *	Author: Omar Gonzalez
+ *	Copyright: © 2012-2019 Omar Gonzalez
+ *
+ *	Website: https://omarg.me
+ *
+ *	Adds a powerful feedback system to your forum.
+ *
+ ***************************************************************************
+
+****************************************************************************
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+****************************************************************************/
+
+.ougc_feedback_repbox {
+	font-size:16px;
+	font-weight: bold;
+	padding:5px 7px 5px 7px;
+}
+
+._negative {
+	background-color: #FDD2D1;
+	color: #CB0200;
+	border:1px solid #980201;
+}
+
+._neutral {
+	background-color:#FAFAFA;
+	color: #999999;
+	border:1px solid #CCCCCC;
+}
+
+._positive {
+	background-color:#E8FCDC;
+	color: #008800;
+	border:1px solid #008800;
+}', array('feedback.php' => '', 'member.php' => 'profile'));
+
+		self::_deactivate();
 
 		require_once MYBB_ROOT.'inc/adminfunctions_templates.php';
 		find_replace_templatesets('member_profile', '#'.preg_quote('{$profilefields}').'#i', '{$profilefields}{$ougc_feedback}');
@@ -561,18 +515,36 @@ class OUGC_Feedback
 			$plugins = array();
 		}
 
-		$info = ougc_feedback_info();
+		self::load_plugin_info();
 
 		if(!isset($plugins['feedback']))
 		{
-			$plugins['feedback'] = $info['versioncode'];
+			$plugins['feedback'] = self::$plugin_info['versioncode'];
+		}
+
+		// TODO:: ip should be stored
+
+		// Add DB fields
+		foreach(self::get_db_fields() as $table => $fields)
+		{
+			foreach($fields as $name => $definition)
+			{
+				if(!$db->field_exists($name, $table))
+				{
+					$db->add_column($table, $name, $definition);
+				}
+				else
+				{
+					$db->modify_column($table, $name, $definition);
+				}
+			}
 		}
 
 		/*~*~* RUN UPDATES START *~*~*/
 
 		/*~*~* RUN UPDATES END *~*~*/
 
-		$plugins['feedback'] = $info['versioncode'];
+		$plugins['feedback'] = self::$plugin_info['versioncode'];
 		$cache->update('ougc_plugins', $plugins);
 	}
 
@@ -647,19 +619,6 @@ class OUGC_Feedback
 				);
 				break;
 		}
-		// TODO:: ip should be stored
-
-		// Add DB fields
-		foreach($this->get_db_fields() as $table => $fields)
-		{
-			foreach($fields as $name => $definition)
-			{
-				if(!$db->field_exists($name, $table))
-				{
-					$db->add_column($table, $name, $definition);
-				}
-			}
-		}
 
 		$cache->update_forums();
 		$cache->update_usergroups();
@@ -677,13 +636,13 @@ class OUGC_Feedback
 	function _uninstall()
 	{
 		global $db, $PL, $cache;
-		$this->load_pluginlibrary();
+		self::load_pluginlibrary();
 
 		// Drop table
 		$db->drop_table('ougc_feedback');
 
 		// Remove DB fields
-		foreach($this->get_db_fields() as $table => $fields)
+		foreach(self::get_db_fields() as $table => $fields)
 		{
 			foreach($fields as $name => $definition)
 			{
@@ -726,36 +685,36 @@ class OUGC_Feedback
 	{
 		global $lang;
 
-		(isset($lang->setting_group_ougc_feedback) && !$force) or $lang->load('ougc_feedback');
+		(isset($lang->ougc_feedback) && !$force) or $lang->load('ougc_feedback');
 	}
 
 	// Build plugin info
 	function load_plugin_info()
 	{
-		$this->plugin_info = ougc_feedback_info();
+		self::$plugin_info = self::_info();
 	}
 
 	// PluginLibrary requirement check
 	function load_pluginlibrary()
 	{
 		global $lang;
-		$this->load_plugin_info();
-		$this->load_language();
+		self::load_plugin_info();
+		self::load_language();
 
 		if(!file_exists(PLUGINLIBRARY))
 		{
-			flash_message($lang->sprintf($lang->ougc_feedback_pluginlibrary_required, $this->plugin_info['pl']['ulr'], $this->plugin_info['pl']['version']), 'error');
+			flash_message($lang->sprintf($lang->ougc_feedback_pluginlibrary_required, self::$plugin_info['pl']['ulr'], self::$plugin_info['pl']['version']), 'error');
 			admin_redirect('index.php?module=config-plugins');
 		}
 
 		global $PL;
 		$PL or require_once PLUGINLIBRARY;
 
-		if($PL->version < $this->plugin_info['pl']['version'])
+		if($PL->version < self::$plugin_info['pl']['version'])
 		{
 			global $lang;
 
-			flash_message($lang->sprintf($lang->ougc_feedback_pluginlibrary_old, $PL->version, $this->plugin_info['pl']['version'], $this->plugin_info['pl']['ulr']), 'error');
+			flash_message($lang->sprintf($lang->ougc_feedback_pluginlibrary_old, $PL->version, self::$plugin_info['pl']['version'], self::$plugin_info['pl']['ulr']), 'error');
 			admin_redirect('index.php?module=config-plugins');
 		}
 	}
@@ -789,6 +748,7 @@ class OUGC_Feedback
 					),
 					'users'			=> array(
 						'ougc_feedback_notification'	=> "varchar(5) NOT NULL DEFAULT ''",
+						'ougc_feedback'	=> "int NOT NULL DEFAULT '0'",
 					)
 				);
 				break;
@@ -813,6 +773,7 @@ class OUGC_Feedback
 					),
 					'users'			=> array(
 						'ougc_feedback_notification'	=> "varchar(5) NOT NULL DEFAULT ''",
+						'ougc_feedback'	=> "int NOT NULL DEFAULT '0'",
 					)
 				);
 				break;
@@ -831,7 +792,7 @@ class OUGC_Feedback
 	function error($message, $title='', $success=false, $replacement='', $hide_add=1)
 	{
 		global $templates, $lang, $theme, $mybb;
-		$this->load_language();
+		self::load_language();
 
 		$title = $title ? $title : $lang->error;
 		$message = $message ? $message : $lang->message;
@@ -848,13 +809,13 @@ class OUGC_Feedback
 		}
 		else
 		{
-			$this->set_error($message);
+			self::set_error($message);
 
-			$message = $this->get_error();
+			$message = self::get_error();
 
 			eval('$message = "'.$templates->get('ougcfeedback_modal_error').'";');
 
-			$tfoot = $this->get_go_back_button();
+			$tfoot = self::get_go_back_button();
 
 			eval('echo "'.$templates->get('ougcfeedback_modal', 1, 0).'";');
 		}
@@ -865,34 +826,41 @@ class OUGC_Feedback
 	// Send an error to the browser
 	function success($message, $title='', $replacement='', $hide_add=1)
 	{
-		$this->error($message,  $title, true, $replacement, $hide_add);
+		self::set_go_back_button(false);
+		self::error($message,  $title, true, $replacement, $hide_add);
 	}
 
 	// Set error
 	function set_error($message)
 	{
-		$this->error = $message;
+		self::$error = $message;
 	}
 
 	// Get error
 	function get_error()
 	{
-		return $this->error;
+		return self::$error;
 	}
 
 	// Set go back button status
 	function set_go_back_button($_=true)
 	{
-		$this->go_back_button = $_;
+		self::$go_back_button = $_;
 	}
 
 	// Get go back button
 	function get_go_back_button()
 	{
-		if($this->go_back_button)
+		if(self::go_back_button)
 		{
-			global $templates, $lang;
-			$this->load_language();
+			global $mybb, $templates, $lang;
+
+			self::load_language();
+
+			$mybb->input['type'] = $mybb->get_input('type', MyBB::INPUT_INT);
+			$mybb->input['feedback'] = $mybb->get_input('feedback', MyBB::INPUT_INT);
+			$mybb->input['reload'] = $mybb->get_input('reload', MyBB::INPUT_INT);
+			$mybb->input['comment'] = $mybb->get_input('comment', MyBB::INPUT_STRING);
 
 			return eval('return "'.$templates->get('ougcfeedback_modal_tfoot').'";');
 		}
@@ -905,22 +873,23 @@ class OUGC_Feedback
 	{
 		global $db;
 
-		$this->data = array();
+		self::$data = array();
 
-		!isset($data['uid']) or $this->data['uid'] = (int)$data['uid'];
-		!isset($data['fuid']) or $this->data['fuid'] = (int)$data['fuid'];
-		!isset($data['pid']) or $this->data['pid'] = (int)$data['pid'];
-		!isset($data['type']) or $this->data['type'] = (int)$data['type'];
-		!isset($data['feedback']) or $this->data['feedback'] = (int)$data['feedback'];
-		!isset($data['comment']) or $this->data['comment'] = (string)$data['comment'];
-		!isset($data['status']) or $this->data['status'] = (int)$data['status'];
-		!isset($data['dateline']) or $this->data['dateline'] = TIME_NOW;
+		!isset(self::$data['fid']) or self::$data['fid'] = (int)$data['fid'];
+		!isset(self::$data['uid']) or self::$data['uid'] = (int)$data['uid'];
+		!isset(self::$data['fuid']) or self::$data['fuid'] = (int)$data['fuid'];
+		!isset(self::$data['pid']) or self::$data['pid'] = (int)$data['pid'];
+		!isset(self::$data['type']) or self::$data['type'] = (int)$data['type'];
+		!isset(self::$data['feedback']) or self::$data['feedback'] = (int)$data['feedback'];
+		!isset(self::$data['comment']) or self::$data['comment'] = (string)$data['comment'];
+		!isset(self::$data['status']) or self::$data['status'] = (int)$data['status'];
+		!isset(self::$data['dateline']) or self::$data['dateline'] = TIME_NOW;
 	}
 
 	// Feedback: Insert
 	function validate_feedback()
 	{
-		if($this->error)
+		if(self::error)
 		{
 			return false;
 		}
@@ -928,15 +897,27 @@ class OUGC_Feedback
 		return true;
 	}
 
+	// Feedback: Fetch
+	function fetch_feedback( int $fid)
+	{
+		global $db;
+
+		$query = $db->simple_select('ougc_feedback', '*', "fid='{$fid}'");
+		$feedback = $db->fetch_array($query);
+
+		return $feedback;
+	}
+
 	// Feedback: Insert
 	function insert_feedback($update=false)
 	{
 		global $db;
 
-		$feedback = &$this->data;
+		$feedback = &self::$data;
 
 		$insert_data = array();
 
+		//!isset($feedback['fid']) or $insert_data['fid'] = (int)$feedback['fid'];
 		!isset($feedback['uid']) or $insert_data['uid'] = (int)$feedback['uid'];
 		!isset($feedback['fuid']) or $insert_data['fuid'] = (int)$feedback['fuid'];
 		!isset($feedback['pid']) or $insert_data['pid'] = (int)$feedback['pid'];
@@ -945,18 +926,41 @@ class OUGC_Feedback
 		!isset($feedback['comment']) or $insert_data['comment'] = $db->escape_string($feedback['comment']);
 		!isset($feedback['status']) or $insert_data['status'] = (int)$feedback['status'];
 
+		if(!$update)
+		{
+			!isset($feedback['dateline']) or $insert_data['dateline'] = (int)$feedback['dateline'];
+		}
+
 		if($update)
 		{
-			
+			self::$fid = $feedback['fid'];
+
+			$db->update_query('ougc_feedback', $insert_data, "fid='{$feedback['fid']}'");
 		}
 		else
 		{
 			$insert_data['dateline'] = TIME_NOW;
 
-			$this->fid = $db->insert_query('ougc_feedback', $insert_data);
+			self::$fid = $db->insert_query('ougc_feedback', $insert_data);
 		}
 
+		//self::sync_user($insert_data['uid']);
+
 		return $insert_data;
+	}
+
+	// Feedback: Update
+	function update_feedback()
+	{
+		self::insert_feedback(true);
+	}
+
+	// Feedback: Update
+	function delete_feedback( int $fid)
+	{
+		global $db;
+
+		$db->delete_query('ougc_feedback', "fid='{$fid}'");
 	}
 
 	// Send a Private Message to an user (Copied from MyBB 1.7)
@@ -1031,7 +1035,7 @@ class OUGC_Feedback
 		{
 			$reset_lang = true;
 			$lang->set_language($email['language']);
-			$this->load_language(true);
+			self::load_language(true);
 		}
 
 		foreach(array('subject', 'message') as $key)
@@ -1082,8 +1086,19 @@ class OUGC_Feedback
 		if(isset($reset_lang))
 		{
 			$lang->set_language($mybb->user['language']);
-			$this->load_language(true);
+			self::load_language(true);
 		}
+	}
+
+	// Sync user feedback
+	function sync_user( int $uid)
+	{
+		global $db;
+
+		$query = $db->simple_select('ougc_feedback', 'SUM(feedback) AS feedback', "uid='{$uid}' AND status='1'");
+		$feedback = $db->fetch_field($query, 'feedback');
+
+		$db->update_query('users', array('ougc_feedback' => $feedback), "uid='{$uid}'");
 	}
 
 	// Hook: admin_config_settings_change
@@ -1093,7 +1108,7 @@ class OUGC_Feedback
 
 		$query = $db->simple_select('settinggroups', 'name', "gid='{$mybb->get_input('gid', 1)}'");
 
-		!($db->fetch_field($query, 'name') == 'ougc_feedback') or $this->load_language();
+		!($db->fetch_field($query, 'name') == 'ougc_feedback') or self::load_language();
 	}
 
 	// Hook: admin_formcontainer_end
@@ -1104,11 +1119,11 @@ class OUGC_Feedback
 		if($run_module == 'user' && isset($form_container->_title) && $form_container->_title == $lang->users_permissions)
 		{
 			global $form, $mybb;
-			$this->load_language();
+			self::load_language();
 
 			$perms = array();
 
-			$db_fields = $this->get_db_fields();
+			$db_fields = self::get_db_fields();
 			foreach($db_fields['usergroups'] as $name => $definition)
 			{
 				if($name == 'ougc_feedback_maxperday')
@@ -1128,11 +1143,11 @@ class OUGC_Feedback
 		if($run_module == 'forum' && isset($form_container->_title) && ($form_container->_title == $lang->additional_forum_options || $form_container->_title == "<div class=\"float_right\" style=\"font-weight: normal;\"><a href=\"#\" onclick=\"$('#additional_options_link').toggle(); $('#additional_options').fadeToggle('fast'); return false;\">{$lang->hide_additional_options}</a></div>".$lang->additional_forum_options))
 		{
 			global $form, $mybb, $forum_data;
-			$this->load_language();
+			self::load_language();
 
 			$perms = array();
 
-			$db_fields = $this->get_db_fields();
+			$db_fields = self::get_db_fields();
 			foreach($db_fields['forums'] as $name => $definition)
 			{
 				$lang_var = 'ougc_feedback_permission_'.str_replace('ougc_feedback_', '', $name);
@@ -1149,7 +1164,7 @@ class OUGC_Feedback
 		global $updated_group, $mybb;
 
 		$array_data = array();
-		$db_fields = $this->get_db_fields();
+		$db_fields = self::get_db_fields();
 		foreach($db_fields['usergroups'] as $name => $definition)
 		{
 			$array_data[$name] = $mybb->get_input($name, 1);
@@ -1164,7 +1179,7 @@ class OUGC_Feedback
 		global $db, $mybb, $fid, $plugins;
 
 		$array_data = array();
-		$db_fields = $this->get_db_fields();
+		$db_fields = self::get_db_fields();
 		foreach($db_fields['forums'] as $name => $definition)
 		{
 			$array_data[$name] = $mybb->get_input($name, 1);
@@ -1187,7 +1202,8 @@ class OUGC_Feedback
 	function hook_member_profile_end()
 	{
 		global $db, $memprofile, $templates, $ougc_feedback, $theme, $lang, $mybb;
-		$this->load_language();
+
+		self::load_language();
 
 		$ougc_feedback = '';
 		if(!$mybb->settings['ougc_feedback_showin_profile'])
@@ -1195,11 +1211,11 @@ class OUGC_Feedback
 			return;
 		}
 
-		$where = array("uid='{$memprofile['uid']}'", "fuid!='0'");
-		if(!$mybb->usergroup['ougc_feedback_ismod'])
+		$where = array("uid='{$memprofile['uid']}'", /*"fuid!='0'", */"status='1'");
+		/*if(!$mybb->usergroup['ougc_feedback_ismod'])
 		{
 			$where[] = "status='1'";
-		}
+		}*/
 
 		$stats = array('total' => 0, 'positive' => 0, 'neutral' => 0, 'negative' => 0, 'positive_percent' => 0, 'neutral_percent' => 0, 'negative_percent' => 0, 'positive_users' => array(), 'neutral_users' => array(), 'negative_users' => array());
 
@@ -1249,7 +1265,7 @@ class OUGC_Feedback
 			$show = true;
 			if(!$mybb->settings['ougc_feedback_allow_profile_multiple'] && $mybb->settings['ougc_feedback_profile_hide_add'])
 			{
-				$where = array("uid='{$memprofile['uid']}'", "fuid!='0'", "fuid='{$mybb->user['uid']}'");
+				$where = array("uid='{$memprofile['uid']}'", /*"fuid!='0'", */"fuid='{$mybb->user['uid']}'");
 
 				if(!$mybb->usergroup['ougc_feedback_ismod'])
 				{
@@ -1291,7 +1307,8 @@ class OUGC_Feedback
 	function hook_postbit(&$post)
 	{
 		global $db, $templates, $theme, $lang, $mybb, $pids;
-		$this->load_language();
+
+		self::load_language();
 
 		$post['ougc_feedback'] = $post['ougc_feedback_button'] = '';
 		if($mybb->settings['ougc_feedback_showin_postbit'])
@@ -1302,12 +1319,12 @@ class OUGC_Feedback
 			{
 				global $plugins;
 
-				$where = array("fuid!='0'");
+				$where = array(/*"fuid!='0'", */"status='1'");
 
-				if(!$mybb->usergroup['ougc_feedback_ismod'])
+				/*if(!$mybb->usergroup['ougc_feedback_ismod'])
 				{
 					$where[] = "status='1'";
-				}
+				}*/
 
 				if($plugins->current_hook == 'postbit' && $mybb->get_input('mode') != 'threaded' && !empty($pids) && THIS_SCRIPT != 'newreply.php')
 				{
@@ -1334,7 +1351,18 @@ class OUGC_Feedback
 				}
 			}
 
-			$stats = array('total' => 0, 'positive' => 0, 'neutral' => 0, 'negative' => 0, 'positive_percent' => 0, 'neutral_percent' => 0, 'negative_percent' => 0, 'positive_users' => array(), 'neutral_users' => array(), 'negative_users' => array());
+			$stats = array(
+				'total' => 0,
+				'positive' => 0,
+				'neutral' => 0,
+				'negative' => 0,
+				'positive_percent' => 0,
+				'neutral_percent' => 0,
+				'negative_percent' => 0,
+				'positive_users' => array(),
+				'neutral_users' => array(),
+				'negative_users' => array()
+			);
 
 			if(!empty($query_cache[$post['uid']]))
 			{
@@ -1343,7 +1371,7 @@ class OUGC_Feedback
 					++$stats['total'];
 
 					$feedback['feedback'] = (int)$feedback['feedback'];
-					switch($feedback['feedback'])
+					switch((int)$feedback['feedback'])
 					{
 						case 1:
 							++$stats['positive'];
@@ -1374,11 +1402,25 @@ class OUGC_Feedback
 
 			$stats = array_map('my_number_format', $stats);
 
-			$view_all = '';
+			/*$view_all = '';
 			if($mybb->usergroup['ougc_feedback_canview'])
 			{
 				eval('$view_all = "'.$templates->get('ougcfeedback_postbit_view_all').'";');
+			}*/
+
+			$average = $stats['positive'] - $stats['negative'];
+
+			$class = 'reputation_neutral';
+			if($average > 0)
+			{
+				$class = 'reputation_positive';
 			}
+			elseif($average < 0)
+			{
+				$class = 'reputation_negative';
+			}
+
+			$average = my_number_format($average);
 
 			eval('$post[\'ougc_feedback\'] = "'.$templates->get('ougcfeedback_postbit').'";');
 			$post['user_details'] = str_replace('<!--OUGC_FEEDBACK-->', $post['ougc_feedback'], $post['user_details']);
@@ -1442,7 +1484,15 @@ class OUGC_Feedback
 			}
 		}
 
-		#$plugins->remove_hook('postbit', array($this, 'hook_postbit'));
+		#$plugins->remove_hook('postbit', array('OUGC_Feedback', 'hook_postbit'));
+	}
+
+	// Hook: report_content_types
+	function hook_report_content_types(&$args)
+	{
+		self::load_language();
+
+		$args[] = 'feedback';
 	}
 
 	// Hook: report_start
@@ -1452,7 +1502,7 @@ class OUGC_Feedback
 
 		if($mybb->get_input('type') == 'feedback')
 		{
-			$this->load_language();
+			self::load_language();
 		}
 	}
 
@@ -1468,8 +1518,10 @@ class OUGC_Feedback
 
 		global $db, $mybb, $error, $verified, $id, $id2, $id3, $report_type_db, $lang;
 
+		$fid = $mybb->get_input('pid', MyBB::INPUT_INT);
+
 		// Any member can report a reputation comment but let's make sure it exists first
-		$query = $db->simple_select('ougc_feedback', '*', "fid='{$mybb->get_input('pid', 1)}'");
+		$query = $db->simple_select('ougc_feedback', '*', "fid='{$fid}'");
 		$feedback = $db->fetch_array($query);
 
 		if(empty($feedback))
@@ -1499,7 +1551,7 @@ class OUGC_Feedback
 		}
 
 		global $reputation_link, $bad_user, $lang, $good_user, $usercache, $report_data;
-		$this->load_language();
+		self::load_language();
 
 		$user = get_user($report['id3']);
 
@@ -1523,7 +1575,7 @@ class OUGC_Feedback
 		}
 
 		global $templates, $ougc_feedback_header, $ougc_feedback_sort, $sorturl, $lang, $colspan, $sort_selected;
-		$this->load_language();
+		self::load_language();
 
 		++$colspan;
 
@@ -1543,7 +1595,7 @@ class OUGC_Feedback
 		}
 
 		global $templates, $ougc_feedback_bit, $alt_bg;
-		$this->load_language();
+		self::load_language();
 
 		static $done = false;
 
@@ -1568,7 +1620,38 @@ class OUGC_Feedback
 	*/
 }
 
-global $feedback;
+// Plugin API
+function ougc_feedback_info()
+{
+	return OUGC_Feedback::_info();
+}
 
-$feedback = new OUGC_Feedback;
-#$db->query("TRUNCATE TABLE ".TABLE_PREFIX."ougc_feedback");
+// _activate() routine
+function ougc_feedback_activate()
+{
+	return OUGC_Feedback::_activate();
+}
+
+// _deactivate() routine
+function ougc_feedback_deactivate()
+{
+	return OUGC_Feedback::_deactivate();
+}
+
+// _install() routine
+function ougc_feedback_install()
+{
+	return OUGC_Feedback::_install();
+}
+
+// _is_installed() routine
+function ougc_feedback_is_installed()
+{
+	return OUGC_Feedback::_is_installed();
+}
+
+// _uninstall() routine
+function ougc_feedback_uninstall()
+{
+	return OUGC_Feedback::_uninstall();
+}

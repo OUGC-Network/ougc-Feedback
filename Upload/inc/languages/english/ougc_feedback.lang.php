@@ -27,18 +27,19 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
  
-// Plugin APIC
-$l['setting_group_ougc_feedback'] = 'OUGC Feedback';
+// Plugin API
+$l['ougc_feedback'] = 'OUGC Feedback';
 
 // Profile
 $l['ougc_feedback_profile_title'] = 'Feedback';
 $l['ougc_feedback_profile_view'] = 'View All';
 $l['ougc_feedback_profile_total'] = 'Total';
-$l['ougc_feedback_profile_positibve'] = 'Positive';
+$l['ougc_feedback_profile_positive'] = 'Positive';
 $l['ougc_feedback_profile_neutral'] = 'Neutral';
 $l['ougc_feedback_profile_negative'] = 'Negative';
 $l['ougc_feedback_profile_users'] = 'users';
 $l['ougc_feedback_profile_add'] = 'Add Feedback';
+$l['ougc_feedback_profile_edit'] = 'Update Feedback';
 
 // Modal
 $l['ougc_feedback_modal_type'] = 'Transaction Type:';
@@ -55,11 +56,13 @@ $l['ougc_feedback_page_report_for'] = 'Feedback Report for {1}';
 $l['ougc_feedback_page_summary'] = 'Summary';
 $l['ougc_feedback_page_profile'] = 'Profile of {1}';
 $l['ougc_feedback_confirm_delete'] = 'Are you sure you wish to delete this feedback?';
+$l['ougc_feedback_confirm_restore'] = 'Are you sure you wish to restore this feedback?';
 $l['ougc_feedback_page_empty'] = 'This user currently does not have any feedback with the specified criteria below.';
 $l['ougc_feedback_page_report'] = 'Report';
 $l['ougc_feedback_page_edit'] = 'Edit';
-$l['ougc_feedback_page_delete'] = 'Remove';
-$l['ougc_feedback_page_delete_hard'] = 'Delete';
+$l['ougc_feedback_page_delete'] = 'Delete';
+$l['ougc_feedback_page_restore'] = 'Restore';
+$l['ougc_feedback_page_delete_hard'] = 'Permanently Delete';
 $l['ougc_feedback_page_last_updated'] = 'Last updated {1}';
 $l['ougc_feedback_page_post_given'] = 'Feedback given for <a href="{1}">{2}\'s post</a> {3}<br />';
 $l['ougc_feedback_page_post_nolink'] = 'Feedback given for {1}\'s post<br />';
@@ -110,6 +113,7 @@ $l['ougc_feedback_report_info'] = '<a href="{1}">Feedback</a> from {2}';
 $l['ougc_feedback_report_info_profile'] = '<br /><span class="smalltext">On {1}\'s profile</span';
 
 // Errors
+$l['ougc_feedback_error_unknown'] = 'Unexpected error occurred.';
 $l['ougc_feedback_error_profile_disabled'] = 'Profile feedback is disabled.';
 $l['ougc_feedback_error_profile_thread'] = 'Thread feedback is disabled.';
 $l['ougc_feedback_error_profile_multiple_disabled'] = 'Multiple profile feedback is disabled.';
@@ -118,10 +122,17 @@ $l['ougc_feedback_error_invalid_user'] = 'Invalid user.';
 $l['ougc_feedback_error_invalid_self_user'] = 'You cannot add to your own feedback.';
 $l['ougc_feedback_error_invalid_post'] = 'Invalid post.';
 $l['ougc_feedback_error_invalid_type'] = 'Invalid feedback type selected.';
-$l['ougc_feedback_error_invalid_feedback'] = 'Invalid feedback value selected.';
+$l['ougc_feedback_error_invalid_feedback'] = 'Invalid feedback selected.';
+$l['ougc_feedback_error_invalid_feedback_value'] = 'Invalid feedback value selected.';
 $l['ougc_feedback_error_invalid_status'] = 'Invalid feedback status selected.';
-$l['ougc_feedback_error_invalid_comment'] = 'Invalid feedback comment entered.';
+$l['ougc_feedback_error_invalid_comment'] = 'Invalid feedback comment entered. The minimum and maximum characters count is {1} and {2} respectively, whereas your message is {3} characters long.';
 $l['ougc_feedback_error_invalid_maxperday'] = 'You have already given as many feedback  as you are allowed to for today.';
+
+// Redirect messages
+$l['ougc_feedback_redirect_removed'] = 'The selected feedback was successfully deleted.';
+$l['ougc_feedback_redirect_deleted'] = 'The selected feedback was successfully permanently deleted.';
+$l['ougc_feedback_redirect_restored'] = 'The selected feedback was successfully restored.';
 
 // Success
 $l['ougc_feedback_success_feedback_added'] = 'Your feedback was successfully added.';
+$l['ougc_feedback_success_feedback_edited'] = 'Your feedback was successfully edited.';
