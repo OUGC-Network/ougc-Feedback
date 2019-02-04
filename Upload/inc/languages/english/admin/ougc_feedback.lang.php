@@ -27,15 +27,17 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
  
-// Plugin APIC
-$l['setting_group_ougc_feedback'] = 'OUGC Feedback';
-$l['setting_group_ougc_feedback_desc'] = 'Adds a powerful feedback system to your forum.';
+// Plugin API
+$l['ougc_feedback'] = 'OUGC Feedback';
+$l['ougc_feedback_desc'] = 'Adds a powerful feedback system to your forum.';
 
 // PluginLibrary
 $l['ougc_feedback_pluginlibrary_required'] = 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or later to be uploaded to your forum.';
 $l['ougc_feedback_pluginlibrary_old'] = 'This plugin requires PluginLibrary version {2} or later, whereas your current version is {1}. Please do update <a href="{3}">PluginLibrary</a>.';
 
 // Settings
+$l['setting_group_ougc_feedback'] = 'Feedback System';
+$l['setting_group_ougc_feedback_desc'] = 'Modify the settings for the feedback system, a powerful reputation system for market traders.';
 $l['setting_ougc_feedback_allow_profile'] = 'Allow Profile Feedback';
 $l['setting_ougc_feedback_allow_profile_desc'] = 'Allow feedback from profiles.';
 $l['setting_ougc_feedback_allow_profile_multiple'] = 'Allow Multiple Profile Feedback';
@@ -68,14 +70,16 @@ $l['ougc_feedback_permission_canview'] = 'Can view feedback page?';
 $l['ougc_feedback_permission_cangive'] = 'Can give feedback to users?';
 $l['ougc_feedback_permission_canreceive'] = 'Can receive feedback from users?';
 $l['ougc_feedback_permission_canedit'] = 'Can edit his/her own sent feedback?';
-$l['ougc_feedback_permission_canremove'] = 'Can remove his/her own sent feedback?';
+$l['ougc_feedback_permission_canremove'] = 'Can (soft) delete his/her own sent feedback?';
 $l['ougc_feedback_permission_maxperday'] = 'Maximum Feedback Allowed Per Day:';
 $l['ougc_feedback_permission_maxperday_desc'] = 'Here you can enter the maximum number of feedbacks that users in this group can give per day. To allow unlimited feedbacks per day, enter 0.';
 $l['ougc_feedback_permission_ismod'] = 'Can moderate feedback?';
 $l['ougc_feedback_permission_mod_canedit'] = 'Can this moderator edit feedbacks?';
-$l['ougc_feedback_permission_mod_canremove'] = 'Can this moderator remove feedbacks?';
+$l['ougc_feedback_permission_mod_canremove'] = 'Can this moderator soft delete feedbacks?';
 $l['ougc_feedback_permission_mod_candelete'] = 'Can this moderator hard delete feedbacks?';
 
+// Reort system
+$l['report_content_feedback'] = 'OUGC Feedback';
  
 // Forums
 $l['ougc_feedback_permission_allow_threads'] = 'Yes, allow feedback for threads';

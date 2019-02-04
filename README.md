@@ -1,4 +1,4 @@
-[![Omar G.](https://omarg.me/cache/images/logo.png "Omar G. MyBB Page")](http://omarg.me/page?mybb "Omar G. MyBB Page")
+[![Omar G.](http://omarg.me/cache/images/logo.png "Omar G. MyBB Page")](http://omarg.me/page?mybb "Omar G. MyBB Page")
 
 ## OUGC Feedback
 Adds a powerful feedback system to your forum.

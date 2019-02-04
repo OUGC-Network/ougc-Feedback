@@ -33,12 +33,20 @@ $.extend(true, OUGC_Plugins, {
 		$('#ougcfeedback_form').submit(function(e)
 		{
 			e.preventDefault();
-			e.unbind();
+			$(e).off();
 		});
 	},
-	Feedback_Add: function(uid, pid, type, feedback, reload)
+
+	Feedback_Add: function(uid, pid, type, feedback, reload, comment, backbutton)
 	{
-		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload);
+		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&comment=' + String(comment) + '&backbutton=' + parseInt(backbutton);
+
+		MyBB.popupWindow('/feedback.php?' + postData);
+	},
+
+	Feedback_Edit: function(fid, reload)
+	{
+		var postData = 'action=edit&fid=' + parseInt(fid) + '&reload=' + parseInt(reload);
 
 		MyBB.popupWindow('/feedback.php?' + postData);
 	},
@@ -95,12 +103,65 @@ $.extend(true, OUGC_Plugins, {
 		});
 	},
 
+	Feedback_DoEdit: function(uid, pid, fid)
+	{
+		// Get form, serialize it and send it
+		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
+
+		$.ajax(
+		{
+			type: 'post',
+			dataType: 'json',
+			url: 'feedback.php',
+			data: postData,
+			success: function (request)
+			{
+				if(request.error)
+				{
+					alert(request.error);
+					return true;
+				}
+				else
+				{
+					$.modal.close();
+					$(request.modal).appendTo('body').modal({ fadeDuration: 250}).fadeIn('slow');
+
+					if(request.reload)
+					{
+						location.reload(true);
+						/*$.ajax({
+							url: '',
+							context: document.body,
+							success: function(s, x){
+								$(this).html(s);
+							}
+						});*/
+					}
+					else
+					{
+						$('.ougcfeedback_info_' + parseInt(uid)).html(request.replacement);
+
+						if(request.hide_add)
+						{
+							$('.ougcfeedback_add_' + parseInt(uid)).fadeOut('slow');
+						}
+					}
+				}
+			},
+			error: function (xhr)
+			{
+				$.modal.close();
+				$(xhr.responseText).appendTo('body').modal({ fadeDuration: 250}).fadeIn('slow');
+			}
+		});
+	},
+
 	Feedback_Report: function(fid)
 	{
 		MyBB.popupWindow('/report.php?type=feedback&pid=' + parseInt(fid));
 	},
 
-	Feedback_Delete: function(fid)
+	Feedback_Delete: function(fid, my_post_key, hard)
 	{
 		$.prompt(delete_feedback_confirm, {
 			buttons:[
@@ -110,10 +171,17 @@ $.extend(true, OUGC_Plugins, {
 			submit: function(e,v,m,f){
 				if(v == true)
 				{
+					var postData = '';
+
+					if(parseInt(hard))
+					{
+						postData = '&hard=' + parseInt(hard);
+					}
+
 					var form = $('<form />',
 					{
 						method: 'post',
-						action: 'feedback.php?action=delete',
+						action: 'feedback.php?action=delete' + postData,
 						style: 'display: none;'
 					});
 
@@ -143,5 +211,50 @@ $.extend(true, OUGC_Plugins, {
 				}
 			}
 		});
-	}
-}
+	},
+
+	Feedback_Restore: function(fid)
+	{
+		$.prompt(restore_feedback_confirm, {
+			buttons:[
+				{title: yes_confirm, value: true},
+				{title: no_confirm, value: false}
+			],
+			submit: function(e,v,m,f){
+				if(v == true)
+				{
+					var form = $('<form />',
+					{
+						method: 'post',
+						action: 'feedback.php?action=restore',
+						style: 'display: none;'
+					});
+
+					form.append(
+						$('<input />',
+						{
+							name: 'fid',
+							type: 'hidden',
+							value: fid
+						})
+					);
+
+					if(my_post_key)
+					{
+						form.append(
+							$('<input />',
+							{
+								name: 'my_post_key',
+								type: 'hidden',
+								value: my_post_key
+							})
+						);
+					}
+
+					$('body').append(form);
+					form.submit();
+				}
+			}
+		});
+	},
+});
