@@ -87,11 +87,11 @@ else
 // Plugin class
 class OUGC_Feedback
 {
-	static private $plugin_info;
-	static private $error;
-	static private $go_back_button;
-	static private $data;
-	static private $fid;
+	static public $plugin_info;
+	static public $error;
+	static public $go_back_button;
+	static public $data = array();
+	static public $fid;
 
 	function __construct()
 	{
@@ -101,7 +101,6 @@ class OUGC_Feedback
 	// Plugin API:_info() routine
 	function _info()
 	{
-		static $done = false; if(!$done) {$done = true; self::_activate();};
 		global $lang;
 
 		self::load_language();
@@ -184,23 +183,23 @@ class OUGC_Feedback
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
 			),*/
-			'perpage'					=> array(
-			   'title'			=> $lang->setting_ougc_feedback_perpage,
-			   'description'	=> $lang->setting_ougc_feedback_perpage_desc,
-			   'optionscode'	=> 'numeric',
-			   'value'			=> 20
-			),
-			'allow_email_notifications'	=> array(
-			   'title'			=> $lang->setting_ougc_feedback_allow_email_notifications,
-			   'description'	=> $lang->setting_ougc_feedback_allow_email_notifications_desc,
-			   'optionscode'	=> 'yesno',
-			   'value'			=> 1
-			),
 			'allow_pm_notifications'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_pm_notifications,
 			   'description'	=> $lang->setting_ougc_feedback_allow_pm_notifications_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
+			),
+			'allow_email_notifications'	=> array(
+			   'title'			=> $lang->setting_ougc_feedback_allow_email_notifications,
+			   'description'	=> $lang->setting_ougc_feedback_allow_email_notifications_desc,
+			   'optionscode'	=> 'yesno',
+			   'value'			=> 0
+			),
+			'perpage'					=> array(
+			   'title'			=> $lang->setting_ougc_feedback_perpage,
+			   'description'	=> $lang->setting_ougc_feedback_perpage_desc,
+			   'optionscode'	=> 'numeric',
+			   'value'			=> 20
 			),
 			/*'allow_alert_notifications'	=> array(
 			   'title'			=> $lang->setting_ougc_feedback_allow_alert_notifications,
@@ -272,7 +271,7 @@ class OUGC_Feedback
   </div>
 </div>',
 			'modal_tfoot'	=> '<tr>
-		<td class="tfoot" align="center"><input name="submit" type="button" class="button" value="{$lang->ougc_feedback_go_back}" onclick="return OUGC_Plugins.Feedback_Add(\'{self::data[\'uid\']}\', \'{self::data[\'pid\']}\', \'{$mybb->input[\'type\']}\', \'{$mybb->input[\'feedback\']}\', \'{$mybb->input[\'reload\']}\', \'{$mybb->input[\'comment\']}\', \'1\'); return false;" /></td>
+		<td class="tfoot" align="center"><input name="submit" type="button" class="button" value="{$lang->ougc_feedback_go_back}" onclick="return OUGC_Plugins.Feedback_Add(\'{$uid}\', \'{$pid}\', \'{$mybb->input[\'type\']}\', \'{$mybb->input[\'feedback\']}\', \'{$mybb->input[\'reload\']}\', \'{$mybb->input[\'comment\']}\', \'1\'); return false;" /></td>
 </tr>',
 			'modal_error'	=> '<blockquote>{$message}</blockquote>',
 			'postbit'	=> '<span class="ougcfeedback_info_{$post[\'uid\']}" title="{$lang->ougc_feedback_profile_positive} {$lang->ougc_feedback_profile_title}: {$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})
@@ -307,7 +306,7 @@ class OUGC_Feedback
 </div>',
 			'profile_view_all'	=> '<span class="smalltext float_right">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$memprofile[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)',
 			'profile_add'	=> '<tr class="ougcfeedback_add_{$memprofile[\'uid\']}">
-	<td class="trow1" colspan="2" align="right"><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="button small_button">{$lang->ougc_feedback_profile_add}</a></td>
+	<td class="trow1" colspan="2" align="right"><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\', \'\', \'\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="button small_button">{$lang->ougc_feedback_profile_add}</a></td>
 </tr>',
 			'page'	=> '<html>
 <head>
@@ -826,7 +825,7 @@ class OUGC_Feedback
 	// Send an error to the browser
 	function success($message, $title='', $replacement='', $hide_add=1)
 	{
-		self::set_go_back_button(false);
+		//self::set_go_back_button(false);
 		self::error($message,  $title, true, $replacement, $hide_add);
 	}
 
@@ -851,7 +850,7 @@ class OUGC_Feedback
 	// Get go back button
 	function get_go_back_button()
 	{
-		if(self::go_back_button)
+		if(self::$go_back_button)
 		{
 			global $mybb, $templates, $lang;
 
@@ -862,34 +861,42 @@ class OUGC_Feedback
 			$mybb->input['reload'] = $mybb->get_input('reload', MyBB::INPUT_INT);
 			$mybb->input['comment'] = $mybb->get_input('comment', MyBB::INPUT_STRING);
 
+			$uid = self::$data['uid'];
+			$pid = self::$data['pid'];
+
 			return eval('return "'.$templates->get('ougcfeedback_modal_tfoot').'";');
 		}
 
 		return '';
 	}
 
-	// Feedback: Insert
-	function set_data($data)
+	// Feedback: 
+	function set_data($feedback)
 	{
 		global $db;
 
-		self::$data = array();
+		!isset($feedback['fid']) or self::$data['fid'] = (int)$feedback['fid'];
+		!isset($feedback['fid']) or self::$data['fid'] = (int)$feedback['fid'];
+		!isset($feedback['uid']) or self::$data['uid'] = (int)$feedback['uid'];
+		!isset($feedback['fuid']) or self::$data['fuid'] = (int)$feedback['fuid'];
+		!isset($feedback['pid']) or self::$data['pid'] = (int)$feedback['pid'];
+		!isset($feedback['type']) or self::$data['type'] = (int)$feedback['type'];
+		!isset($feedback['feedback']) or self::$data['feedback'] = (int)$feedback['feedback'];
+		!isset($feedback['comment']) or self::$data['comment'] = (string)$feedback['comment'];
+		!isset($feedback['status']) or self::$data['status'] = (int)$feedback['status'];
+		!isset($feedback['dateline']) or self::$data['dateline'] = TIME_NOW;
+	}
 
-		!isset(self::$data['fid']) or self::$data['fid'] = (int)$data['fid'];
-		!isset(self::$data['uid']) or self::$data['uid'] = (int)$data['uid'];
-		!isset(self::$data['fuid']) or self::$data['fuid'] = (int)$data['fuid'];
-		!isset(self::$data['pid']) or self::$data['pid'] = (int)$data['pid'];
-		!isset(self::$data['type']) or self::$data['type'] = (int)$data['type'];
-		!isset(self::$data['feedback']) or self::$data['feedback'] = (int)$data['feedback'];
-		!isset(self::$data['comment']) or self::$data['comment'] = (string)$data['comment'];
-		!isset(self::$data['status']) or self::$data['status'] = (int)$data['status'];
-		!isset(self::$data['dateline']) or self::$data['dateline'] = TIME_NOW;
+	// Feedback: get data
+	function get_data()
+	{
+		return self::$data;
 	}
 
 	// Feedback: Insert
 	function validate_feedback()
 	{
-		if(self::error)
+		if(self::$error)
 		{
 			return false;
 		}
@@ -1029,6 +1036,11 @@ class OUGC_Feedback
 	function send_email($email)
 	{
 		global $mybb, $db, $lang;
+
+		if(!$mybb->settings['ougc_feedback_allow_email_notifications'])
+		{
+			return false;
+		}
 
 		// Load language
 		if($email['language'] != $mybb->user['language'] && $lang->language_exists($email['language']))

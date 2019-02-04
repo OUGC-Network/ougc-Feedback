@@ -33,7 +33,7 @@ $.extend(true, OUGC_Plugins, {
 		$('#ougcfeedback_form').submit(function(e)
 		{
 			e.preventDefault();
-			e.unbind();
+			$(e).off();
 		});
 	},
 

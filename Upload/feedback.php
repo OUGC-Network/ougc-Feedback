@@ -235,12 +235,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
 		check_forum_password($post['fid']); // this should at least stop the script
 
-		$where = array("uid='{$feedback['uid']}'", /*"fuid!='0'", */"fuid='{$feedback['fuid']}'", "pid='{$feedback['pid']}'");
-
-		if(!$mybb->usergroup['ougc_feedback_ismod'])
-		{
-			$where[] = "status='1'";
-		}
+		$where = array("uid='{$feedback['uid']}'", /*"fuid!='0'", */"fuid='{$feedback['fuid']}'", "pid='{$feedback['pid']}'", "status='1'");
 
 		$query = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $where));
 
@@ -301,6 +296,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 		}
 		elseif($message_count < $comments_minlength || $message_count > $comments_maxlength)
 		{
+			OUGC_Feedback::set_go_back_button(true);
 			OUGC_Feedback::error($lang->sprintf($lang->ougc_feedback_error_invalid_comment, $comments_minlength, $comments_maxlength, $message_count));
 		}
 
@@ -323,17 +319,17 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
 				OUGC_Feedback::sync_user((int)$feedback['uid']);
 
-				if(strpos(','.$user['ougc_feedback_notification'].',', ',1,'))
-				{
+				/*if(strpos(','.$user['ougc_feedback_notification'].',', ',1,'))
+				{*/
 					OUGC_Feedback::send_pm(array(
 						'subject'		=> $lang->ougc_feedback_notification_pm_subject,
 						'message'		=> $lang->sprintf($lang->ougc_feedback_notification_pm_message, $user['username'], $mybb->settings['bbname']),
 						'touid'			=> $feedback['uid']
 					), -1, true);
-				}
+				/*}*/
 
-				if(strpos(','.$user['ougc_feedback_notification'].',', ',`2,'))
-				{
+				/*if(strpos(','.$user['ougc_feedback_notification'].',', ',`2,'))
+				{*/
 					OUGC_Feedback::send_email(array(
 						'to'		=> $user['email'],
 						'subject'	=> 'ougc_feedback_notification_mail_subject',
@@ -342,7 +338,7 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 						'touid'		=> $user['uid'],
 						'language'	=> $user['language']
 					));
-				}
+				/*}*/
 
 				/*if(strpos(','.$user['ougc_feedback_notification'].',', ',`3,'))
 				{
