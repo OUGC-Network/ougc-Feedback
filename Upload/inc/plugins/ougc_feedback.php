@@ -108,11 +108,11 @@ class OUGC_Feedback
 		return array(
 			'name'					=> 'OUGC Feedback',
 			'description'			=> $lang->ougc_feedback_desc,
-			'website'				=> 'https://omarg.me/thread?public/plugins/mybb-ougc-feedback',
+			'website'				=> 'https://ougc.network',
 			'author'				=> 'Omar G.',
-			'authorsite'			=> 'https://omarg.me',
-			'version'				=> '1.8.19',
-			'versioncode'			=> 1819,
+			'authorsite'			=> 'https://ougc.network',
+			'version'				=> '1.8.22',
+			'versioncode'			=> 1822,
 			'compatibility'			=> '18*',
 			'codename'				=> 'ougc_feedback',
 			'pl'			=> array(
