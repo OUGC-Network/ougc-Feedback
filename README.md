@@ -6,7 +6,7 @@ Adds a powerful feedback system to your forum.
 ***
 
 ### Support
-Please visit [OUGC Network](https://ougc.network/landing?mybb "Visit OUGC Network") for more information about this project.
+Please visit [OUGC Network](https://ougc.network/?landing=mybb "Visit OUGC Network") for more information about this project.
 
 ### Thank You!
 Remember this is a free release developed on free time, either for personal use or as custom requests.
