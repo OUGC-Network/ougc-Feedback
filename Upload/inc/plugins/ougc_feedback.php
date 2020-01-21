@@ -1349,12 +1349,13 @@ class OUGC_Feedback
 
 		$post['ougc_feedback'] = $post['ougc_feedback_button'] = '';
 
+		$show = true;
 		if(!empty($post['fid']) && (!$mybb->settings['ougc_feedback_showin_forums'] || ($mybb->settings['ougc_feedback_showin_forums'] != -1 && !in_array($post['fid'], array_map('intval', explode(',', $mybb->settings['ougc_feedback_showin_forums']))))))
 		{
-			return;
+			$show = false;
 		}
 
-		if($mybb->settings['ougc_feedback_showin_postbit'])
+		if($show && $mybb->settings['ougc_feedback_showin_postbit'])
 		{
 			static $query_cache;
 
