@@ -108,11 +108,11 @@ class OUGC_Feedback
 		return array(
 			'name'					=> 'OUGC Feedback',
 			'description'			=> $lang->ougc_feedback_desc,
-			'website'				=> 'https://omarg.me/thread?public/plugins/mybb-ougc-feedback',
+			'website'				=> 'https://ougc.network',
 			'author'				=> 'Omar G.',
-			'authorsite'			=> 'https://omarg.me',
-			'version'				=> '1.8.19',
-			'versioncode'			=> 1819,
+			'authorsite'			=> 'https://ougc.network',
+			'version'				=> '1.8.22',
+			'versioncode'			=> 1822,
 			'compatibility'			=> '18*',
 			'codename'				=> 'ougc_feedback',
 			'pl'			=> array(
@@ -152,6 +152,12 @@ class OUGC_Feedback
 			   'description'	=> $lang->setting_ougc_feedback_showin_postbit_desc,
 			   'optionscode'	=> 'yesno',
 			   'value'			=> 1
+			),
+			'showin_forums'			=> array(
+			   'title'			=> $lang->setting_ougc_feedback_showin_forums,
+			   'description'	=> $lang->setting_ougc_feedback_showin_forums_desc,
+			   'optionscode'	=> 'forumselect',
+			   'value'			=> -1
 			),
 			'postbit_hide_button'					=> array(
 			   'title'			=> $lang->setting_ougc_feedback_postbit_hide_button,
@@ -531,6 +537,21 @@ class OUGC_Feedback
 				if(!$db->field_exists($name, $table))
 				{
 					$db->add_column($table, $name, $definition);
+
+					// Set default group permissions
+					if($table == 'usergroups')
+					{
+						if(in_array($name, array('ougc_feedback_mod_candelete')))
+						{
+							$db->update_query('usergroups', array($name => 1), "gid='4'"); // Administrators
+						}
+
+						if(in_array($name, array('ougc_feedback_ismod', 'ougc_feedback_mod_canedit', 'ougc_feedback_mod_canremove')))
+						{
+							$db->update_query('usergroups', array($name => 1), "gid='4'"); // Administrators
+							$db->update_query('usergroups', array($name => 1), "gid='3'"); // Super moderators
+						}
+					}
 				}
 				else
 				{
@@ -542,6 +563,10 @@ class OUGC_Feedback
 		/*~*~* RUN UPDATES START *~*~*/
 
 		/*~*~* RUN UPDATES END *~*~*/
+
+		$cache->update_usergroups();
+
+		$cache->update_forums();
 
 		$plugins['feedback'] = self::$plugin_info['versioncode'];
 		$cache->update('ougc_plugins', $plugins);
@@ -733,7 +758,7 @@ class OUGC_Feedback
 						'ougc_feedback_cangive'			=> "smallint NOT NULL DEFAULT '1'",
 						'ougc_feedback_canreceive'		=> "smallint NOT NULL DEFAULT '1'",
 						'ougc_feedback_canedit'			=> "smallint NOT NULL DEFAULT '1'",
-						'ougc_feedback_canremove'		=> "smallint NOT NULL DEFAULT '0'",
+						'ougc_feedback_canremove'		=> "smallint NOT NULL DEFAULT '1'",
 						//'ougc_feedback_value'			=> "int NOT NULL DEFAULT '1'",
 						'ougc_feedback_maxperday'		=> "int NOT NULL DEFAULT '5'",
 						'ougc_feedback_ismod'			=> "smallint NOT NULL DEFAULT '0'",
@@ -758,7 +783,7 @@ class OUGC_Feedback
 						'ougc_feedback_cangive'			=> "tinyint(1) NOT NULL DEFAULT '1'",
 						'ougc_feedback_canreceive'		=> "tinyint(1) NOT NULL DEFAULT '1'",
 						'ougc_feedback_canedit'			=> "tinyint(1) NOT NULL DEFAULT '1'",
-						'ougc_feedback_canremove'		=> "tinyint(1) NOT NULL DEFAULT '0'",
+						'ougc_feedback_canremove'		=> "tinyint(1) NOT NULL DEFAULT '1'",
 						//'ougc_feedback_value'			=> "int UNSIGNED NOT NULL DEFAULT '1'",
 						'ougc_feedback_maxperday'		=> "int UNSIGNED NOT NULL DEFAULT '5'",
 						'ougc_feedback_ismod'			=> "tinyint(1) NOT NULL DEFAULT '0'",
@@ -1323,6 +1348,12 @@ class OUGC_Feedback
 		self::load_language();
 
 		$post['ougc_feedback'] = $post['ougc_feedback_button'] = '';
+
+		if(!empty($post['fid']) && (!$mybb->settings['ougc_feedback_showin_forums'] || ($mybb->settings['ougc_feedback_showin_forums'] != -1 && !in_array($post['fid'], array_map('intval', explode(',', $mybb->settings['ougc_feedback_showin_forums']))))))
+		{
+			return;
+		}
+
 		if($mybb->settings['ougc_feedback_showin_postbit'])
 		{
 			static $query_cache;
