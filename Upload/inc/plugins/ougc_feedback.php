@@ -930,7 +930,7 @@ class OUGC_Feedback
 	}
 
 	// Feedback: Fetch
-	function fetch_feedback( int $fid)
+	function fetch_feedback($fid)
 	{
 		global $db;
 
@@ -988,7 +988,7 @@ class OUGC_Feedback
 	}
 
 	// Feedback: Update
-	function delete_feedback( int $fid)
+	function delete_feedback($fid)
 	{
 		global $db;
 
@@ -1128,7 +1128,7 @@ class OUGC_Feedback
 	}
 
 	// Sync user feedback
-	function sync_user( int $uid)
+	function sync_user($uid)
 	{
 		global $db;
 
