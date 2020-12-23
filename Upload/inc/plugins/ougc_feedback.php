@@ -216,7 +216,7 @@ class OUGC_Feedback
 		));
 
 		$PL->templates('ougcfeedback', 'OUGC Feedback', array(
-			'js'	=> '<script type="text/javascript" src="{$mybb->asset_url}/jscripts/ougc_feedback.js?ver=1819"></script>',
+			'js'	=> '<script type="text/javascript" src="{$mybb->asset_url}/jscripts/ougc_feedback.js?ver=1824"></script>',
 			'form'	=> '<div class="modal">
 	<div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback[\'uid\']}_{$feedback[\'pid\']}">
 	<form method="post" action="{$mybb->settings[\'bburl\']}/feedback.php" id="ougcfeedback_form" class="feedback_{$feedback[\'uid\']}_{$feedback[\'pid\']}" onsubmit="javascript: return OUGC_Plugins.{$method};">
@@ -1133,7 +1133,8 @@ class OUGC_Feedback
 		global $db;
 
 		$query = $db->simple_select('ougc_feedback', 'SUM(feedback) AS feedback', "uid='{$uid}' AND status='1'");
-		$feedback = $db->fetch_field($query, 'feedback');
+
+		$feedback = (int)$db->fetch_field($query, 'feedback');
 
 		$db->update_query('users', array('ougc_feedback' => $feedback), "uid='{$uid}'");
 	}

@@ -163,98 +163,86 @@ $.extend(true, OUGC_Plugins, {
 
 	Feedback_Delete: function(fid, my_post_key, hard)
 	{
-		$.prompt(delete_feedback_confirm, {
-			buttons:[
-				{title: yes_confirm, value: true},
-				{title: no_confirm, value: false}
-			],
-			submit: function(e,v,m,f){
-				if(v == true)
-				{
-					var postData = '';
+		var result = confirm(delete_feedback_confirm);
 
-					if(parseInt(hard))
-					{
-						postData = '&hard=' + parseInt(hard);
-					}
+		if(result)
+		{
+			var postData = '';
 
-					var form = $('<form />',
-					{
-						method: 'post',
-						action: 'feedback.php?action=delete' + postData,
-						style: 'display: none;'
-					});
-
-					form.append(
-						$('<input />',
-						{
-							name: 'fid',
-							type: 'hidden',
-							value: fid
-						})
-					);
-
-					if(my_post_key)
-					{
-						form.append(
-							$('<input />',
-							{
-								name: 'my_post_key',
-								type: 'hidden',
-								value: my_post_key
-							})
-						);
-					}
-
-					$('body').append(form);
-					form.submit();
-				}
+			if(parseInt(hard))
+			{
+				postData = '&hard=' + parseInt(hard);
 			}
-		});
+
+			var form = $('<form />',
+			{
+				method: 'post',
+				action: 'feedback.php?action=delete' + postData,
+				style: 'display: none;'
+			});
+
+			form.append(
+				$('<input />',
+				{
+					name: 'fid',
+					type: 'hidden',
+					value: fid
+				})
+			);
+
+			if(my_post_key)
+			{
+				form.append(
+					$('<input />',
+					{
+						name: 'my_post_key',
+						type: 'hidden',
+						value: my_post_key
+					})
+				);
+			}
+
+			$('body').append(form);
+			form.submit();
+		}
 	},
 
 	Feedback_Restore: function(fid)
 	{
-		$.prompt(restore_feedback_confirm, {
-			buttons:[
-				{title: yes_confirm, value: true},
-				{title: no_confirm, value: false}
-			],
-			submit: function(e,v,m,f){
-				if(v == true)
+		var result = confirm(delete_feedback_confirm);
+
+		if(result)
+		{
+			var form = $('<form />',
+			{
+				method: 'post',
+				action: 'feedback.php?action=restore',
+				style: 'display: none;'
+			});
+
+			form.append(
+				$('<input />',
 				{
-					var form = $('<form />',
+					name: 'fid',
+					type: 'hidden',
+					value: fid
+				})
+			);
+
+			if(my_post_key)
+			{
+				form.append(
+					$('<input />',
 					{
-						method: 'post',
-						action: 'feedback.php?action=restore',
-						style: 'display: none;'
-					});
-
-					form.append(
-						$('<input />',
-						{
-							name: 'fid',
-							type: 'hidden',
-							value: fid
-						})
-					);
-
-					if(my_post_key)
-					{
-						form.append(
-							$('<input />',
-							{
-								name: 'my_post_key',
-								type: 'hidden',
-								value: my_post_key
-							})
-						);
-					}
-
-					$('body').append(form);
-					form.submit();
-				}
+						name: 'my_post_key',
+						type: 'hidden',
+						value: my_post_key
+					})
+				);
 			}
-		});
+
+			$('body').append(form);
+			form.submit();
+		}
 	},
 });
