@@ -38,6 +38,7 @@ $l['ougc_feedback_profile_positive'] = 'Positive';
 $l['ougc_feedback_profile_neutral'] = 'Neutral';
 $l['ougc_feedback_profile_negative'] = 'Negative';
 $l['ougc_feedback_profile_users'] = 'users';
+$l['ougc_feedback_profile_average'] = 'Average';
 $l['ougc_feedback_profile_add'] = 'Add Feedback';
 $l['ougc_feedback_profile_edit'] = 'Update Feedback';
 

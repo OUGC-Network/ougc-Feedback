@@ -76,10 +76,14 @@ else
 	switch(THIS_SCRIPT)
 	{
 		case 'member.php':
-			$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment';
+			$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment,ougcfeedback_profile_average, ougcfeedback_profile_view_all';
 			break;
 		case 'showthread.php':
-			$templatelist .= ',ougcfeedback_postbit';
+		case 'newthread.php':
+		case 'newreply.php':
+		case 'editpost.php':
+		case 'private.php':
+			$templatelist .= ',ougcfeedback_postbit, ougcfeedback_postbit_average, ougcfeedback_postbit_button';
 			break;
 	}
 }
@@ -286,6 +290,7 @@ class OUGC_Feedback
 	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: <a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}"><strong class="{$class}">{$average}</strong></a></span>
 </span>',
 			'postbit_button'	=> '<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\', \'0\', \'\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add ougcfeedback_add_{$post[\'uid\']}"><span>{$lang->ougc_feedback_profile_add}</span></a>',
+			'postbit_average'	=> '{$lang->ougc_feedback_profile_average}: <strong class="{$class}">{$average}</strong>',
 			'profile'	=> '<div class="ougcfeedback_info_{$memprofile[\'uid\']}">
 	<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
 		<tr>
@@ -311,6 +316,7 @@ class OUGC_Feedback
 	</table><br />
 </div>',
 			'profile_view_all'	=> '<span class="smalltext float_right">(<a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$memprofile[\'uid\']}">{$lang->ougc_feedback_profile_view}</a>)',
+			'profile_average'	=> '{$lang->ougc_feedback_profile_average}: <strong class="reputation{$class}">{$stats[\'average\']}</strong>',
 			'profile_add'	=> '<tr class="ougcfeedback_add_{$memprofile[\'uid\']}">
 	<td class="trow1" colspan="2" align="right"><a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$memprofile[\'uid\']}\', \'0\', \'1\', \'1\', \'\', \'\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="button small_button">{$lang->ougc_feedback_profile_add}</a></td>
 </tr>',
@@ -1239,11 +1245,12 @@ class OUGC_Feedback
 	// Hook: member_profile_end
 	function hook_member_profile_end()
 	{
-		global $db, $memprofile, $templates, $ougc_feedback, $theme, $lang, $mybb;
+		global $db, $memprofile, $templates, $ougc_feedback, $ougc_feedback_average, $theme, $lang, $mybb;
 
 		self::load_language();
 
-		$ougc_feedback = '';
+		$ougc_feedback = $ougc_feedback_average = '';
+
 		if(!$mybb->settings['ougc_feedback_showin_profile'])
 		{
 			return;
@@ -1255,7 +1262,19 @@ class OUGC_Feedback
 			$where[] = "status='1'";
 		}*/
 
-		$stats = array('total' => 0, 'positive' => 0, 'neutral' => 0, 'negative' => 0, 'positive_percent' => 0, 'neutral_percent' => 0, 'negative_percent' => 0, 'positive_users' => array(), 'neutral_users' => array(), 'negative_users' => array());
+		$stats = array(
+			'total' => 0,
+			'positive' => 0,
+			'neutral' => 0,
+			'negative' => 0,
+			'positive_percent' => 0,
+			'neutral_percent' => 0,
+			'negative_percent' => 0,
+			'positive_users' => array(),
+			'neutral_users' => array(),
+			'negative_users' => array(),
+			'average' => 0
+		);
 
 		$query = $db->simple_select('ougc_feedback', '*', implode(' AND ', $where));
 		while($feedback = $db->fetch_array($query))
@@ -1285,7 +1304,24 @@ class OUGC_Feedback
 			$stats['positive_percent'] = floor(100*($stats['positive']/$stats['total']));
 			$stats['neutral_percent'] = floor(100*($stats['neutral']/$stats['total']));
 			$stats['negative_percent'] = floor(100*($stats['negative']/$stats['total']));
+
+			$stats['average'] = $stats['positive'] - $stats['negative'];
 		}
+
+		$class = '_neutral';
+
+		if($stats['average'] > 0)
+		{
+			$class = '_positive';
+		}
+		elseif($stats['average'] < 0)
+		{
+			$class = '_negative';
+		}
+
+		$stats['average'] = my_number_format($stats['average']);
+
+		eval('$ougc_feedback_average = "'.$templates->get('ougcfeedback_profile_average').'";');
 
 		$stats['positive_users'] = count($stats['positive_users']);
 		$stats['neutral_users'] = count($stats['neutral_users']);
@@ -1348,7 +1384,7 @@ class OUGC_Feedback
 
 		self::load_language();
 
-		$post['ougc_feedback'] = $post['ougc_feedback_button'] = '';
+		$post['ougc_feedback'] = $post['ougc_feedback_button'] = $post['ougc_feedback_average'] = '';
 
 		$show = true;
 		if(!empty($post['fid']) && (!$mybb->settings['ougc_feedback_showin_forums'] || ($mybb->settings['ougc_feedback_showin_forums'] != -1 && !in_array($post['fid'], array_map('intval', explode(',', $mybb->settings['ougc_feedback_showin_forums']))))))
@@ -1434,11 +1470,15 @@ class OUGC_Feedback
 				}
 			}
 
+			$average = 0;
+
 			if($stats['total'])
 			{
 				$stats['positive_percent'] = floor(100*($stats['positive']/$stats['total']));
 				$stats['neutral_percent'] = floor(100*($stats['neutral']/$stats['total']));
 				$stats['negative_percent'] = floor(100*($stats['negative']/$stats['total']));
+
+				$average = $stats['positive'] - $stats['negative'];
 			}
 
 			$stats['positive_users'] = count($stats['positive_users']);
@@ -1453,9 +1493,8 @@ class OUGC_Feedback
 				eval('$view_all = "'.$templates->get('ougcfeedback_postbit_view_all').'";');
 			}*/
 
-			$average = $stats['positive'] - $stats['negative'];
-
 			$class = 'reputation_neutral';
+
 			if($average > 0)
 			{
 				$class = 'reputation_positive';
@@ -1466,8 +1505,11 @@ class OUGC_Feedback
 			}
 
 			$average = my_number_format($average);
+	
+			eval('$post[\'ougc_feedback_average\'] = "'.$templates->get('ougcfeedback_postbit_average').'";');
 
 			eval('$post[\'ougc_feedback\'] = "'.$templates->get('ougcfeedback_postbit').'";');
+
 			$post['user_details'] = str_replace('<!--OUGC_FEEDBACK-->', $post['ougc_feedback'], $post['user_details']);
 		}
 
