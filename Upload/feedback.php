@@ -370,6 +370,8 @@ if($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 	{
 		$mybb->input['comment'] = $feedback['comment'];
 
+		$mybb->input['comment'] = htmlspecialchars_uni($mybb->input['comment']);
+
 		eval('$comment_row = "'.$templates->get('ougcfeedback_form_comment', 1, 0).'";');
 	}
 
