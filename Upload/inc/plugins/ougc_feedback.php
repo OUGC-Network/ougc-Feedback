@@ -287,8 +287,7 @@ class OUGC_Feedback
 			'postbit'	=> '<span class="ougcfeedback_info_{$post[\'uid\']}" title="{$lang->ougc_feedback_profile_positive} {$lang->ougc_feedback_profile_title}: {$stats[\'positive\']} ({$stats[\'positive_percent\']}% - {$stats[\'positive_users\']} {$lang->ougc_feedback_profile_users})
 {$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: {$stats[\'neutral\']} ({$stats[\'neutral_percent\']}% - {$stats[\'neutral_users\']} {$lang->ougc_feedback_profile_users})
 {$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: {$stats[\'negative\']} ({$stats[\'negative_percent\']}% - {$stats[\'negative_users\']} {$lang->ougc_feedback_profile_users})">
-	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: <a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}"><strong class="{$class}">{$average}</strong></a></span>
-</span>',
+	<br />{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: <a href="{$mybb->settings[\'bburl\']}/feedback.php?uid={$post[\'uid\']}"><strong class="{$class}">{$average}</strong></a></span>',
 			'postbit_button'	=> '<a href="javascript: void(0);" onclick="return OUGC_Plugins.Feedback_Add(\'{$post[\'uid\']}\', \'{$post[\'pid\']}\', \'1\', \'1\', \'0\', \'\'); return false;" title="{$lang->ougc_feedback_profile_add}" class="postbit_reputation_add ougcfeedback_add_{$post[\'uid\']}"><span>{$lang->ougc_feedback_profile_add}</span></a>',
 			'postbit_average'	=> '{$lang->ougc_feedback_profile_average}: <strong class="{$class}">{$average}</strong>',
 			'profile'	=> '<div class="ougcfeedback_info_{$memprofile[\'uid\']}">
