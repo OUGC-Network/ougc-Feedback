@@ -33,61 +33,6 @@ defined('IN_MYBB') or die('Direct initialization of this file is not allowed.');
 // PLUGINLIBRARY
 defined('PLUGINLIBRARY') or define('PLUGINLIBRARY', MYBB_ROOT.'inc/plugins/pluginlibrary.php');
 
-// Tell MyBB when to run the hook
-if(defined('IN_ADMINCP'))
-{
-	$plugins->add_hook('admin_config_settings_start', array('OUGC_Feedback', 'load_language'));
-	$plugins->add_hook('admin_style_templates_set', array('OUGC_Feedback', 'load_language'));
-	$plugins->add_hook('admin_config_settings_change', array('OUGC_Feedback', 'hook_admin_config_settings_change'));
-	$plugins->add_hook('admin_formcontainer_end', array('OUGC_Feedback', 'hook_admin_formcontainer_end'));
-	$plugins->add_hook('admin_user_groups_edit_commit', array('OUGC_Feedback', 'hook_admin_user_groups_edit_commit'));
-	$plugins->add_hook('admin_forum_management_edit_commit', array('OUGC_Feedback', 'hook_admin_forum_management_edit_commit'));
-	$plugins->add_hook('admin_forum_management_add_commit', array('OUGC_Feedback', 'hook_admin_forum_management_edit_commit'));
-	$plugins->add_hook('report_content_types', array('OUGC_Feedback', 'hook_report_content_types'));
-}
-else
-{
-	global $templatelist, $settings;
-
-	$plugins->add_hook('global_intermediate', array('OUGC_Feedback', 'hook_global_intermediate'));
-	$plugins->add_hook('member_profile_end', array('OUGC_Feedback', 'hook_member_profile_end'));
-	$plugins->add_hook('postbit', array('OUGC_Feedback', 'hook_postbit'));
-	$plugins->add_hook('postbit_prev', array('OUGC_Feedback', 'hook_postbit'));
-	$plugins->add_hook('postbit_pm', array('OUGC_Feedback', 'hook_postbit'));
-	$plugins->add_hook('postbit_announcement', array('OUGC_Feedback', 'hook_postbit'));
-	//$plugins->add_hook('memberlist_end', array('OUGC_Feedback', 'hook_memberlist_end'));
-	//$plugins->add_hook('memberlist_intermediate', array('OUGC_Feedback', 'hook_memberlist_intermediate'));
-	//$plugins->add_hook('memberlist_user', array('OUGC_Feedback', 'hook_memberlist_user'));
-	$plugins->add_hook('report_start', array('OUGC_Feedback', 'hook_report_start'));
-	$plugins->add_hook('report_type', array('OUGC_Feedback', 'hook_report_type'));
-	$plugins->add_hook('modcp_reports_report', array('OUGC_Feedback', 'hook_modcp_reports_report'));
-
-	if(isset($templatelist))
-	{
-		$templatelist .= ',';
-	}
-	else
-	{
-		$templatelist = '';
-	}
-
-	$templatelist .= 'ougcfeedback_js';
-
-	switch(THIS_SCRIPT)
-	{
-		case 'member.php':
-			$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment,ougcfeedback_profile_average, ougcfeedback_profile_view_all';
-			break;
-		case 'showthread.php':
-		case 'newthread.php':
-		case 'newreply.php':
-		case 'editpost.php':
-		case 'private.php':
-			$templatelist .= ',ougcfeedback_postbit, ougcfeedback_postbit_average, ougcfeedback_postbit_button';
-			break;
-	}
-}
-
 // Plugin class
 class OUGC_Feedback
 {
@@ -99,7 +44,64 @@ class OUGC_Feedback
 
 	function __construct()
 	{
+		global $plugins;
+
 		self::set_go_back_button();
+
+		// Tell MyBB when to run the hook
+		if(defined('IN_ADMINCP'))
+		{
+			$plugins->add_hook('admin_config_settings_start', array($this, 'load_language'));
+			$plugins->add_hook('admin_style_templates_set', array($this, 'load_language'));
+			$plugins->add_hook('admin_config_settings_change', array($this, 'hook_admin_config_settings_change'));
+			$plugins->add_hook('admin_formcontainer_end', array($this, 'hook_admin_formcontainer_end'));
+			$plugins->add_hook('admin_user_groups_edit_commit', array($this, 'hook_admin_user_groups_edit_commit'));
+			$plugins->add_hook('admin_forum_management_edit_commit', array($this, 'hook_admin_forum_management_edit_commit'));
+			$plugins->add_hook('admin_forum_management_add_commit', array($this, 'hook_admin_forum_management_edit_commit'));
+			$plugins->add_hook('report_content_types', array($this, 'hook_report_content_types'));
+		}
+		else
+		{
+			global $templatelist, $settings;
+		
+			$plugins->add_hook('global_intermediate', array($this, 'hook_global_intermediate'));
+			$plugins->add_hook('member_profile_end', array($this, 'hook_member_profile_end'));
+			$plugins->add_hook('postbit', array($this, 'hook_postbit'));
+			$plugins->add_hook('postbit_prev', array($this, 'hook_postbit'));
+			$plugins->add_hook('postbit_pm', array($this, 'hook_postbit'));
+			$plugins->add_hook('postbit_announcement', array($this, 'hook_postbit'));
+			//$plugins->add_hook('memberlist_end', array($this, 'hook_memberlist_end'));
+			//$plugins->add_hook('memberlist_intermediate', array($this, 'hook_memberlist_intermediate'));
+			//$plugins->add_hook('memberlist_user', array($this, 'hook_memberlist_user'));
+			$plugins->add_hook('report_start', array($this, 'hook_report_start'));
+			$plugins->add_hook('report_type', array($this, 'hook_report_type'));
+			$plugins->add_hook('modcp_reports_report', array($this, 'hook_modcp_reports_report'));
+		
+			if(isset($templatelist))
+			{
+				$templatelist .= ',';
+			}
+			else
+			{
+				$templatelist = '';
+			}
+		
+			$templatelist .= 'ougcfeedback_js';
+		
+			switch(THIS_SCRIPT)
+			{
+				case 'member.php':
+					$templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment,ougcfeedback_profile_average, ougcfeedback_profile_view_all';
+					break;
+				case 'showthread.php':
+				case 'newthread.php':
+				case 'newreply.php':
+				case 'editpost.php':
+				case 'private.php':
+					$templatelist .= ',ougcfeedback_postbit, ougcfeedback_postbit_average, ougcfeedback_postbit_button';
+					break;
+			}
+		}
 	}
 
 	// Plugin API:_info() routine
@@ -1570,7 +1572,7 @@ class OUGC_Feedback
 			}
 		}
 
-		#$plugins->remove_hook('postbit', array('OUGC_Feedback', 'hook_postbit'));
+		#$plugins->remove_hook('postbit', array($this, 'hook_postbit'));
 	}
 
 	// Hook: report_content_types
@@ -1706,38 +1708,52 @@ class OUGC_Feedback
 	*/
 }
 
+$GLOBALS['ougcFeedback'] = new \OUGC_Feedback();
+
 // Plugin API
 function ougc_feedback_info()
 {
-	return OUGC_Feedback::_info();
+	global $ougcFeedback;
+
+	return $ougcFeedback->_info();
 }
 
 // _activate() routine
 function ougc_feedback_activate()
 {
-	return OUGC_Feedback::_activate();
+	global $ougcFeedback;
+
+	return $ougcFeedback->_activate();
 }
 
 // _deactivate() routine
 function ougc_feedback_deactivate()
 {
-	return OUGC_Feedback::_deactivate();
+	global $ougcFeedback;
+
+	return $ougcFeedback->_deactivate();
 }
 
 // _install() routine
 function ougc_feedback_install()
 {
-	return OUGC_Feedback::_install();
+	global $ougcFeedback;
+
+	return $ougcFeedback->_install();
 }
 
 // _is_installed() routine
 function ougc_feedback_is_installed()
 {
-	return OUGC_Feedback::_is_installed();
+	global $ougcFeedback;
+
+	return $ougcFeedback->_is_installed();
 }
 
 // _uninstall() routine
 function ougc_feedback_uninstall()
 {
-	return OUGC_Feedback::_uninstall();
+	global $ougcFeedback;
+
+	return $ougcFeedback->_uninstall();
 }
