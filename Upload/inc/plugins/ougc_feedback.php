@@ -35,13 +35,13 @@ defined('PLUGINLIBRARY') or define('PLUGINLIBRARY', MYBB_ROOT . 'inc/plugins/plu
 // Plugin class
 class OUGC_Feedback
 {
-    static public $plugin_info;
-    static public $error;
-    static public $go_back_button;
-    static public $data = array();
-    static public $fid;
+    public static $plugin_info;
+    public static $error;
+    public static $go_back_button;
+    public static $data = array();
+    public static $fid;
 
-    function __construct()
+    public function __construct()
     {
         global $plugins;
 
@@ -103,7 +103,7 @@ class OUGC_Feedback
     }
 
     // Plugin API:_info() routine
-    function _info()
+    public function _info()
     {
         global $lang;
 
@@ -127,7 +127,7 @@ class OUGC_Feedback
     }
 
     // Plugin API:_activate() routine
-    function _activate()
+    public function _activate()
     {
         global $PL, $lang, $cache, $db;
         self::load_pluginlibrary();
@@ -600,7 +600,7 @@ class OUGC_Feedback
     }
 
     // Plugin API:_deactivate() routine
-    function _deactivate()
+    public function _deactivate()
     {
         require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
         find_replace_templatesets('member_profile', '#' . preg_quote('{$ougc_feedback}') . '#i', '', 0);
@@ -621,7 +621,7 @@ class OUGC_Feedback
     }
 
     // Plugin API:_install() routine
-    function _install()
+    public function _install()
     {
         global $db, $cache;
 
@@ -629,7 +629,7 @@ class OUGC_Feedback
         switch ($db->type) {
             case 'pgsql':
                 $db->write_query(
-                    "CREATE TABLE `" . TABLE_PREFIX . "ougc_feedback` (
+                    'CREATE TABLE `' . TABLE_PREFIX . "ougc_feedback` (
 						`fid` serial,
 						`uid` int NOT NULL DEFAULT '0',
 						`fuid` int NOT NULL DEFAULT '0',
@@ -645,7 +645,7 @@ class OUGC_Feedback
                 break;
             case 'sqlite':
                 $db->write_query(
-                    "CREATE TABLE `" . TABLE_PREFIX . "ougc_feedback` (
+                    'CREATE TABLE `' . TABLE_PREFIX . "ougc_feedback` (
 						`fid` INTEGER PRIMARY KEY,
 						`uid` int NOT NULL DEFAULT '0',
 						`fuid` int NOT NULL DEFAULT '0',
@@ -661,7 +661,7 @@ class OUGC_Feedback
             default:
                 $collation = $db->build_create_table_collation();
                 $db->write_query(
-                    "CREATE TABLE `" . TABLE_PREFIX . "ougc_feedback` (
+                    'CREATE TABLE `' . TABLE_PREFIX . "ougc_feedback` (
 						`fid` int UNSIGNED NOT NULL AUTO_INCREMENT,
 						`uid` int UNSIGNED NOT NULL DEFAULT '0',
 						`fuid` int UNSIGNED NOT NULL DEFAULT '0',
@@ -683,7 +683,7 @@ class OUGC_Feedback
     }
 
     // Plugin API:_is_installed() routine
-    function _is_installed()
+    public function _is_installed()
     {
         global $db;
 
@@ -691,7 +691,7 @@ class OUGC_Feedback
     }
 
     // Plugin API:_uninstall() routine
-    function _uninstall()
+    public function _uninstall()
     {
         global $db, $PL, $cache;
         self::load_pluginlibrary();
@@ -732,7 +732,7 @@ class OUGC_Feedback
     }
 
     // Load language file
-    function load_language($force = false)
+    public function load_language($force = false)
     {
         global $lang;
 
@@ -740,13 +740,13 @@ class OUGC_Feedback
     }
 
     // Build plugin info
-    function load_plugin_info()
+    public function load_plugin_info()
     {
         self::$plugin_info = self::_info();
     }
 
     // PluginLibrary requirement check
-    function load_pluginlibrary()
+    public function load_pluginlibrary()
     {
         global $lang;
         self::load_plugin_info();
@@ -784,7 +784,7 @@ class OUGC_Feedback
     }
 
     // DB Fields
-    function get_db_fields()
+    public function get_db_fields()
     {
         global $db;
 
@@ -846,13 +846,13 @@ class OUGC_Feedback
     }
 
     // Default status
-    function default_status()
+    public function default_status()
     {
         return 1;
     }
 
     // Send an error to the browser
-    function error($message, $title = '', $success = false, $replacement = '', $hide_add = 1)
+    public function error($message, $title = '', $success = false, $replacement = '', $hide_add = 1)
     {
         global $templates, $lang, $theme, $mybb;
         self::load_language();
@@ -888,32 +888,32 @@ class OUGC_Feedback
     }
 
     // Send an error to the browser
-    function success($message, $title = '', $replacement = '', $hide_add = 1)
+    public function success($message, $title = '', $replacement = '', $hide_add = 1)
     {
         //self::set_go_back_button(false);
         self::error($message, $title, true, $replacement, $hide_add);
     }
 
     // Set error
-    function set_error($message)
+    public function set_error($message)
     {
         self::$error = $message;
     }
 
     // Get error
-    function get_error()
+    public function get_error()
     {
         return self::$error;
     }
 
     // Set go back button status
-    function set_go_back_button($_ = true)
+    public function set_go_back_button($_ = true)
     {
         self::$go_back_button = $_;
     }
 
     // Get go back button
-    function get_go_back_button()
+    public function get_go_back_button()
     {
         if (self::$go_back_button) {
             global $mybb, $templates, $lang;
@@ -935,7 +935,7 @@ class OUGC_Feedback
     }
 
     // Feedback:
-    function set_data($feedback)
+    public function set_data($feedback)
     {
         global $db;
 
@@ -952,13 +952,13 @@ class OUGC_Feedback
     }
 
     // Feedback: get data
-    function get_data()
+    public function get_data()
     {
         return self::$data;
     }
 
     // Feedback: Insert
-    function validate_feedback()
+    public function validate_feedback()
     {
         if (self::$error) {
             return false;
@@ -968,7 +968,7 @@ class OUGC_Feedback
     }
 
     // Feedback: Fetch
-    function fetch_feedback($fid)
+    public function fetch_feedback($fid)
     {
         global $db;
 
@@ -979,7 +979,7 @@ class OUGC_Feedback
     }
 
     // Feedback: Insert
-    function insert_feedback($update = false)
+    public function insert_feedback($update = false)
     {
         global $db;
 
@@ -1016,13 +1016,13 @@ class OUGC_Feedback
     }
 
     // Feedback: Update
-    function update_feedback()
+    public function update_feedback()
     {
         self::insert_feedback(true);
     }
 
     // Feedback: Update
-    function delete_feedback($fid)
+    public function delete_feedback($fid)
     {
         global $db;
 
@@ -1030,7 +1030,7 @@ class OUGC_Feedback
     }
 
     // Send a Private Message to an user (Copied from MyBB 1.7)
-    function send_pm($pm, $fromid = 0, $admin_override = false)
+    public function send_pm($pm, $fromid = 0, $admin_override = false)
     {
         global $mybb;
 
@@ -1047,7 +1047,7 @@ class OUGC_Feedback
         global $lang, $session;
         $lang->load('messages');
 
-        require_once MYBB_ROOT . "inc/datahandlers/pm.php";
+        require_once MYBB_ROOT . 'inc/datahandlers/pm.php';
 
         $pmhandler = new PMDataHandler();
 
@@ -1090,7 +1090,7 @@ class OUGC_Feedback
     }
 
     // Send a e-mail to an user
-    function send_email($email)
+    public function send_email($email)
     {
         global $mybb, $db, $lang;
 
@@ -1152,7 +1152,7 @@ class OUGC_Feedback
     }
 
     // Sync user feedback
-    function sync_user($uid)
+    public function sync_user($uid)
     {
         global $db;
 
@@ -1164,7 +1164,7 @@ class OUGC_Feedback
     }
 
     // Hook: admin_config_settings_change
-    function hook_admin_config_settings_change()
+    public function hook_admin_config_settings_change()
     {
         global $db, $mybb;
 
@@ -1174,7 +1174,7 @@ class OUGC_Feedback
     }
 
     // Hook: admin_formcontainer_end
-    function hook_admin_formcontainer_end()
+    public function hook_admin_formcontainer_end()
     {
         global $run_module, $form_container, $lang;
 
@@ -1238,7 +1238,7 @@ class OUGC_Feedback
     }
 
     // Hook: admin_user_groups_edit_commit
-    function hook_admin_user_groups_edit_commit()
+    public function hook_admin_user_groups_edit_commit()
     {
         global $updated_group, $mybb;
 
@@ -1252,7 +1252,7 @@ class OUGC_Feedback
     }
 
     // Hook: admin_forum_management_edit_commit
-    function hook_admin_forum_management_edit_commit()
+    public function hook_admin_forum_management_edit_commit()
     {
         global $db, $mybb, $fid, $plugins;
 
@@ -1268,7 +1268,7 @@ class OUGC_Feedback
     }
 
     // Hook: global_intermediate
-    function hook_global_intermediate()
+    public function hook_global_intermediate()
     {
         global $templates, $ougc_feedback_js, $mybb;
 
@@ -1276,7 +1276,7 @@ class OUGC_Feedback
     }
 
     // Hook: member_profile_end
-    function hook_member_profile_end()
+    public function hook_member_profile_end()
     {
         global $db, $memprofile, $templates, $ougc_feedback, $ougc_feedback_average, $theme, $lang, $mybb;
 
@@ -1404,7 +1404,7 @@ class OUGC_Feedback
     }
 
     // Hook: postbit
-    function hook_postbit(&$post)
+    public function hook_postbit(&$post)
     {
         global $db, $templates, $theme, $lang, $mybb, $pids;
 
@@ -1587,7 +1587,7 @@ class OUGC_Feedback
     }
 
     // Hook: report_content_types
-    function hook_report_content_types(&$args)
+    public function hook_report_content_types(&$args)
     {
         self::load_language();
 
@@ -1595,7 +1595,7 @@ class OUGC_Feedback
     }
 
     // Hook: report_start
-    function hook_report_start()
+    public function hook_report_start()
     {
         global $mybb;
 
@@ -1605,7 +1605,7 @@ class OUGC_Feedback
     }
 
     // Hook: report_type
-    function hook_report_type()
+    public function hook_report_type()
     {
         global $report_type;
 
@@ -1635,7 +1635,7 @@ class OUGC_Feedback
     }
 
     // Hook: modcp_reports_report
-    function hook_modcp_reports_report()
+    public function hook_modcp_reports_report()
     {
         global $report;
 
@@ -1713,7 +1713,7 @@ class OUGC_Feedback
     */
 }
 
-$GLOBALS['ougcFeedback'] = new \OUGC_Feedback();
+$GLOBALS['ougcFeedback'] = new OUGC_Feedback();
 
 // Plugin API
 function ougc_feedback_info()
