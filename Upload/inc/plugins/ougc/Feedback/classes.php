@@ -30,6 +30,10 @@ declare(strict_types=1);
 
 namespace ougc\Feedback\Core;
 
+const PLUGIN_VERSION = '1.8.23';
+
+const PLUGIN_VERSION_CODE = 1823;
+
 const FEEDBACK_TYPE_BUYER = 1;
 
 const FEEDBACK_TYPE_SELLER = 2;

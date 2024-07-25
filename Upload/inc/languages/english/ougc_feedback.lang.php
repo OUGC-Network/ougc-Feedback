@@ -41,6 +41,9 @@ $l['ougc_feedback_profile_average'] = 'Average';
 $l['ougc_feedback_profile_add'] = 'Add Feedback';
 $l['ougc_feedback_profile_edit'] = 'Update Feedback';
 
+// Posts
+$l['ougc_feedback_post_view'] = 'View All';
+
 // Modal
 $l['ougc_feedback_modal_type'] = 'Transaction Type:';
 $l['ougc_feedback_modal_feedback'] = 'Feedback:';

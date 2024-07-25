@@ -25,10 +25,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ****************************************************************************/
 
-var OUGC_Plugins = OUGC_Plugins || {};
-
-$.extend(true, OUGC_Plugins, {
-	Feedback_unBind: function()
+var OUGC_Feedback = {
+	Unbind: function()
 	{
 		$('#ougcfeedback_form').submit(function(e)
 		{
@@ -37,21 +35,21 @@ $.extend(true, OUGC_Plugins, {
 		});
 	},
 
-	Feedback_Add: function(uid, pid, type, feedback, reload, comment, backbutton)
+	Add: function(uid, pid, type, feedback, reload, comment, back_button)
 	{
-		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&comment=' + String(comment) + '&backbutton=' + parseInt(backbutton);
+		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&comment=' + String(comment) + '&back_button=' + parseInt(back_button);
 
 		MyBB.popupWindow('/feedback.php?' + postData);
 	},
 
-	Feedback_Edit: function(fid, reload)
+	Edit: function(fid, reload)
 	{
 		var postData = 'action=edit&fid=' + parseInt(fid) + '&reload=' + parseInt(reload);
 
 		MyBB.popupWindow('/feedback.php?' + postData);
 	},
 
-	Feedback_DoAdd: function(uid, pid)
+	DoAdd: function(uid, pid)
 	{
 		// Get form, serialize it and send it
 		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
@@ -103,7 +101,7 @@ $.extend(true, OUGC_Plugins, {
 		});
 	},
 
-	Feedback_DoEdit: function(uid, pid, fid)
+	DoEdit: function(uid, pid, fid)
 	{
 		// Get form, serialize it and send it
 		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
@@ -156,12 +154,12 @@ $.extend(true, OUGC_Plugins, {
 		});
 	},
 
-	Feedback_Report: function(fid)
+	Report: function(fid)
 	{
 		MyBB.popupWindow('/report.php?type=feedback&pid=' + parseInt(fid));
 	},
 
-	Feedback_Delete: function(fid, my_post_key, hard)
+	Delete: function(fid, my_post_key, hard)
 	{
 		var result = confirm(delete_feedback_confirm);
 
@@ -207,7 +205,7 @@ $.extend(true, OUGC_Plugins, {
 		}
 	},
 
-	Feedback_Restore: function(fid)
+	Restore: function(fid)
 	{
 		var result = confirm(delete_feedback_confirm);
 
@@ -245,4 +243,4 @@ $.extend(true, OUGC_Plugins, {
 			form.submit();
 		}
 	},
-});
+}

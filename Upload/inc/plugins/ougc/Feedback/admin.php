@@ -37,6 +37,8 @@ use stdClass;
 use function ougc\Feedback\Core\loadLanguage;
 
 use const ougc\Feedback\Core\FIELDS_DATA;
+use const ougc\Feedback\Core\PLUGIN_VERSION;
+use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
 use const ougc\Feedback\Core\TABLES_DATA;
 use const ougc\Feedback\ROOT;
 
@@ -52,8 +54,8 @@ function pluginInformation(): array
         'website' => 'https://ougc.network',
         'author' => 'Omar G.',
         'authorsite' => 'https://ougc.network',
-        'version' => '1.8.23',
-        'versioncode' => 1823,
+        'version' => PLUGIN_VERSION,
+        'versioncode' => PLUGIN_VERSION_CODE,
         'compatibility' => '18*',
         'codename' => 'ougc_feedback',
         'pl' => [

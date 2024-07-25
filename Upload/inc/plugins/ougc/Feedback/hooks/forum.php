@@ -33,7 +33,12 @@ namespace ougc\Feedback\Hooks\Forum;
 use MyBB;
 
 use function ougc\Feedback\Core\getTemplate;
+use function ougc\Feedback\Core\getTemplateName;
 use function ougc\Feedback\Core\loadLanguage;
+
+use const ougc\Feedback\Core\DEBUG;
+use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
+use const ougc\Feedback\ROOT;
 
 function global_start(): bool
 {
@@ -66,6 +71,12 @@ function global_start(): bool
 function global_intermediate(): bool
 {
     global $ougc_feedback_js, $mybb;
+
+    $version = PLUGIN_VERSION_CODE;
+
+    if (DEBUG) {
+        $version = TIME_NOW;
+    }
 
     $ougc_feedback_js = eval(getTemplate('js'));
 
@@ -338,11 +349,11 @@ function postbit(array &$post): array
 
         $stats = array_map('my_number_format', $stats);
 
-        /*$view_all = '';
-        if($mybb->usergroup['ougc_feedback_canview'])
-        {
+        $view_all = '';
+
+        if ($mybb->usergroup['ougc_feedback_canview']) {
             $view_all = eval(getTemplate('postbit_view_all'));
-        }*/
+        }
 
         $class = 'reputation_neutral';
 

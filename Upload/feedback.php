@@ -81,7 +81,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             trow_error($lang->ougc_feedback_error_invalid_feedback_value);
         }
 
-        $method = "Feedback_DoEdit('{$feedback['uid']}', '{$feedback['pid']}', '{$feedback['fid']}')";
+        $method = "DoEdit('{$feedback['uid']}', '{$feedback['pid']}', '{$feedback['fid']}')";
 
         $mybb->input['reload'] = 1;
 
@@ -99,10 +99,10 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             'status' => default_status()
         ];
 
-        $method = "Feedback_DoAdd('{$feedback['uid']}', '{$feedback['pid']}')";
+        $method = "DoAdd('{$feedback['uid']}', '{$feedback['pid']}')";
     }
 
-    if (!$edit || $mybb->request_method == 'post' || $mybb->get_input('backbutton', MyBB::INPUT_INT)) {
+    if (!$edit || $mybb->request_method == 'post' || $mybb->get_input('back_button', MyBB::INPUT_INT)) {
         $feedback['type'] = $mybb->get_input('type', MyBB::INPUT_INT);
 
         $feedback['feedback'] = $mybb->get_input('feedback', MyBB::INPUT_INT);

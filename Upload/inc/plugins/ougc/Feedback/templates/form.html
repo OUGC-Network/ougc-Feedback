@@ -2,7 +2,7 @@
     <div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback['uid']}_{$feedback['pid']}">
         <form method="post" action="{$mybb->settings['bburl']}/feedback.php" id="ougcfeedback_form"
               class="feedback_{$feedback['uid']}_{$feedback['pid']}"
-              onsubmit="javascript: return OUGC_Plugins.{$method};">
+              onsubmit="javascript: return OUGC_Feedback.{$method};">
             <input name="action" type="hidden" value="{$mybb->input['action']}"/>
             <input name="uid" type="hidden" value="{$feedback['uid']}"/>
             <input name="pid" type="hidden" value="{$feedback['pid']}"/>
@@ -40,7 +40,7 @@
             </table>
         </form>
         <script>
-            OUGC_Plugins.Feedback_unBind();
+            OUGC_Feedback.Unbind();
         </script>
     </div>
 </div>
