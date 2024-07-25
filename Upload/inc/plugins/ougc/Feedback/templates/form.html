@@ -1,0 +1,46 @@
+<div class="modal">
+    <div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback['uid']}_{$feedback['pid']}">
+        <form method="post" action="{$mybb->settings['bburl']}/feedback.php" id="ougcfeedback_form"
+              class="feedback_{$feedback['uid']}_{$feedback['pid']}"
+              onsubmit="javascript: return OUGC_Plugins.{$method};">
+            <input name="action" type="hidden" value="{$mybb->input['action']}"/>
+            <input name="uid" type="hidden" value="{$feedback['uid']}"/>
+            <input name="pid" type="hidden" value="{$feedback['pid']}"/>
+            <input name="fid" type="hidden" value="{$feedback['fid']}"/>
+            <input name="my_post_key" type="hidden" value="{$mybb->post_code}"/>
+            <input name="reload" type="hidden" value="{$mybb->input['reload']}"/>
+            <table width="100%" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" border="0"
+                   class="tborder">
+                <tr>
+                    <td class="thead" colspan="2"><strong>{$lang->ougc_feedback_profile_add}</strong></td>
+                </tr>
+                <tr>
+                    <td class="trow1" width="40%"><strong>{$lang->ougc_feedback_modal_type}</strong></td>
+                    <td class="trow1"><select name="type">
+                        <option value="1" {$type_selected_buyer}>{$lang->ougc_feedback_type_buyer}</option>
+                        <option value="2" {$type_selected_seller}>{$lang->ougc_feedback_type_seller}</option>
+                        <option value="3" {$type_selected_trader}>{$lang->ougc_feedback_type_trader}</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <td class="trow2" width="40%"><strong>{$lang->ougc_feedback_modal_feedback}</strong></td>
+                    <td class="trow2"><select name="feedback">
+                        <option value="1" {$feedback_selected_positive}>{$lang->ougc_feedback_profile_positive}</option>
+                        <option value="0" {$feedback_selected_neutral}>{$lang->ougc_feedback_profile_neutral}</option>
+                        <option value="-1" {$feedback_selected_negative}>{$lang->ougc_feedback_profile_negative}
+                        </option>
+                    </select></td>
+                </tr>
+                {$comment_row}
+                <tr>
+                    <td class="tfoot" colspan="2" align="center">
+                        <input name="submit" type="submit" class="button" value="{$lang->ougc_feedback_profile_add}"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+        <script>
+            OUGC_Plugins.Feedback_unBind();
+        </script>
+    </div>
+</div>

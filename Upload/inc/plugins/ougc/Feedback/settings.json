@@ -1,0 +1,50 @@
+{
+  "allow_profile": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "allow_profile_multiple": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "showin_profile": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "showin_postbit": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "showin_forums": {
+    "optionscode": "forumselect",
+    "value": -1
+  },
+  "postbit_hide_button": {
+    "optionscode": "yesno",
+    "value": 0
+  },
+  "profile_hide_add": {
+    "optionscode": "yesno",
+    "value": 0
+  },
+  "comments_minlength": {
+    "optionscode": "numeric",
+    "value": 15
+  },
+  "comments_maxlength": {
+    "optionscode": "numeric",
+    "value": 100
+  },
+  "allow_pm_notifications": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "allow_email_notifications": {
+    "optionscode": "yesno",
+    "value": 0
+  },
+  "perpage": {
+    "optionscode": "numeric",
+    "value": 20
+  }
+}

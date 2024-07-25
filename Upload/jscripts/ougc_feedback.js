@@ -2,9 +2,9 @@
  *
  *	OUGC Feedback plugin (/jscripts/ougc_feedback.js)
  *	Author: Omar Gonzalez
- *	Copyright: © 2012-2019 Omar Gonzalez
+ *	Copyright: © 2012 Omar Gonzalez
  *
- *	Website: https://omarg.me
+ *	Website: https://ougc.network
  *
  *	Adds a powerful feedback system to your forum.
  *

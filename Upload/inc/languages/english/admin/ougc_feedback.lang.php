@@ -4,9 +4,9 @@
  *
  *    OUGC Feedback plugin (/inc/languages/english/admin/ougc_feedback.lang.php)
  *    Author: Omar Gonzalez
- *    Copyright: © 2012-2019 Omar Gonzalez
+ *    Copyright: © 2012 Omar Gonzalez
  *
- *    Website: https://omarg.me
+ *    Website: https://ougc.network
  *
  *    Adds a powerful feedback system to your forum.
  *
@@ -32,7 +32,6 @@ $l['ougc_feedback_desc'] = 'Adds a powerful feedback system to your forum.';
 
 // PluginLibrary
 $l['ougc_feedback_pluginlibrary_required'] = 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or later to be uploaded to your forum.';
-$l['ougc_feedback_pluginlibrary_old'] = 'This plugin requires PluginLibrary version {2} or later, whereas your current version is {1}. Please do update <a href="{3}">PluginLibrary</a>.';
 
 // Settings
 $l['setting_group_ougc_feedback'] = 'Feedback System';
