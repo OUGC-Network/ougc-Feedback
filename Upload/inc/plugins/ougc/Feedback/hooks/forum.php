@@ -32,6 +32,7 @@ namespace ougc\Feedback\Hooks\Forum;
 
 use MyBB;
 
+use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\loadLanguage;
 
 function global_start(): bool
@@ -64,14 +65,14 @@ function global_start(): bool
 
 function global_intermediate(): bool
 {
-    global $templates, $ougc_feedback_js, $mybb;
+    global $ougc_feedback_js, $mybb;
 
-    eval('$ougc_feedback_js = "' . $templates->get('ougcfeedback_js') . '";');
+    $ougc_feedback_js = eval(getTemplate('js'));
 
     return true;
 }
 
-function member_profile_end(): bool
+function member_profile_end(): string
 {
     global $db, $memprofile, $templates, $ougc_feedback, $ougc_feedback_average, $theme, $lang, $mybb;
 
@@ -80,7 +81,7 @@ function member_profile_end(): bool
     $ougc_feedback = $ougc_feedback_average = '';
 
     if (!$mybb->settings['ougc_feedback_showin_profile']) {
-        return false;
+        return $ougc_feedback;
     }
 
     $where = array(
@@ -153,7 +154,7 @@ function member_profile_end(): bool
 
     $stats['average'] = my_number_format($stats['average']);
 
-    eval('$ougc_feedback_average = "' . $templates->get('ougcfeedback_profile_average') . '";');
+    $ougc_feedback_average = eval(getTemplate('profile_average'));
 
     $stats['positive_users'] = count($stats['positive_users']);
 
@@ -204,19 +205,19 @@ function member_profile_end(): bool
                 MyBB::INPUT_INT
             ) : 1;
 
-            eval('$add_row = "' . $templates->get('ougcfeedback_profile_add') . '";');
+            $add_row = eval(getTemplate('profile_add'));
         }
     }
 
     $view_all = '';
 
     if ($mybb->usergroup['ougc_feedback_canview']) {
-        eval('$view_all = "' . $templates->get('ougcfeedback_profile_view_all') . '";');
+        $view_all = eval(getTemplate('profile_view_all'));
     }
 
-    eval('$ougc_feedback = "' . $templates->get('ougcfeedback_profile') . '";');
+    $ougc_feedback = eval(getTemplate('profile'));
 
-    return true;
+    return $ougc_feedback;
 }
 
 function postbit(array &$post): array
@@ -340,7 +341,7 @@ function postbit(array &$post): array
         /*$view_all = '';
         if($mybb->usergroup['ougc_feedback_canview'])
         {
-            eval('$view_all = "'.$templates->get('ougcfeedback_postbit_view_all').'";');
+            $view_all = eval(getTemplate('postbit_view_all'));
         }*/
 
         $class = 'reputation_neutral';
@@ -353,9 +354,9 @@ function postbit(array &$post): array
 
         $average = my_number_format($average);
 
-        eval('$post[\'ougc_feedback_average\'] = "' . $templates->get('ougcfeedback_postbit_average') . '";');
+        $post['ougc_feedback_average'] = eval(getTemplate('postbit_average'));
 
-        eval('$post[\'ougc_feedback\'] = "' . $templates->get('ougcfeedback_postbit') . '";');
+        $post['ougc_feedback'] = eval(getTemplate('postbit'));
 
         $post['user_details'] = str_replace('<!--OUGC_FEEDBACK-->', $post['ougc_feedback'], $post['user_details']);
     }
@@ -408,7 +409,7 @@ function postbit(array &$post): array
         }
 
         if (!isset($button_query_cache[$post['pid']])) {
-            eval('$post[\'ougc_feedback_button\'] = "' . $templates->get('ougcfeedback_postbit_button') . '";');
+            $post['ougc_feedback_button'] = eval(getTemplate('postbit_button'));
         }
     }
     #$plugins->remove_hook('postbit', array($this, 'hook_postbit'));
@@ -452,9 +453,9 @@ function memberlist_end(): bool
 
     ++$colspan;
 
-    eval('$ougc_feedback_header = "' . $templates->get('ougcfeedback_memberlist_header') . '";');
+    $ougc_feedback_header = eval(getTemplate('memberlist_header'));
 
-    eval('$ougc_feedback_sort = "' . $templates->get('ougcfeedback_memberlist_sort') . '";');
+    $ougc_feedback_sort = eval(getTemplate('memberlist_sort'));
 
     return true;
 }
@@ -490,7 +491,7 @@ function memberlist_user(array &$user): array
         }
     }
 
-    eval('$ougc_feedback_bit = "' . $templates->get('ougcfeedback_memberlist_user') . '";');
+    $ougc_feedback_bit = eval(getTemplate('memberlist_user'));
 
     return $user;
 }

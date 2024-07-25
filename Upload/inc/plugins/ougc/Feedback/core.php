@@ -30,151 +30,6 @@ declare(strict_types=1);
 
 namespace ougc\Feedback\Core;
 
-const FEEDBACK_TYPE_BUYER = 1;
-
-const FEEDBACK_TYPE_SELLER = 2;
-
-const FEEDBACK_TYPE_TRADER = 3;
-
-const FEEDBACK_TYPE_POSITIVE = 1;
-
-const FEEDBACK_TYPE_NEUTRAL = 0;
-
-const FEEDBACK_TYPE_NEGATIVE = -1;
-
-const TABLES_DATA = [
-    'ougc_feedback' => [
-        'fid' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'auto_increment' => true,
-            'primary_key' => true
-        ],
-        'uid' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'fuid' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'pid' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'type' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'feedback' => [
-            'type' => 'INT',
-            'default' => 0
-        ],
-        'comment' => [
-            'type' => 'TEXT',
-            'null' => true
-        ],
-        'status' => [
-            'type' => 'TINYINT',
-            'default' => 1
-        ],
-        'dateline' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        // todo, legacy KEY uid (uid) skipped
-    ]
-];
-
-const FIELDS_DATA = [
-    'usergroups' => [
-        'ougc_feedback_canview' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 1,
-        ],
-        'ougc_feedback_cangive' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 1,
-        ],
-        'ougc_feedback_canreceive' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 1,
-        ],
-        'ougc_feedback_canedit' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 1,
-        ],
-        'ougc_feedback_canremove' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 1,
-        ],
-        /*'ougc_feedback_value' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 1
-        ],*/
-        'ougc_feedback_maxperday' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 5
-        ],
-        'ougc_feedback_ismod' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'ougc_feedback_mod_canedit' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'ougc_feedback_mod_canremove' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'ougc_feedback_mod_candelete' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 0
-        ]
-    ],
-    'forums' => [
-        'ougc_feedback_allow_threads' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 1,
-        ],
-        'ougc_feedback_allow_posts' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 1,
-        ]
-    ],
-    'users' => [
-        'ougc_feedback_notification' => [
-            'type' => 'VARCHAR',
-            'size' => 5,
-            'default' => '',
-        ],
-        'ougc_feedback' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ]
-    ]
-];
-
 function loadLanguage(bool $forceLoad = false): bool
 {
     global $lang;
@@ -217,7 +72,7 @@ function getSetting(string $settingKey = '')
     global $mybb;
 
     return isset(SETTINGS[$settingKey]) ? SETTINGS[$settingKey] : (
-    isset($mybb->settings['ougc_contract_system_' . $settingKey]) ? $mybb->settings['ougc_contract_system_' . $settingKey] : false
+    isset($mybb->settings['ougc_feedback_' . $settingKey]) ? $mybb->settings['ougc_feedback_' . $settingKey] : false
     );
 }
 
@@ -229,7 +84,7 @@ function getTemplateName(string $templateName = ''): string
         $templatePrefix = '_';
     }
 
-    return "ougccontractsystem{$templatePrefix}{$templateName}";
+    return "ougcfeedback{$templatePrefix}{$templateName}";
 }
 
 function getTemplate(string $templateName = '', bool $enableHTMLComments = true): string
@@ -278,7 +133,7 @@ function trow_error(
             'reload' => $mybb->get_input('reload', 1)
         );
 
-        eval('$data[\'modal\'] = "' . $templates->get('ougcfeedback_modal', 1, 0) . '";');
+        $data['modal'] = eval(getTemplate('modal', false));
 
         echo json_encode($data);
     } else {
@@ -286,11 +141,11 @@ function trow_error(
 
         $message = get_error();
 
-        eval('$message = "' . $templates->get('ougcfeedback_modal_error') . '";');
+        $message = eval(getTemplate('modal_error'));
 
         $tfoot = get_go_back_button();
 
-        eval('echo "' . $templates->get('ougcfeedback_modal', 1, 0) . '";');
+        echo eval(getTemplate('modal', false));
     }
 
     exit;
@@ -347,7 +202,7 @@ function get_go_back_button(): string
 
     $pid = set_data()['pid'];
 
-    return eval('return "' . $templates->get('ougcfeedback_modal_tfoot') . '";');
+    return eval(getTemplate('modal_tfoot'));
 }
 
 function set_data(array $feedback): array
@@ -428,16 +283,16 @@ function insert_feedback(bool $update = false): array
     }
 
     if ($update) {
-        self::$fid = $feedback['fid'];
+        enums::$fid = $feedback['fid'];
 
         $db->update_query('ougc_feedback', $insert_data, "fid='{$feedback['fid']}'");
     } else {
         $insert_data['dateline'] = TIME_NOW;
 
-        self::$fid = $db->insert_query('ougc_feedback', $insert_data);
+        enums::$fid = (int)$db->insert_query('ougc_feedback', $insert_data);
     }
 
-    //self::sync_user($insert_data['uid']);
+    sync_user($insert_data['uid']);
 
     set_data($feedback);
 

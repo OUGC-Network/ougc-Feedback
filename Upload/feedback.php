@@ -29,6 +29,7 @@
 use function ougc\Feedback\Core\default_status;
 use function ougc\Feedback\Core\delete_feedback;
 use function ougc\Feedback\Core\fetch_feedback;
+use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\insert_feedback;
 use function ougc\Feedback\Core\loadLanguage;
 use function ougc\Feedback\Core\send_email;
@@ -39,6 +40,8 @@ use function ougc\Feedback\Core\trow_error;
 use function ougc\Feedback\Core\trow_success;
 use function ougc\Feedback\Core\update_feedback;
 use function ougc\Feedback\Core\validate_feedback;
+use function ougc\Feedback\Hooks\Forum\member_profile_end;
+use function ougc\Feedback\Hooks\Forum\postbit;
 
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
@@ -47,16 +50,20 @@ use const ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
 
-define('IN_MYBB', 1);
-define('THIS_SCRIPT', 'feedback.php');
+const IN_MYBB = 1;
+
+const THIS_SCRIPT = 'feedback.php';
 
 $templatelist = 'ougcfeedback_page_item_edit, ougcfeedback_page_item_delete, ougcfeedback_page_item_delete_hard, ougcfeedback_page_item_report, ougcfeedback_page_item, ougcfeedback_page_addlink, ougcfeedback_page';
 
 require_once './global.php';
 
+global $mybb, $lang, $db, $templates, $cache;
+global $PL;
+
 $mybb->input['fid'] = $mybb->get_input('fid', MyBB::INPUT_INT);
 
-$PL or require_once PLUGINLIBRARY;
+$PL || require_once PLUGINLIBRARY;
 
 loadLanguage();
 
@@ -364,16 +371,15 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
                 /*if(strpos(','.$user['ougc_feedback_notification'].',', ',`3,'))
                 {
-                    $ougcFeedback->send_alert(array());
+                    \ougc\Feedback\Core\send_alert(array());
                 }*/
 
                 if ($feedback['pid']) {
-                    $ougcFeedback->hook_postbit($post);
+                    postbit($post);
                     $replacement = $post['ougc_feedback'];
                 } else {
                     $memprofile = &$user;
-                    $ougcFeedback->hook_member_profile_end();
-                    $replacement = $ougc_feedback;
+                    $replacement = member_profile_end();
                 }
 
                 trow_success(
@@ -393,16 +399,16 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
         $mybb->input['comment'] = htmlspecialchars_uni($mybb->input['comment']);
 
-        eval('$comment_row = "' . $templates->get('ougcfeedback_form_comment', 1, 0) . '";');
+        $comment_row = eval(getTemplate('form_comment', false));
     }
 
     if ($edit) {
         $lang->ougc_feedback_profile_add = $lang->ougc_feedback_profile_edit;
     }
 
-    eval('$form = "' . $templates->get('ougcfeedback_form', 1, 0) . '";');
+    echo eval(getTemplate('form', false));
 
-    exit($form);
+    exit;
 
     // Send an error to the browser
     //$ougcFeedback->send_form($form);
@@ -502,11 +508,13 @@ $username = format_name($user['username'], $user['usergroup'], $user['displaygro
 
 $user['displaygroup'] = $user['displaygroup'] ? $user['displaygroup'] : $user['usergroup'];
 
+$display_group = usergroup_displaygroup($user['displaygroup']);
+
 // Get user title
 $usertitle = '';
 if (trim($user['usertitle'])) {
     $usertitle = $user['usertitle'];
-} elseif (trim($display_group['usertitle'])) {
+} elseif (!empty($display_group['usertitle'])) {
     $usertitle = $display_group['usertitle'];
 } else {
     $usertitles = $cache->read('usertitles');
@@ -860,7 +868,7 @@ foreach ($feedback_cache as $feedback) {
 
     $edit_link = $delete_link = $delete_hard_link = $report_link = '';
     if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canedit']) || ($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_canedit']))) {
-        eval('$edit_link = "' . $templates->get('ougcfeedback_page_item_edit') . '";');
+        $edit_link = eval(getTemplate('page_item_edit'));
     }
 
     if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canremove']) || ($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_canremove']))) {
@@ -872,18 +880,18 @@ foreach ($feedback_cache as $feedback) {
     }
 
     if ($mybb->user['uid'] && $mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_candelete']) {
-        eval('$delete_hard_link = "' . $templates->get('ougcfeedback_page_item_delete_hard') . '";');
+        $delete_hard_link = eval(getTemplate('page_item_delete_hard'));
     }
 
     if ($mybb->user['uid']) {
         $report_link = eval($templates->render('ougcfeedback_page_item_report'));
     }
 
-    eval('$feedback_list .= "' . $templates->get('ougcfeedback_page_item') . '";');
+    $feedback_list .= eval(getTemplate('page_item'));
 }
 
 if (!$feedback_list) {
-    eval('$feedback_list = "' . $templates->get('ougcfeedback_page_empty') . '";');
+    $feedback_list = eval(getTemplate('page_empty'));
 }
 
 $add_feedback = '';
@@ -911,7 +919,7 @@ if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_fee
     }
 
     if ($show) {
-        eval('$add_feedback = "' . $templates->get('ougcfeedback_page_addlink') . '";');
+        $add_feedback = eval(getTemplate('page_addlink'));
     }
 }
 
@@ -923,5 +931,5 @@ if ($user['ougc_feedback'] < 0) {
     $total_class = '_neutral';
 }
 
-eval('$page = "' . $templates->get('ougcfeedback_page') . '";');
+$page = eval(getTemplate('page'));
 output_page($page);

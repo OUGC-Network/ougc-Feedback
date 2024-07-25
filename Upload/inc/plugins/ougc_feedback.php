@@ -28,6 +28,8 @@
 
 declare(strict_types=1);
 
+use ougc\Feedback\Core\enums;
+
 use function ougc\Feedback\Admin\loadPluginLibrary;
 use function ougc\Feedback\Admin\pluginActivation;
 use function ougc\Feedback\Admin\pluginDeactivation;
@@ -37,7 +39,6 @@ use function ougc\Feedback\Admin\pluginIsInstalled;
 use function ougc\Feedback\Admin\pluginUninstallation;
 use function ougc\Feedback\Core\addHooks;
 use function ougc\Feedback\Core\loadLanguage;
-
 use function ougc\Feedback\Core\set_go_back_button;
 
 use const ougc\Feedback\ROOT;
@@ -56,6 +57,7 @@ define('ougc\Feedback\ROOT', constant('MYBB_ROOT') . 'inc/plugins/ougc/Feedback'
 defined('PLUGINLIBRARY') || define('PLUGINLIBRARY', MYBB_ROOT . 'inc/plugins/pluginlibrary.php');
 
 require_once ROOT . '/core.php';
+require_once ROOT . '/classes.php';
 
 defined('PLUGINLIBRARY') || define('PLUGINLIBRARY', MYBB_ROOT . 'inc/plugins/pluginlibrary.php');
 
@@ -71,15 +73,7 @@ if (defined('IN_ADMINCP')) {
     addHooks('ougc\Feedback\Hooks\Forum');
 }
 
-class OUGC_Feedback
-{
-    public function __construct()
-    {
-        set_go_back_button();
-    }
-}
-
-$GLOBALS['ougcFeedback'] = new OUGC_Feedback();
+$GLOBALS['ougcFeedback'] = new enums();
 
 function ougc_feedback_info(): array
 {
