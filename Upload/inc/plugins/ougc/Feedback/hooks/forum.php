@@ -84,17 +84,17 @@ function member_profile_end(): string
         return $ougc_feedback;
     }
 
-    $where = array(
+    $where = [
         "uid='{$memprofile['uid']}'",
         /*"fuid!='0'", */
         "status='1'"
-    );
+    ];
     /*if(!$mybb->usergroup['ougc_feedback_ismod'])
     {
         $where[] = "status='1'";
     }*/
 
-    $stats = array(
+    $stats = [
         'total' => 0,
         'positive' => 0,
         'neutral' => 0,
@@ -102,11 +102,11 @@ function member_profile_end(): string
         'positive_percent' => 0,
         'neutral_percent' => 0,
         'negative_percent' => 0,
-        'positive_users' => array(),
-        'neutral_users' => array(),
-        'negative_users' => array(),
+        'positive_users' => [],
+        'neutral_users' => [],
+        'negative_users' => [],
         'average' => 0
-    );
+    ];
 
     $query = $db->simple_select('ougc_feedback', '*', implode(' AND ', $where));
 
@@ -174,11 +174,11 @@ function member_profile_end(): string
         $show = true;
 
         if (!$mybb->settings['ougc_feedback_allow_profile_multiple'] && $mybb->settings['ougc_feedback_profile_hide_add']) {
-            $where = array(
+            $where = [
                 "uid='{$memprofile['uid']}'",
                 /*"fuid!='0'", */
                 "fuid='{$mybb->user['uid']}'"
-            );
+            ];
 
             if (!$mybb->usergroup['ougc_feedback_ismod']) {
                 $where[] = "status='1'";
@@ -243,10 +243,10 @@ function postbit(array &$post): array
         if (!isset($query_cache)) {
             global $plugins;
 
-            $where = array(
+            $where = [
                 /*"fuid!='0'", */
                 "status='1'"
-            );
+            ];
 
             /*if(!$mybb->usergroup['ougc_feedback_ismod'])
             {
@@ -256,7 +256,7 @@ function postbit(array &$post): array
             if ($plugins->current_hook == 'postbit' && $mybb->get_input(
                     'mode'
                 ) != 'threaded' && !empty($pids) && THIS_SCRIPT != 'newreply.php') {
-                $uids = array();
+                $uids = [];
 
                 $query = $db->simple_select(
                     'users u LEFT JOIN ' . TABLE_PREFIX . 'posts p ON (p.uid=u.uid)',
@@ -283,7 +283,7 @@ function postbit(array &$post): array
             }
         }
 
-        $stats = array(
+        $stats = [
             'total' => 0,
             'positive' => 0,
             'neutral' => 0,
@@ -291,10 +291,10 @@ function postbit(array &$post): array
             'positive_percent' => 0,
             'neutral_percent' => 0,
             'negative_percent' => 0,
-            'positive_users' => array(),
-            'neutral_users' => array(),
-            'negative_users' => array()
-        );
+            'positive_users' => [],
+            'neutral_users' => [],
+            'negative_users' => []
+        ];
 
         if (!empty($query_cache[$post['uid']])) {
             foreach ($query_cache[$post['uid']] as $feedback) {
@@ -383,7 +383,7 @@ function postbit(array &$post): array
         if (!isset($button_query_cache) && $mybb->settings['ougc_feedback_postbit_hide_button']) {
             global $plugins;
 
-            $where = array("f.fuid='{$mybb->user['uid']}'");
+            $where = ["f.fuid='{$mybb->user['uid']}'"];
 
             if (!$mybb->usergroup['ougc_feedback_ismod']) {
                 $where[] = "f.status='1'";

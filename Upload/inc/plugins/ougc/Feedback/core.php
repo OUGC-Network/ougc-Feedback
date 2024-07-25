@@ -30,6 +30,10 @@ declare(strict_types=1);
 
 namespace ougc\Feedback\Core;
 
+use PMDataHandler;
+
+use const ougc\Feedback\ROOT;
+
 function loadLanguage(bool $forceLoad = false): bool
 {
     global $lang;
@@ -120,18 +124,18 @@ function trow_error(
 
     loadLanguage();
 
-    $title = $title ? $title : $lang->error;
+    $title = $title ?: $lang->error;
 
-    $message = $message ? $message : $lang->message;
+    $message = $message ?: $lang->message;
 
     if ($success) {
         header('Content-type: application/json; charset=' . $lang->settings['charset']);
 
-        $data = array(
+        $data = [
             'replacement' => $replacement,
             'hide_add' => $hide_add,
-            'reload' => $mybb->get_input('reload', 1)
-        );
+            'reload' => $mybb->get_input('reload', MyBB::INPUT_INT)
+        ];
 
         $data['modal'] = eval(getTemplate('modal', false));
 
@@ -260,7 +264,7 @@ function insert_feedback(bool $update = false): array
 
     $feedback = set_data();
 
-    $insert_data = array();
+    $insert_data = [];
 
     //!isset($feedback['fid']) || $insert_data['fid'] = (int)$feedback['fid'];
 
@@ -338,23 +342,23 @@ function send_pm(array $pm, int $fromid = 0, bool $admin_override = false): bool
     $user = get_user($pm['touid']);
 
     // Build our final PM array
-    $pm = array(
+    $pm = [
         'subject' => $pm['subject'],
         'message' => $lang->sprintf($pm['message'], $user['username'], $mybb->settings['bbname']),
         'icon' => -1,
         'fromid' => ($fromid == 0 ? (int)$mybb->user['uid'] : ($fromid < 0 ? 0 : $fromid)),
-        'toid' => array($pm['touid']),
-        'bccid' => array(),
+        'toid' => [$pm['touid']],
+        'bccid' => [],
         'do' => '',
         'pmid' => '',
         'saveasdraft' => 0,
-        'options' => array(
+        'options' => [
             'signature' => 0,
             'disablesmilies' => 0,
             'savecopy' => 0,
             'readreceipt' => 0
-        )
-    );
+        ]
+    ];
 
     if (isset($mybb->session)) {
         $pm['ipaddress'] = $mybb->session->packedip;
@@ -391,7 +395,7 @@ function send_email(array $email): bool
         loadLanguage(true);
     }
 
-    foreach (array('subject', 'message') as $key) {
+    foreach (['subject', 'message'] as $key) {
         $lang_string = $email[$key];
 
         if (is_array($email[$key])) {
@@ -415,7 +419,7 @@ function send_email(array $email): bool
 
     // Log the message
     if ($mybb->settings['mail_logging']) {
-        $entry = array(
+        $entry = [
             'subject' => $db->escape_string($email['subject']),
             'message' => $db->escape_string($email['message']),
             'dateline' => TIME_NOW,
@@ -426,7 +430,7 @@ function send_email(array $email): bool
             'tid' => 0,
             'ipaddress' => $db->escape_binary($mybb->session->packedip),
             'type' => 1
-        );
+        ];
 
         $db->insert_query('maillogs', $entry);
     }
@@ -449,7 +453,7 @@ function sync_user(int $uid): bool
 
     $feedback = (int)$db->fetch_field($query, 'feedback');
 
-    $db->update_query('users', array('ougc_feedback' => $feedback), "uid='{$uid}'");
+    $db->update_query('users', ['ougc_feedback' => $feedback], "uid='{$uid}'");
 
     return true;
 }

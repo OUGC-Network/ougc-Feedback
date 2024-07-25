@@ -67,11 +67,11 @@ if (defined('IN_ADMINCP')) {
     require_once ROOT . '/hooks/admin.php';
 
     addHooks('ougc\Feedback\Hooks\Admin');
-} else {
-    //require_once \ougc\Feedback\ROOT . '/hooks/forum.php';
-
-    addHooks('ougc\Feedback\Hooks\Forum');
 }
+
+require_once ROOT . '/hooks/forum.php';
+
+addHooks('ougc\Feedback\Hooks\Forum');
 
 $GLOBALS['ougcFeedback'] = new enums();
 

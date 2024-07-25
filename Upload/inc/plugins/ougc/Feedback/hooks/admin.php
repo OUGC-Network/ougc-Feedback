@@ -90,14 +90,14 @@ function admin_formcontainer_end(): bool
 
     if ($run_module == 'user' && isset($lang->users_permissions) && $form_container->_title == $lang->users_permissions) {
         global $form, $mybb;
-        
+
         loadLanguage();
 
-        $perms = array();
+        $perms = [];
 
         foreach (FIELDS_DATA['usergroups'] as $name => $definition) {
             if ($name == 'ougc_feedback_maxperday') {
-                $perms[] = "<br />{$lang->ougc_feedback_permission_maxperday}<br /><small>{$lang->ougc_feedback_permission_maxperday_desc}</small><br />{$form->generate_text_box($name, $mybb->get_input($name, MyBB::INPUT_INT), array('id' => $name, 'class' => 'field50'))}";
+                $perms[] = "<br />{$lang->ougc_feedback_permission_maxperday}<br /><small>{$lang->ougc_feedback_permission_maxperday_desc}</small><br />{$form->generate_text_box($name, $mybb->get_input($name, MyBB::INPUT_INT), ['id' => $name, 'class' => 'field50'])}";
             } else {
                 $lang_var = 'ougc_feedback_permission_' . str_replace('ougc_feedback_', '', $name);
 
@@ -105,7 +105,7 @@ function admin_formcontainer_end(): bool
                     $name,
                     1,
                     $lang->{$lang_var},
-                    array('checked' => $mybb->get_input($name, MyBB::INPUT_INT))
+                    ['checked' => $mybb->get_input($name, MyBB::INPUT_INT)]
                 );
             }
         }
@@ -125,7 +125,7 @@ function admin_formcontainer_end(): bool
 
         loadLanguage();
 
-        $perms = array();
+        $perms = [];
 
         foreach (FIELDS_DATA['forums'] as $name => $definition) {
             $lang_var = 'ougc_feedback_permission_' . str_replace('ougc_feedback_', '', $name);
@@ -133,7 +133,7 @@ function admin_formcontainer_end(): bool
                 $name,
                 1,
                 $lang->{$lang_var},
-                array('checked' => isset($forum_data[$name]) ? (int)$forum_data[$name] : 1)
+                ['checked' => isset($forum_data[$name]) ? (int)$forum_data[$name] : 1]
             );
         }
 
@@ -154,7 +154,7 @@ function admin_user_groups_edit_commit(): bool
 {
     global $updated_group, $mybb;
 
-    $array_data = array();
+    $array_data = [];
 
     foreach (FIELDS_DATA['usergroups'] as $name => $definition) {
         $array_data[$name] = $mybb->get_input($name, MyBB::INPUT_INT);
@@ -176,7 +176,7 @@ function admin_forum_management_edit_commit(): bool
 {
     global $db, $mybb, $fid, $plugins;
 
-    $array_data = array();
+    $array_data = [];
 
     foreach (FIELDS_DATA['forums'] as $name => $definition) {
         $array_data[$name] = $mybb->get_input($name, MyBB::INPUT_INT);
