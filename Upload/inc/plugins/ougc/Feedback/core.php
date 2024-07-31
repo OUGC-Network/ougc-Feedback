@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace ougc\Feedback\Core;
 
+use MyBB;
 use PMDataHandler;
 
 use const ougc\Feedback\ROOT;
@@ -69,6 +70,17 @@ function addHooks(string $namespace): bool
     }
 
     return true;
+}
+
+function run_hooks(string $hook_name = '', mixed &$hook_arguments = ''): mixed
+{
+    global $plugins;
+
+    if ($plugins instanceof \pluginSystem) {
+        $hook_arguments = $plugins->run_hooks('ougc_feedback_' . $hook_name, $hook_arguments);
+    }
+
+    return $hook_arguments;
 }
 
 function getSetting(string $settingKey = '')
@@ -141,9 +153,7 @@ function trow_error(
 
         echo json_encode($data);
     } else {
-        set_error($message);
-
-        $message = get_error();
+        $message = set_error($message);
 
         $message = eval(getTemplate('modal_error'));
 
@@ -155,17 +165,19 @@ function trow_error(
     exit;
 }
 
-function success(string $message, string $title = '', string $replacement = '', int $hide_add = 1)
+function trow_success(string $message, string $title = '', string $replacement = '', int $hide_add = 1)
 {
     //set_go_back_button(false);
     trow_error($message, $title, true, $replacement, $hide_add);
 }
 
-function set_error(string $message): string
+function set_error(string $message = ''): string
 {
-    static $error;
+    static $error = '';
 
-    $error = $message;
+    if ($message !== '') {
+        $error = $message;
+    }
 
     return $error;
 }
@@ -179,7 +191,9 @@ function set_go_back_button(bool $set_go_back_button = true): bool
 {
     static $go_back_button = true;
 
-    $go_back_button = $set_go_back_button;
+    if ($set_go_back_button !== true) {
+        $go_back_button = false;
+    }
 
     return $go_back_button;
 }
@@ -204,12 +218,14 @@ function get_go_back_button(): string
 
     $uid = set_data()['uid'];
 
-    $pid = set_data()['pid'];
+    $unique_id = set_data()['unique_id'];
 
+    $feedbackPluginCode = $mybb->get_input('feedback_code', MyBB::INPUT_INT);
+    
     return eval(getTemplate('modal_tfoot'));
 }
 
-function set_data(array $feedback): array
+function set_data(array $feedback = []): array
 {
     static $data;
 
@@ -221,7 +237,7 @@ function set_data(array $feedback): array
 
     !isset($feedback['fuid']) || $data['fuid'] = (int)$feedback['fuid'];
 
-    !isset($feedback['pid']) || $data['pid'] = (int)$feedback['pid'];
+    !isset($feedback['unique_id']) || $data['unique_id'] = (int)$feedback['unique_id'];
 
     !isset($feedback['type']) || $data['type'] = (int)$feedback['type'];
 
@@ -230,6 +246,8 @@ function set_data(array $feedback): array
     !isset($feedback['comment']) || $data['comment'] = (string)$feedback['comment'];
 
     !isset($feedback['status']) || $data['status'] = (int)$feedback['status'];
+
+    !isset($feedback['feedback_code']) || $data['feedback_code'] = (int)$feedback['feedback_code'];
 
     !isset($feedback['dateline']) || $data['dateline'] = TIME_NOW;
 
@@ -272,7 +290,7 @@ function insert_feedback(bool $update = false): array
 
     !isset($feedback['fuid']) || $insert_data['fuid'] = (int)$feedback['fuid'];
 
-    !isset($feedback['pid']) || $insert_data['pid'] = (int)$feedback['pid'];
+    !isset($feedback['unique_id']) || $insert_data['unique_id'] = (int)$feedback['unique_id'];
 
     !isset($feedback['type']) || $insert_data['type'] = (int)$feedback['type'];
 
@@ -281,6 +299,8 @@ function insert_feedback(bool $update = false): array
     !isset($feedback['comment']) || $insert_data['comment'] = $db->escape_string($feedback['comment']);
 
     !isset($feedback['status']) || $insert_data['status'] = (int)$feedback['status'];
+
+    !isset($feedback['feedback_code']) || $insert_data['feedback_code'] = (int)$feedback['feedback_code'];
 
     if (!$update) {
         !isset($feedback['dateline']) || $insert_data['dateline'] = (int)$feedback['dateline'];

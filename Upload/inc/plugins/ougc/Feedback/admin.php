@@ -36,6 +36,8 @@ use stdClass;
 
 use function ougc\Feedback\Core\loadLanguage;
 
+use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FIELDS_DATA;
 use const ougc\Feedback\Core\PLUGIN_VERSION;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
@@ -165,6 +167,23 @@ function pluginActivation(): bool
     // TODO:: ip should be stored
 
     /*~*~* RUN UPDATES START *~*~*/
+
+    if ($plugins['feedback'] <= 1823) {
+        global $db;
+
+        if ($db->field_exists('pid', 'ougc_feedback') && !$db->field_exists('unique_id', 'ougc_feedback')) {
+            $db->rename_column(
+                'ougc_feedback',
+                'pid',
+                'unique_id',
+                buildDbFieldDefinition(TABLES_DATA['ougc_feedback']['unique_id'])
+            );
+        }
+
+        $db->update_query('ougc_feedback', ['feedback_code' => FEEDBACK_TYPE_POST], "unique_id='0'");
+
+        $db->update_query('ougc_feedback', ['feedback_code' => FEEDBACK_TYPE_PROFILE], "unique_id!='0'");
+    }
 
     /*~*~* RUN UPDATES END *~*~*/
 

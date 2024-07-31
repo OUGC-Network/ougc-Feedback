@@ -35,24 +35,24 @@ var OUGC_Feedback = {
 		});
 	},
 
-	Add: function(uid, pid, type, feedback, reload, comment, back_button)
+	Add: function(uid, unique_id, type, feedback, reload, comment, back_button, feedback_code)
 	{
-		var postData = 'action=add&uid=' + parseInt(uid) + '&pid=' + parseInt(pid) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&comment=' + String(comment) + '&back_button=' + parseInt(back_button);
+		var postData = 'action=add&uid=' + parseInt(uid) + '&unique_id=' + parseInt(unique_id) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&comment=' + String(comment) + '&back_button=' + parseInt(back_button) + '&feedback_code=' + String(feedback_code);
 
 		MyBB.popupWindow('/feedback.php?' + postData);
 	},
 
-	Edit: function(fid, reload)
+	Edit: function(fid, reload, feedback_code)
 	{
-		var postData = 'action=edit&fid=' + parseInt(fid) + '&reload=' + parseInt(reload);
+		var postData = 'action=edit&fid=' + parseInt(fid) + '&reload=' + parseInt(reload) + '&feedback_code=' + parseInt(feedback_code);
 
 		MyBB.popupWindow('/feedback.php?' + postData);
 	},
 
-	DoAdd: function(uid, pid)
+	DoAdd: function(uid, unique_id)
 	{
 		// Get form, serialize it and send it
-		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
+		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(unique_id)).serialize();
 
 		$.ajax(
 		{
@@ -101,10 +101,10 @@ var OUGC_Feedback = {
 		});
 	},
 
-	DoEdit: function(uid, pid, fid)
+	DoEdit: function(uid, unique_id, fid)
 	{
 		// Get form, serialize it and send it
-		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(pid)).serialize();
+		var postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(unique_id)).serialize();
 
 		$.ajax(
 		{

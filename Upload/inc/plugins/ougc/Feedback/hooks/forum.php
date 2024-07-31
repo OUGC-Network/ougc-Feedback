@@ -407,15 +407,15 @@ function postbit(array &$post): array
 
                 $join = ' LEFT JOIN ' . TABLE_PREFIX . 'posts p ON (p.pid=f.pid)';
             } else {
-                $where[] = "f.pid='{$post['pid']}'";
+                $where[] = "f.unique_id='{$post['pid']}'";
 
                 $join = '';
             }
 
-            $query = $db->simple_select('ougc_feedback f' . $join, 'f.pid', implode(' AND ', $where));
+            $query = $db->simple_select('ougc_feedback f' . $join, 'f.unique_id', implode(' AND ', $where));
 
-            while ($pid = $db->fetch_field($query, 'pid')) {
-                $query_cache[$pid][] = $pid;
+            while ($unique_id = $db->fetch_field($query, 'unique_id')) {
+                $query_cache[$unique_id][] = $unique_id;
             }
         }
 
@@ -529,10 +529,11 @@ function report_type(): bool
 
     global $db, $mybb, $error, $verified, $id, $id2, $id3, $report_type_db, $lang;
 
-    $fid = $mybb->get_input('pid', MyBB::INPUT_INT);
+    // report pid stores the feedback id
+    $feedbackID = $mybb->get_input('pid', MyBB::INPUT_INT);
 
     // Any member can report a reputation comment but let's make sure it exists first
-    $query = $db->simple_select('ougc_feedback', '*', "fid='{$fid}'");
+    $query = $db->simple_select('ougc_feedback', '*', "fid='{$feedbackID}'");
 
     $feedback = $db->fetch_array($query);
 

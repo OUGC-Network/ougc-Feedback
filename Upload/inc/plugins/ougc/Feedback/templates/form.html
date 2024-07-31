@@ -1,14 +1,15 @@
 <div class="modal">
-    <div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback['uid']}_{$feedback['pid']}">
+    <div style="overflow-y: auto; max-height: 400px;" class="modal_{$feedback['uid']}_{$feedback['unique_id']}">
         <form method="post" action="{$mybb->settings['bburl']}/feedback.php" id="ougcfeedback_form"
-              class="feedback_{$feedback['uid']}_{$feedback['pid']}"
+              class="feedback_{$feedback['uid']}_{$feedback['unique_id']}"
               onsubmit="javascript: return OUGC_Feedback.{$method};">
             <input name="action" type="hidden" value="{$mybb->input['action']}"/>
             <input name="uid" type="hidden" value="{$feedback['uid']}"/>
-            <input name="pid" type="hidden" value="{$feedback['pid']}"/>
+            <input name="unique_id" type="hidden" value="{$feedback['unique_id']}"/>
             <input name="fid" type="hidden" value="{$feedback['fid']}"/>
             <input name="my_post_key" type="hidden" value="{$mybb->post_code}"/>
             <input name="reload" type="hidden" value="{$mybb->input['reload']}"/>
+            <input name="feedback_code" type="hidden" value="{$mybb->input['feedback_code']}"/>
             <table width="100%" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" border="0"
                    class="tborder">
                 <tr>

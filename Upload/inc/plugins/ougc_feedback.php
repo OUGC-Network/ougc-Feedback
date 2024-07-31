@@ -59,8 +59,6 @@ defined('PLUGINLIBRARY') || define('PLUGINLIBRARY', MYBB_ROOT . 'inc/plugins/plu
 require_once ROOT . '/core.php';
 require_once ROOT . '/classes.php';
 
-defined('PLUGINLIBRARY') || define('PLUGINLIBRARY', MYBB_ROOT . 'inc/plugins/pluginlibrary.php');
-
 if (defined('IN_ADMINCP')) {
     require_once ROOT . '/admin.php';
 

@@ -46,6 +46,10 @@ const FEEDBACK_TYPE_NEUTRAL = 0;
 
 const FEEDBACK_TYPE_NEGATIVE = -1;
 
+const FEEDBACK_TYPE_POST = 1;
+
+const FEEDBACK_TYPE_PROFILE = 2;
+
 const TABLES_DATA = [
     'ougc_feedback' => [
         'fid' => [
@@ -64,7 +68,7 @@ const TABLES_DATA = [
             'unsigned' => true,
             'default' => 0
         ],
-        'pid' => [
+        'unique_id' => [
             'type' => 'INT',
             'unsigned' => true,
             'default' => 0
@@ -85,6 +89,11 @@ const TABLES_DATA = [
         'status' => [
             'type' => 'TINYINT',
             'default' => 1
+        ],
+        'feedback_code' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
         ],
         'dateline' => [
             'type' => 'INT',

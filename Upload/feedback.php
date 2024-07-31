@@ -32,6 +32,7 @@ use function ougc\Feedback\Core\fetch_feedback;
 use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\insert_feedback;
 use function ougc\Feedback\Core\loadLanguage;
+use function ougc\Feedback\Core\run_hooks;
 use function ougc\Feedback\Core\send_email;
 use function ougc\Feedback\Core\set_data;
 use function ougc\Feedback\Core\set_go_back_button;
@@ -47,6 +48,8 @@ use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
 
@@ -74,6 +77,17 @@ $mybb->input['action'] = $mybb->get_input('action');
 if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit') {
     $edit = $mybb->get_input('action') == 'edit';
 
+    $feedback_code = 0;
+
+    if ($mybb->get_input('feedback_code', MyBB::INPUT_INT)) {
+        $feedback_code = $mybb->get_input('feedback_code', MyBB::INPUT_INT);
+    }
+
+    $hook_arguments = [
+        'processed' => &$processed,
+        'feedback_code' => &$feedback_code,
+    ];
+
     if ($edit) {
         if (!($feedback = fetch_feedback($mybb->input['fid']))) {
             set_go_back_button(false);
@@ -81,7 +95,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             trow_error($lang->ougc_feedback_error_invalid_feedback_value);
         }
 
-        $method = "DoEdit('{$feedback['uid']}', '{$feedback['pid']}', '{$feedback['fid']}')";
+        $method = "DoEdit('{$feedback['uid']}', '{$feedback['unique_id']}', '{$feedback['fid']}')";
 
         $mybb->input['reload'] = 1;
 
@@ -95,11 +109,12 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $feedback = [
             'uid' => $mybb->get_input('uid', MyBB::INPUT_INT),
             'fuid' => $mybb->user['uid'],
-            'pid' => $mybb->get_input('pid', MyBB::INPUT_INT),
-            'status' => default_status()
+            'unique_id' => $mybb->get_input('unique_id', MyBB::INPUT_INT),
+            'status' => default_status(),
+            'feedback_code' => $feedback_code
         ];
 
-        $method = "DoAdd('{$feedback['uid']}', '{$feedback['pid']}')";
+        $method = "DoAdd('{$feedback['uid']}', '{$feedback['unique_id']}')";
     }
 
     if (!$edit || $mybb->request_method == 'post' || $mybb->get_input('back_button', MyBB::INPUT_INT)) {
@@ -109,6 +124,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
         $feedback['comment'] = $mybb->get_input('comment');
     }
+
+    $hook_arguments['feedback_data'] = &$feedback;
 
     // Set handler data
     set_data($feedback);
@@ -201,8 +218,16 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
     $hide_add = 0;
 
-    if (!$edit && $feedback['pid']) {
-        if (!($post = get_post($feedback['pid']))) {
+    $processed = false;
+
+    run_hooks('add_edit_intermediate', $hook_arguments);
+
+    set_data($feedback);
+
+    if (!$processed && !$edit && $feedback['unique_id']) {
+        $feedback_code = FEEDBACK_TYPE_POST;
+
+        if (!($post = get_post($feedback['unique_id']))) {
             set_go_back_button(false);
 
             trow_error($lang->ougc_feedback_error_invalid_post);
@@ -282,13 +307,13 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $where = [
             "uid='{$feedback['uid']}'", /*"fuid!='0'", */
             "fuid='{$feedback['fuid']}'",
-            "pid='{$feedback['pid']}'",
+            "unique_id='{$feedback['unique_id']}'",
             "status='1'"
         ];
 
         $query = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $where));
 
-        if ($db->fetch_field($query, 'fid')) {
+        if ($db->num_rows($query)) {
             set_go_back_button(false);
 
             trow_error($lang->ougc_feedback_error_post_multiple_disabled);
@@ -297,7 +322,11 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         if ($mybb->settings['ougc_feedback_postbit_hide_button']) {
             $hide_add = 1;
         }
-    } elseif (!$edit) {
+
+        $processed = true;
+    } elseif (!$processed && !$edit) {
+        $feedback_code = FEEDBACK_TYPE_PROFILE;
+
         if (!$mybb->settings['ougc_feedback_allow_profile']) {
             set_go_back_button(false);
 
@@ -324,6 +353,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
             $hide_add = (int)$mybb->settings['ougc_feedback_profile_hide_add'];
         }
+
+        $processed = true;
     }
 
     $comments_minlength = (int)$mybb->settings['ougc_feedback_comments_minlength'];
@@ -340,7 +371,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         if ($comments_maxlength < 1) {
             $feedback['comment'] = '';
         } elseif ($message_count < $comments_minlength || $message_count > $comments_maxlength) {
-            set_go_back_button(true);
+            set_go_back_button();
 
             trow_error(
                 $lang->sprintf(
@@ -352,8 +383,10 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             );
         }
 
+        run_hooks('add_edit_do_start', $hook_arguments);
+
         // Validate, throw error if not valid
-        if (validate_feedback()) {
+        if ($processed && validate_feedback()) {
             if ($edit) {
                 // Insert feedback
                 update_feedback();
@@ -401,7 +434,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
                     \ougc\Feedback\Core\send_alert(array());
                 }*/
 
-                if ($feedback['pid']) {
+                if ($feedback['unique_id'] && $feedback_code === FEEDBACK_TYPE_POST) {
                     postbit($post);
                     $replacement = $post['ougc_feedback'];
                 } else {
@@ -662,11 +695,13 @@ $query = $db->simple_select('ougc_feedback f', 'COUNT(f.fid) AS total_feedback',
 
 $stats['total'] = $db->fetch_field($query, 'total_feedback');
 
+$feedbackPostCode = FEEDBACK_TYPE_POST;
+
 // Get the total amount of feedback from posts
 $query = $db->simple_select(
     'ougc_feedback f',
     'COUNT(f.fid) AS total_posts_feedback',
-    implode(' AND ', array_merge($where_stats, ["f.pid>'0'"]))
+    implode(' AND ', array_merge($where_stats, ["feedback_code='{$feedbackPostCode}'"]))
 );
 
 $stats['posts'] = $db->fetch_field($query, 'total_posts_feedback');
@@ -792,10 +827,12 @@ while ($feedback = $db->fetch_array($query)) {
     $feedback_cache[] = $feedback;
 
     // If this is a post, hold it and gather some information about it
-    if ($feedback['pid'] && !isset($post_cache[$feedback['pid']])) {
-        $post_cache[$feedback['pid']] = $feedback['pid'];
+    if ($feedback['unique_id'] && !isset($post_cache[$feedback['unique_id']])) {
+        $post_cache[$feedback['unique_id']] = $feedback['unique_id'];
     }
 }
+
+$post_reputation = [];
 
 if (!empty($post_cache)) {
     $pids = implode(',', $post_cache);
@@ -851,17 +888,19 @@ foreach ($feedback_cache as $feedback) {
 
     $postfeed_given = '';
 
-    if ($feedback['pid']) {
+    if ($feedback['unique_id']) {
         $postfeed_given = $lang->sprintf($lang->ougc_feedback_page_post_nolink, $user['username']);
 
-        if ($post = $post_reputation[$feedback['pid']]) {
+        if (isset($post_reputation[$feedback['unique_id']])) {
+            $post = $post_reputation[$feedback['unique_id']];
+
             $thread_link = get_thread_link($post['tid']);
 
             $subject = htmlspecialchars_uni($parser->parse_badwords($post['subject']));
 
             $thread_link = $lang->sprintf($lang->ougc_feedback_page_post_given_thread, $thread_link, $subject);
 
-            $link = get_post_link($feedback['pid']) . '#pid' . $feedback['pid'];
+            $link = get_post_link($feedback['unique_id']) . '#pid' . $feedback['unique_id'];
 
             $postfeed_given = $lang->sprintf(
                 $lang->ougc_feedback_page_post_given,

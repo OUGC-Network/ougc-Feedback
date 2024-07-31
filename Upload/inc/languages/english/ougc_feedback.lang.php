@@ -128,7 +128,7 @@ $l['ougc_feedback_error_invalid_type'] = 'Invalid feedback type selected.';
 $l['ougc_feedback_error_invalid_feedback'] = 'Invalid feedback selected.';
 $l['ougc_feedback_error_invalid_feedback_value'] = 'Invalid feedback value selected.';
 $l['ougc_feedback_error_invalid_status'] = 'Invalid feedback status selected.';
-$l['ougc_feedback_error_invalid_comment'] = 'Invalid feedback comment entered. The minimum and maximum characters count is {1} and {2} respectively, whereas your message is {3} characters long.';
+$l['ougc_feedback_error_invalid_comment'] = 'Invalid comment, make sure your comment is at between {1} and {2} characters long. Your message is {3} characters long.';
 $l['ougc_feedback_error_invalid_maxperday'] = 'You have already given as many feedback  as you are allowed to for today.';
 
 // Redirect messages
