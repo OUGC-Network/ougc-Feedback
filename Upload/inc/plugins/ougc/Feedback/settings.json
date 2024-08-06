@@ -27,6 +27,10 @@
     "optionscode": "yesno",
     "value": 0
   },
+  "showin_memberlist": {
+    "optionscode": "yesno",
+    "value": 0
+  },
   "comments_minlength": {
     "optionscode": "numeric",
     "value": 15

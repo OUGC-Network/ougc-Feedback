@@ -60,8 +60,8 @@ $l['setting_ougc_feedback_postbit_hide_button'] = 'Hide Post-bit Button';
 $l['setting_ougc_feedback_postbit_hide_button_desc'] = 'Turn this on to hide the post-bit feedback button if not allowed to use it. Save one query turning this off.';
 $l['setting_ougc_feedback_profile_hide_add'] = 'Hide Profile Add Link';
 $l['setting_ougc_feedback_profile_hide_add_desc'] = 'Turn this on to hide the profile feedback add link if not allowed to use it. Save one query turning this off.';
-//$l['setting_ougc_feedback_showin_memberlist'] = 'Show In Member List';
-//$l['setting_ougc_feedback_showin_memberlist_desc'] = 'Whether if to show feedback status in the member list page.';
+$l['setting_ougc_feedback_showin_memberlist'] = 'Show In Member List';
+$l['setting_ougc_feedback_showin_memberlist_desc'] = 'Whether if to show feedback status in the member list page.';
 $l['setting_ougc_feedback_perpage'] = 'Pagination Per-Page Setting';
 $l['setting_ougc_feedback_perpage_desc'] = 'Maximum number of items to show per page in pagination enabled features.';
 

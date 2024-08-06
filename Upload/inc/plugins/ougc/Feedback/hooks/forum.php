@@ -32,6 +32,7 @@ namespace ougc\Feedback\Hooks\Forum;
 
 use MyBB;
 
+use function ougc\Feedback\Core\getSetting;
 use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\getTemplateName;
 use function ougc\Feedback\Core\loadLanguage;
@@ -85,75 +86,19 @@ function global_intermediate(): bool
 
 function member_profile_end(): string
 {
-    global $db, $memprofile, $templates, $ougc_feedback, $ougc_feedback_average, $theme, $lang, $mybb;
+    global $db, $memprofile, $ougc_feedback, $ougc_feedback_average, $theme, $lang, $mybb;
 
     loadLanguage();
 
     $ougc_feedback = $ougc_feedback_average = '';
 
-    if (!$mybb->settings['ougc_feedback_showin_profile']) {
+    if (!getSetting('showin_profile')) {
         return $ougc_feedback;
     }
 
-    $where = [
-        "uid='{$memprofile['uid']}'",
-        /*"fuid!='0'", */
-        "status='1'"
-    ];
-    /*if(!$mybb->usergroup['ougc_feedback_ismod'])
-    {
-        $where[] = "status='1'";
-    }*/
+    $userID = (int)$memprofile['uid'];
 
-    $stats = [
-        'total' => 0,
-        'positive' => 0,
-        'neutral' => 0,
-        'negative' => 0,
-        'positive_percent' => 0,
-        'neutral_percent' => 0,
-        'negative_percent' => 0,
-        'positive_users' => [],
-        'neutral_users' => [],
-        'negative_users' => [],
-        'average' => 0
-    ];
-
-    $query = $db->simple_select('ougc_feedback', '*', implode(' AND ', $where));
-
-    while ($feedback = $db->fetch_array($query)) {
-        ++$stats['total'];
-
-        $feedback['feedback'] = (int)$feedback['feedback'];
-
-        switch ($feedback['feedback']) {
-            case 1:
-                ++$stats['positive'];
-
-                $stats['positive_users'][$feedback['fuid']] = 1;
-                break;
-            case 0:
-                ++$stats['neutral'];
-
-                $stats['neutral_users'][$feedback['fuid']] = 1;
-                break;
-            case -1:
-                ++$stats['negative'];
-
-                $stats['negative_users'][$feedback['fuid']] = 1;
-                break;
-        }
-    }
-
-    if ($stats['total']) {
-        $stats['positive_percent'] = floor(100 * ($stats['positive'] / $stats['total']));
-
-        $stats['neutral_percent'] = floor(100 * ($stats['neutral'] / $stats['total']));
-
-        $stats['negative_percent'] = floor(100 * ($stats['negative'] / $stats['total']));
-
-        $stats['average'] = $stats['positive'] - $stats['negative'];
-    }
+    $stats = \ougc\Feedback\Core\getUserStats($userID);
 
     $class = '_neutral';
 
@@ -163,17 +108,7 @@ function member_profile_end(): string
         $class = '_negative';
     }
 
-    $stats['average'] = my_number_format($stats['average']);
-
     $ougc_feedback_average = eval(getTemplate('profile_average'));
-
-    $stats['positive_users'] = count($stats['positive_users']);
-
-    $stats['neutral_users'] = count($stats['neutral_users']);
-
-    $stats['negative_users'] = count($stats['negative_users']);
-
-    $stats = array_map('my_number_format', $stats);
 
     $add_row = '';
 
@@ -181,10 +116,15 @@ function member_profile_end(): string
 
     $memprofile_perms = usergroup_permissions($memprofile['usergroup'] . ',' . $memprofile['additionalgroups']);
 
-    if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_feedback_cangive'] && $memprofile_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $memprofile['uid']) {
+    if (
+        getSetting('allow_profile') &&
+        $mybb->usergroup['ougc_feedback_cangive'] &&
+        $memprofile_perms['ougc_feedback_canreceive'] &&
+        $mybb->user['uid'] != $memprofile['uid']
+    ) {
         $show = true;
 
-        if (!$mybb->settings['ougc_feedback_allow_profile_multiple'] && $mybb->settings['ougc_feedback_profile_hide_add']) {
+        if (!getSetting('allow_profile_multiple') && getSetting('profile_hide_add')) {
             $where = [
                 "uid='{$memprofile['uid']}'",
                 /*"fuid!='0'", */
@@ -239,16 +179,9 @@ function postbit(array &$post): array
 
     $post['ougc_feedback'] = $post['ougc_feedback_button'] = $post['ougc_feedback_average'] = '';
 
-    $show = true;
+    $show = (bool)is_member(getSetting('showin_forums'), ['usergroup' => $post['fid'], 'additionalgroups' => '']);
 
-    if (!empty($post['fid']) && (!$mybb->settings['ougc_feedback_showin_forums'] || ($mybb->settings['ougc_feedback_showin_forums'] != -1 && !in_array(
-                    $post['fid'],
-                    array_map('intval', explode(',', $mybb->settings['ougc_feedback_showin_forums']))
-                )))) {
-        $show = false;
-    }
-
-    if ($show && $mybb->settings['ougc_feedback_showin_postbit']) {
+    if ($show && getSetting('showin_postbit')) {
         static $query_cache;
 
         if (!isset($query_cache)) {
@@ -391,7 +324,7 @@ function postbit(array &$post): array
     if ($mybb->usergroup['ougc_feedback_cangive'] && $post_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $post['uid']) {
         static $button_query_cache;
 
-        if (!isset($button_query_cache) && $mybb->settings['ougc_feedback_postbit_hide_button']) {
+        if (!isset($button_query_cache) && getSetting('postbit_hide_button')) {
             global $plugins;
 
             $where = ["f.fuid='{$mybb->user['uid']}'"];
@@ -454,7 +387,7 @@ function memberlist_end(): bool
 {
     global $mybb;
 
-    if (!$mybb->settings['ougc_feedback_showin_memberlist']) {
+    if (!getSetting('showin_memberlist')) {
         return false;
     }
 
@@ -476,37 +409,43 @@ function memberlist_intermediate(): bool
     return true;
 }
 
-function memberlist_user(array &$user): array
+*/
+function memberlist_user(array &$userData): array
 {
-    global $mybb;
+    $userData['feedback'] = $userData['feedback_average'] = '';
 
-    if (!$mybb->settings['ougc_feedback_showin_memberlist']) {
-        return $user;
+    if (!getSetting('showin_memberlist')) {
+        return $userData;
     }
 
-    global $templates, $ougc_feedback_bit, $alt_bg;
+    global $theme, $lang, $mybb;
 
     loadLanguage();
 
-    static $done = false;
+    $userID = (int)$userData['uid'];
 
-    if (!$done) {
-        global $alttrow;
+    $stats = \ougc\Feedback\Core\getUserStats($userID);
 
-        $done = true;
+    $class = '_neutral';
 
-        if ($alttrow == 'trow1') {
-            $alt_bg = 'trow2';
-        } else {
-            $alt_bg = 'trow1';
-        }
+    if ($stats['average'] > 0) {
+        $class = '_positive';
+    } elseif ($stats['average'] < 0) {
+        $class = '_negative';
     }
 
-    $ougc_feedback_bit = eval(getTemplate('memberlist_user'));
+    $userData['feedback_average'] = eval(getTemplate('memberlist_average'));
 
-    return $user;
+    $view_all = '';
+
+    if ($mybb->usergroup['ougc_feedback_canview']) {
+        $view_all = eval(getTemplate('memberlist_view_all'));
+    }
+
+    $userData['feedback'] = eval(getTemplate('memberlist'));
+
+    return $userData;
 }
-*/
 
 function report_start(): bool
 {

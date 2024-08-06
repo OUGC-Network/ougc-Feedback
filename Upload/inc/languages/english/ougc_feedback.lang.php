@@ -41,6 +41,16 @@ $l['ougc_feedback_profile_average'] = 'Average';
 $l['ougc_feedback_profile_add'] = 'Add Feedback';
 $l['ougc_feedback_profile_edit'] = 'Update Feedback';
 
+// Profile
+$l['ougc_feedback_member_list_title'] = 'Feedback';
+$l['ougc_feedback_member_list_view'] = 'View All';
+$l['ougc_feedback_member_list_total'] = 'Total';
+$l['ougc_feedback_member_list_positive'] = 'Positive';
+$l['ougc_feedback_member_list_neutral'] = 'Neutral';
+$l['ougc_feedback_member_list_negative'] = 'Negative';
+$l['ougc_feedback_member_list_users'] = 'users';
+$l['ougc_feedback_member_list_average'] = 'Average';
+
 // Posts
 $l['ougc_feedback_post_view'] = 'View All';
 

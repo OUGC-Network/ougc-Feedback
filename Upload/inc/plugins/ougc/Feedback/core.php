@@ -87,9 +87,7 @@ function getSetting(string $settingKey = '')
 {
     global $mybb;
 
-    return isset(SETTINGS[$settingKey]) ? SETTINGS[$settingKey] : (
-    isset($mybb->settings['ougc_feedback_' . $settingKey]) ? $mybb->settings['ougc_feedback_' . $settingKey] : false
-    );
+    return SETTINGS[$settingKey] ?? ($mybb->settings['ougc_feedback_' . $settingKey] ?? false);
 }
 
 function getTemplateName(string $templateName = ''): string
@@ -221,7 +219,7 @@ function get_go_back_button(): string
     $unique_id = set_data()['unique_id'];
 
     $feedbackPluginCode = $mybb->get_input('feedback_code', MyBB::INPUT_INT);
-    
+
     return eval(getTemplate('modal_tfoot'));
 }
 
@@ -476,4 +474,81 @@ function sync_user(int $uid): bool
     $db->update_query('users', ['ougc_feedback' => $feedback], "uid='{$uid}'");
 
     return true;
+}
+
+function getUserStats(int $userID): array
+{
+    global $db;
+
+    $whereClauses = [
+        "uid='{$userID}'",
+        /*"fuid!='0'", */
+        "status='1'"
+    ];
+    /*if(!$mybb->usergroup['ougc_feedback_ismod'])
+    {
+        $whereClauses[] = "status='1'";
+    }*/
+
+    $userStats = [
+        'total' => 0,
+        'positive' => 0,
+        'neutral' => 0,
+        'negative' => 0,
+        'positive_percent' => 0,
+        'neutral_percent' => 0,
+        'negative_percent' => 0,
+        'positive_users' => [],
+        'neutral_users' => [],
+        'negative_users' => [],
+        'average' => 0
+    ];
+
+    $dbQuery = $db->simple_select('ougc_feedback', '*', implode(' AND ', $whereClauses));
+
+    while ($feedbackData = $db->fetch_array($dbQuery)) {
+        ++$userStats['total'];
+
+        $feedbackData['feedback'] = (int)$feedbackData['feedback'];
+
+        switch ($feedbackData['feedback']) {
+            case 1:
+                ++$userStats['positive'];
+
+                $userStats['positive_users'][$feedbackData['fuid']] = 1;
+                break;
+            case 0:
+                ++$userStats['neutral'];
+
+                $userStats['neutral_users'][$feedbackData['fuid']] = 1;
+                break;
+            case -1:
+                ++$userStats['negative'];
+
+                $userStats['negative_users'][$feedbackData['fuid']] = 1;
+                break;
+        }
+    }
+
+    if ($userStats['total']) {
+        $userStats['positive_percent'] = floor(100 * ($userStats['positive'] / $userStats['total']));
+
+        $userStats['neutral_percent'] = floor(100 * ($userStats['neutral'] / $userStats['total']));
+
+        $userStats['negative_percent'] = floor(100 * ($userStats['negative'] / $userStats['total']));
+
+        $userStats['average'] = $userStats['positive'] - $userStats['negative'];
+    }
+
+    $userStats['average'] = my_number_format($userStats['average']);
+
+    $userStats['positive_users'] = count($userStats['positive_users']);
+
+    $userStats['neutral_users'] = count($userStats['neutral_users']);
+
+    $userStats['negative_users'] = count($userStats['negative_users']);
+
+    $userStats = array_map('my_number_format', $userStats);
+
+    return $userStats;
 }
