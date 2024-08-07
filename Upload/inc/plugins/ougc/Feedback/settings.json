@@ -11,6 +11,10 @@
     "optionscode": "yesno",
     "value": 1
   },
+  "latest_profile_feedback": {
+    "optionscode": "numeric",
+    "value": 10
+  },
   "showin_postbit": {
     "optionscode": "yesno",
     "value": 1

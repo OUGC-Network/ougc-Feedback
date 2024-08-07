@@ -1,30 +1,9 @@
-<div class="ougcfeedback_info_{$userID}">
-    <table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="tborder">
-        <tr>
-            <td colspan="2" class="thead"><strong>{$lang->ougc_feedback_profile_title}</strong>{$view_all}</td>
-        </tr>
-        <tr>
-            <td class="trow1" style="width: 30%;"><strong>{$lang->ougc_feedback_profile_total}:</strong></td>
-            <td class="trow1">{$stats['total']}</td>
-        </tr>
-        <tr style="color: green;">
-            <td class="trow2" style="width: 30%;"><strong>{$lang->ougc_feedback_profile_positive}:</strong></td>
-            <td class="trow2">{$stats['positive']} ({$stats['positive_percent']}% - {$stats['positive_users']}
-                {$lang->ougc_feedback_profile_users})
-            </td>
-        </tr>
-        <tr style="color: gray;">
-            <td class="trow1" style="width: 30%;"><strong>{$lang->ougc_feedback_profile_neutral}:</strong></td>
-            <td class="trow1">{$stats['neutral']} ({$stats['neutral_percent']}% - {$stats['neutral_users']}
-                {$lang->ougc_feedback_profile_users})
-            </td>
-        </tr>
-        <tr style="color: red;">
-            <td class="trow2" style="width: 30%;"><strong>{$lang->ougc_feedback_profile_negative}:</strong></td>
-            <td class="trow2">{$stats['negative']} ({$stats['negative_percent']}% - {$stats['negative_users']}
-                {$lang->ougc_feedback_profile_users})
-            </td>
-        </tr>
-    </table>
-    <br/>
+<div class="memberlist_stat_box_wrap ougcfeedback_info_{$userID}">
+    <a href="{$mybb->settings['bburl']}/feedback.php?&uid={$userID}" class="stat_box_href">
+        <div class="profile-stat-boxes">
+            <h2>{$stats['total']}</h2>
+            <span class="smalltext">{$lang->ougc_feedback_member_list_title}</span>
+        </div>
+    </a>
 </div>
+<br>

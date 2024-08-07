@@ -560,6 +560,8 @@ if (!($user = get_user($uid))) {
     error($lang->ougc_feedback_error_invalid_user);
 }
 
+$user['username'] = htmlspecialchars_uni($user['username']);
+
 $lang->ougc_feedback_page_profile = $lang->sprintf($lang->ougc_feedback_page_profile, $user['username']);
 
 $lang->ougc_feedback_page_report_for = $lang->sprintf($lang->ougc_feedback_page_report_for, $user['username']);
@@ -811,7 +813,7 @@ $multipage = $feedback_count ? (string)multipage(
 // Fetch the reputations which will be displayed on this page
 $query = $db->query(
     '
-	SELECT f.*, u.username AS user_username, u.reputation AS user_reputation, u.usergroup AS user_usergroup, u.displaygroup AS user_displaygroup
+	SELECT f.*, u.username AS user_username, u.usergroup AS user_usergroup, u.displaygroup AS user_displaygroup
 	FROM ' . TABLE_PREFIX . 'ougc_feedback f
 	LEFT JOIN ' . TABLE_PREFIX . 'users u ON (u.uid=f.fuid)
 	WHERE ' . implode(' AND ', $where) . "

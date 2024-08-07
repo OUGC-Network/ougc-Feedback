@@ -56,6 +56,7 @@ function global_start(): bool
     switch (THIS_SCRIPT) {
         case 'member.php':
             $templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment,ougcfeedback_profile_average, ougcfeedback_profile_view_all';
+            $templatelist .= ', ougcfeedback_profile_latest_row, ougcfeedback_profile_latest_empty, ougcfeedback_profile_latest_view_all, ougcfeedback_profile_latest';
             break;
         case 'showthread.php':
         case 'newthread.php':
@@ -169,6 +170,126 @@ function member_profile_end(): string
     $ougc_feedback = eval(getTemplate('profile'));
 
     return $ougc_feedback;
+}
+
+function member_profile_end10(): bool
+{
+    global $db, $memprofile, $theme, $lang, $mybb, $parser;
+    global $feedbackLatest;
+
+    $feedbackLimit = getSetting('latest_profile_feedback');
+
+    $feedbackLatest = '';
+
+    if ($feedbackLimit < 1) {
+        return false;
+    }
+
+    if (!($parser instanceof \postParser)) {
+        require_once MYBB_ROOT . 'inc/class_parser.php';
+
+        $parser = new \postParser();
+    }
+
+    loadLanguage();
+
+    $userID = (int)$memprofile['uid'];
+
+    $whereClauses = ["f.uid='{$userID}'"];
+
+    if (!$mybb->usergroup['ougc_feedback_ismod']) {
+        $whereClauses[] = "f.status='1'";
+    }
+
+    $dbQuery = $db->simple_select(
+        "ougc_feedback f LEFT JOIN {$db->table_prefix}users u ON (u.uid=f.fuid)",
+        'f.*, u.username AS userName, u.reputation AS user_reputation, u.usergroup AS userGroup, u.displaygroup AS displayGroup',
+        implode(' AND ', $whereClauses),
+        ['limit' => $feedbackLimit]
+    );
+
+    $profileUserName = htmlspecialchars_uni($memprofile['username']);
+
+    $tableTitle = $lang->sprintf($lang->ougc_feedback_profile_latest_title, $profileUserName);
+
+    if (!$db->num_rows($dbQuery)) {
+        $feedback_list = eval(getTemplate('profile_latest_empty'));
+
+        $viewAllLink = '';
+    } else {
+        $feedback_list = '';
+
+        while ($feedbackData = $db->fetch_array($dbQuery)) {
+            $feedbackID = (int)$feedbackData['fid'];
+
+            $feedbackRate = (int)$feedbackData['feedback'];
+
+            if (empty($feedbackData['fuid'])) {
+                $userName = $lang->guest;
+            } elseif (empty($feedbackData['userName'])) {
+                $userName = $lang->na;
+            } else {
+                $userName = format_name(
+                    htmlspecialchars_uni($feedbackData['userName']),
+                    $feedbackData['userGroup'],
+                    $feedbackData['displayGroup']
+                );
+
+                $userName = build_profile_link(
+                    $userName,
+                    $feedbackData['fuid']
+                );
+            }
+
+            switch ($feedbackData['feedback']) {
+                case \ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE:
+                    $statusClass = 'trow_reputation_negative';
+
+                    $typeClass = 'reputation_negative';
+
+                    $rateType .= $lang->ougc_feedback_profile_negative;
+                    break;
+                case \ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL:
+                    $statusClass = 'trow_reputation_neutral';
+
+                    $typeClass = 'reputation_neutral';
+
+                    $rateType .= $lang->ougc_feedback_profile_neutral;
+                    break;
+                case \ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE:
+                    $statusClass = 'trow_reputation_positive';
+
+                    $typeClass = 'reputation_positive';
+
+                    $rateType .= $lang->ougc_feedback_profile_positive;
+                    break;
+            }
+
+            $lastUpdatedDate = my_date('relative', $feedbackData['dateline']);
+
+            $lastUpdated = $lang->sprintf($lang->ougc_feedback_page_last_updated, $lastUpdatedDate);
+
+            if (empty($feedbackData['comment'])) {
+                $feedbackComment = $lang->ougc_feedback_no_comment;
+            } else {
+                $feedbackComment = $parser->parse_message($feedbackData['comment'], [
+                    'allow_html' => 0,
+                    'allow_mycode' => 0,
+                    'allow_smilies' => 1,
+                    'allow_imgcode' => 0,
+                    'filter_badwords' => 1,
+                ]);
+            }
+
+            $feedback_list .= eval(getTemplate('profile_latest_row'));
+        }
+
+        $viewAllLink = eval(getTemplate('profile_latest_view_all'));
+    }
+
+    $feedbackLatest = eval(getTemplate('profile_latest'));
+
+    return true;
 }
 
 function postbit(array &$post): array
@@ -382,34 +503,6 @@ function postbit_announcement(array &$post): array
     return $post;
 }
 
-/*
-function memberlist_end(): bool
-{
-    global $mybb;
-
-    if (!getSetting('showin_memberlist')) {
-        return false;
-    }
-
-    global $templates, $ougc_feedback_header, $ougc_feedback_sort, $sorturl, $lang, $colspan, $sort_selected;
-
-    loadLanguage();
-
-    ++$colspan;
-
-    $ougc_feedback_header = eval(getTemplate('memberlist_header'));
-
-    $ougc_feedback_sort = eval(getTemplate('memberlist_sort'));
-
-    return true;
-}
-
-function memberlist_intermediate(): bool
-{
-    return true;
-}
-
-*/
 function memberlist_user(array &$userData): array
 {
     $userData['feedback'] = $userData['feedback_average'] = '';

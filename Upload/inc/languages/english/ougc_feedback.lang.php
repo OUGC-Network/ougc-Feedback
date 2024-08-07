@@ -40,8 +40,9 @@ $l['ougc_feedback_profile_users'] = 'users';
 $l['ougc_feedback_profile_average'] = 'Average';
 $l['ougc_feedback_profile_add'] = 'Add Feedback';
 $l['ougc_feedback_profile_edit'] = 'Update Feedback';
+$l['ougc_feedback_profile_latest_title'] = 'Feedback for {1}';
 
-// Profile
+// Member list
 $l['ougc_feedback_member_list_title'] = 'Feedback';
 $l['ougc_feedback_member_list_view'] = 'View All';
 $l['ougc_feedback_member_list_total'] = 'Total';
@@ -70,7 +71,7 @@ $l['ougc_feedback_page_summary'] = 'Summary';
 $l['ougc_feedback_page_profile'] = 'Profile of {1}';
 $l['ougc_feedback_confirm_delete'] = 'Are you sure you wish to delete this feedback?';
 $l['ougc_feedback_confirm_restore'] = 'Are you sure you wish to restore this feedback?';
-$l['ougc_feedback_page_empty'] = 'This user currently does not have any feedback with the specified criteria below.';
+$l['ougc_feedback_page_empty'] = 'This user currently does not have any feedback with the specified criteria.';
 $l['ougc_feedback_page_report'] = 'Report';
 $l['ougc_feedback_page_edit'] = 'Edit';
 $l['ougc_feedback_page_delete'] = 'Delete';
@@ -87,6 +88,8 @@ $l['ougc_feedback_page_stats_posts'] = 'Feedback from posts';
 $l['ougc_feedback_page_type_buyer'] = '[Buyer] ';
 $l['ougc_feedback_page_type_seller'] = '[Seller] ';
 $l['ougc_feedback_page_type_trader'] = '[Trader] ';
+
+$l['ougc_feedback_profile_empty'] = 'This user currently does not have any feedback.';
 
 // Took from reputation feature
 $l['show_all'] = 'Show: All Votes';
