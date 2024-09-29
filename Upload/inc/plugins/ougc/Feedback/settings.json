@@ -15,6 +15,10 @@
     "optionscode": "numeric",
     "value": 10
   },
+  "latest_profile_comment_groups": {
+    "optionscode": "groupselect",
+    "value": -1
+  },
   "showin_postbit": {
     "optionscode": "yesno",
     "value": 1

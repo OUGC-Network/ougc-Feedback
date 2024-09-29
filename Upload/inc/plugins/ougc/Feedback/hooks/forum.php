@@ -82,6 +82,34 @@ function global_intermediate(): bool
 
     $ougc_feedback_js = eval(getTemplate('js'));
 
+    global $db;
+    global $ougcFeedbackCounterPositive, $ougcFeedbackCounterNeutral, $ougcFeedbackCounterNegative;
+
+    $ougcFeedbackCounterPositive = $ougcFeedbackCounterNeutral = $ougcFeedbackCounterNegative = 0;
+
+    $userID = (int)$mybb->user['uid'];
+
+    $whereClauses = [
+        "uid='{$userID}'",
+        "status='1'"
+    ];
+
+    $dbQuery = $db->simple_select('ougc_feedback', 'feedback,uid,fuid', implode(' AND ', $whereClauses));
+
+    while ($feedbackData = $db->fetch_array($dbQuery)) {
+        switch ((int)$feedbackData['feedback']) {
+            case \ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE:
+                ++$ougcFeedbackCounterPositive;
+                break;
+            case \ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL:
+                ++$ougcFeedbackCounterNeutral;
+                break;
+            case \ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE:
+                ++$ougcFeedbackCounterNegative;
+                break;
+        }
+    }
+
     return true;
 }
 
@@ -269,16 +297,20 @@ function member_profile_end10(): bool
 
             $lastUpdated = $lang->sprintf($lang->ougc_feedback_page_last_updated, $lastUpdatedDate);
 
-            if (empty($feedbackData['comment'])) {
-                $feedbackComment = $lang->ougc_feedback_no_comment;
-            } else {
-                $feedbackComment = $parser->parse_message($feedbackData['comment'], [
-                    'allow_html' => 0,
-                    'allow_mycode' => 0,
-                    'allow_smilies' => 1,
-                    'allow_imgcode' => 0,
-                    'filter_badwords' => 1,
-                ]);
+            $feedbackComment = $lang->ougc_feedback_no_allowed_to_view_comment;
+
+            if (is_member(getSetting('latest_profile_comment_groups'))) {
+                if (empty($feedbackData['comment'])) {
+                    $feedbackComment = $lang->ougc_feedback_no_comment;
+                } else {
+                    $feedbackComment = $parser->parse_message($feedbackData['comment'], [
+                        'allow_html' => 0,
+                        'allow_mycode' => 0,
+                        'allow_smilies' => 1,
+                        'allow_imgcode' => 0,
+                        'filter_badwords' => 1,
+                    ]);
+                }
             }
 
             $feedback_list .= eval(getTemplate('profile_latest_row'));

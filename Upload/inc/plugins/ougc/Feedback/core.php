@@ -72,7 +72,7 @@ function addHooks(string $namespace): bool
     return true;
 }
 
-function run_hooks(string $hook_name = '', mixed &$hook_arguments = ''): mixed
+function run_hooks(string $hook_name = '', &$hook_arguments = '')
 {
     global $plugins;
 

@@ -82,6 +82,7 @@ $l['ougc_feedback_page_post_given'] = 'Feedback given for <a href="{1}">{2}\'s p
 $l['ougc_feedback_page_post_nolink'] = 'Feedback given for {1}\'s post<br />';
 $l['ougc_feedback_page_post_given_thread'] = 'in <a href="{1}">{2}</a>';
 $l['ougc_feedback_no_comment'] = '[No comment]';
+$l['ougc_feedback_no_allowed_to_view_comment'] = '<i>You are no allowed to see comments.</i>';
 $l['ougc_feedback_page_stats_total'] = 'Total Feedback';
 $l['ougc_feedback_page_stats_members'] = 'Feedback from members';
 $l['ougc_feedback_page_stats_posts'] = 'Feedback from posts';
