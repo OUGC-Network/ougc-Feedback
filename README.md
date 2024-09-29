@@ -1,69 +1,201 @@
-## OUGC Feedback
+![[logo.png]]
 
-Adds a powerful feedback system to your forum.
+<h3 align="center">ougc Feedback</h3>
 
-***
+---
 
-### Support
+<p align="center"> Adds a powerful feedback system to your forum.
+    <br> 
+</p>
 
-Please visit [OUGC Network](https://ougc.network/ "Visit OUGC Network") for more information about this project.
+## 📜 Table of Contents <a name = "table_of_contents"></a>
 
-### Thank You!
+- [About](#about)
+- [Getting Started](#getting_started)
+    - [Dependencies](#dependencies)
+    - [File Structure](#file_structure)
+    - [Install](#install)
+    - [Update](#update)
+    - [Template Modifications](#template_modifications)
+- [Settings](#settings)
+    - [File Level Settings](#file_level_settings)
+- [Templates](#templates)
+- [Usage](#usage)
+- [Built Using](#built_using)
+- [Authors](#authors)
+- [Acknowledgments](#acknowledgement)
+- [Support & Feedback](#support)
 
-Remember this is a free release developed on free time, either for personal use or as custom requests.
+## 🚀 About <a name = "about"></a>
 
-Any contribution is welcome.
+...
 
-Thanks for downloading and using my plugins, I really appreciate it!
+[Go up to Table of Contents](#table_of_contents)
 
-        require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
-        find_replace_templatesets(
-            'member_profile',
-            '#' . preg_quote('{$profilefields}') . '#i',
-            '{$profilefields}{$ougc_feedback}'
-        );
-        find_replace_templatesets(
-            'postbit',
-            '#' . preg_quote('{$post[\'button_rep\']}') . '#i',
-            '{$post[\'button_rep\']}{$post[\'ougc_feedback_button\']}'
-        );
-        find_replace_templatesets(
-            'postbit_classic',
-            '#' . preg_quote('{$post[\'button_rep\']}') . '#i',
-            '{$post[\'button_rep\']}{$post[\'ougc_feedback_button\']}'
-        );
-        find_replace_templatesets(
-            'postbit_author_user',
-            '#' . preg_quote('{$post[\'warninglevel\']}') . '#i',
-            '{$post[\'warninglevel\']}<!--OUGC_FEEDBACK-->'
-        );
-        //find_replace_templatesets('memberlist_user', '#'.preg_quote('{$referral_bit}').'#i', '{$referral_bit}{$ougc_feedback_bit}');
-        //find_replace_templatesets('memberlist', '#'.preg_quote('{$referral_header}').'#i', '{$referral_header}{$ougc_feedback_header}');
-        //find_replace_templatesets('memberlist', '#'.preg_quote('{$lang->sort_by_referrals}</option>').'#i', '{$lang->sort_by_referrals}</option>{$ougc_feedback_sort}');
-        find_replace_templatesets(
-            'headerinclude',
-            '#' . preg_quote('{$stylesheets}') . '#i',
-            '{$stylesheets}{$ougc_feedback_js}'
-        );
+## 📍 Getting Started <a name = "getting_started"></a>
 
+The following information will assist you into getting a copy of this plugin up and running on your forum.
 
+### Dependencies <a name = "dependencies"></a>
 
+A setup that meets the following requirements is necessary to use this plugin.
 
+- [MyBB](https://mybb.com/) >= 1.8
+- PHP >= 7
+- [MyBB-PluginLibrary](https://github.com/frostschutz/MyBB-PluginLibrary) >= 13
 
+### File structure <a name = "file_structure"></a>
 
-        require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
-        find_replace_templatesets('member_profile', '#' . preg_quote('{$ougc_feedback}') . '#i', '', 0);
-        find_replace_templatesets('postbit', '#' . preg_quote('{$post[\'ougc_feedback_button\']}') . '#i', '', 0);
-        find_replace_templatesets(
-            'postbit_classic',
-            '#' . preg_quote('{$post[\'ougc_feedback_button\']}') . '#i',
-            '',
-            0
-        );
-        find_replace_templatesets('postbit_author_user', '#' . preg_quote('<!--OUGC_FEEDBACK-->') . '#i', '', 0);
-        //find_replace_templatesets('memberlist_user', '#'.preg_quote('{$ougc_feedback_bit}').'#i', '', 0);
-        //find_replace_templatesets('memberlist', '#'.preg_quote('{$ougc_feedback_header}').'#i', '', 0);
-        //find_replace_templatesets('memberlist', '#'.preg_quote('{$ougc_feedback_sort}').'#i', '', 0);
-        find_replace_templatesets('headerinclude', '#' . preg_quote('{$ougc_feedback_js}') . '#i', '', 0);
-        //find_replace_templatesets('postbit', '#'.preg_quote('{$post[\'ougc_feedback\']}').'#i', '', 0);
-        //find_replace_templatesets('postbit_classic', '#'.preg_quote('{$post[\'ougc_feedback\']}').'#i', '', 0);
+  ```
+   .
+   ├── inc
+   │ ├── languages
+   │ │ ├── english
+   │ │ │ ├── ougc_feedback.lang.php
+   │ │ │ ├── admin
+   │ │ │ │ ├── ougc_feedback.lang.php
+   │ ├── plugins
+   │ │ ├── ougc
+   │ │ │ ├── Feedback
+   │ │ │ │ ├── hooks
+   │ │ │ │ │ ├── admin.php
+   │ │ │ │ │ ├── forum.php
+   │ │ │ │ ├── templates
+   │ │ │ │ │ ├── form
+   │ │ │ │ │ ├── form_comment
+   │ │ │ │ │ ├── js
+   │ │ │ │ │ ├── memberlist
+   │ │ │ │ │ ├── memberlist_average
+   │ │ │ │ │ ├── memberlist_view_all
+   │ │ │ │ │ ├── modal
+   │ │ │ │ │ ├── modal_error
+   │ │ │ │ │ ├── modal_tfoot
+   │ │ │ │ │ ├── page
+   │ │ │ │ │ ├── page_addlink
+   │ │ │ │ │ ├── page_empty
+   │ │ │ │ │ ├── page_item
+   │ │ │ │ │ ├── page_item_delete
+   │ │ │ │ │ ├── page_item_delete_hard
+   │ │ │ │ │ ├── page_item_edit
+   │ │ │ │ │ ├── page_item_report
+   │ │ │ │ │ ├── page_item_restore
+   │ │ │ │ │ ├── postbit
+   │ │ │ │ │ ├── postbit_average
+   │ │ │ │ │ ├── postbit_button
+   │ │ │ │ │ ├── postbit_view_all
+   │ │ │ │ │ ├── profile
+   │ │ │ │ │ ├── profile_add
+   │ │ │ │ │ ├── profile_average
+   │ │ │ │ │ ├── profile_latest
+   │ │ │ │ │ ├── profile_latest_empty
+   │ │ │ │ │ ├── profile_latest_row
+   │ │ │ │ │ ├── profile_latest_view_all
+   │ │ │ │ │ ├── profile_view_all
+   │ │ │ │ ├── settings.json
+   │ │ │ │ ├── admin.php
+   │ │ │ │ ├── classes.php
+   │ │ │ │ ├── core.php
+   ├── jscripts
+   │ ├── ougc_feedback.js
+   ```
+
+### Installing <a name = "install"></a>
+
+Follow the next steps in order to install a copy of this plugin on your forum.
+
+1. Download the latest package from one of the following sources:
+    - ...
+2. Upload the contents of the _Upload_ folder to your MyBB root directory.
+3. Browse to _Configuration » Plugins_ and install this plugin by clicking _Install & Activate_.
+
+### Updating <a name = "update"></a>
+
+Follow the next steps in order to update your copy of this plugin.
+
+1. Browse to _Configuration » Plugins_ and deactivate this plugin by clicking _Deactivate_.
+2. Follow step 1 and 2 from the [Install](#install) section.
+3. Browse to _Configuration » Plugins_ and activate this plugin by clicking _Activate_.
+
+### Template Modifications <a name = "template_modifications"></a>
+
+The following template edits are required for this plugin to work.
+
+1. Insert `{$ougc_feedback}` after `{$profilefields}` inside the `member_profile` template.
+2. Insert `{$ougc_feedback}` after `{$profilefields}` inside the `memberlist_user` template.
+3. Insert `{$post['ougc_feedback_button']}` after `{$post['button_rep']}` inside the `postbit` template.
+4. Insert `{$post['ougc_feedback_button']}` after `{$post['button_rep']}` inside the `postbit_classic` template.
+5. Insert `<!--OUGC_FEEDBACK-->` after `{$post['warninglevel']}` inside the `postbit_author_user` template.
+6. Insert `{$ougc_feedback_bit}` after `{$referral_bit}` inside the `memberlist_user` template.
+7. Insert `{$ougc_feedback_header}` after `{$referral_header}` inside the `memberlist` template.
+8. Insert `{$ougc_feedback_sort}` after `{$lang->sort_by_referrals}</option>` inside the `memberlist` template.
+9. Insert `{$ougc_feedback_js}` after `{$stylesheets}` inside the `headerinclude` template.
+10. Insert `{$feedbackLatest}` inside the `member_profile` template.
+11. Insert `{$user['feedback']}` inside the `memberlist_user` template.
+
+[Go up to Table of Contents](#table_of_contents)
+
+## 🛠 Settings <a name = "settings"></a>
+
+Below you can find a description of the plugin settings.
+
+### Global Settings
+
+...
+
+### File Level Settings <a name = "file_level_settings"></a>
+
+Additionally, you can force your settings by updating the `SETTINGS` array constant in
+the `ougc\Feedback\Core` namespace in the `./inc/plugins/ougc_feedback.php` file. Any setting set
+this way will always bypass any front-end configuration. Use the setting key as shown below:
+
+```PHP
+define('ougc\Feedback\Core\SETTINGS', [
+    'key' => 'value',
+]);
+```
+
+[Go up to Table of Contents](#table_of_contents)
+
+## 📐 Templates <a name = "templates"></a>
+
+The following is a list of templates available for this plugin.
+
+...
+
+[Go up to Table of Contents](#table_of_contents)
+
+## 📖 Usage <a name="usage"></a>
+
+This plugin has no additional configurations; after activating make sure to modify the global settings in order to get
+this plugin working.
+
+[Go up to Table of Contents](#table_of_contents)
+
+## ⛏ Built Using <a name = "built_using"></a>
+
+- [MyBB](https://mybb.com/) - Web Framework
+- [MyBB PluginLibrary](https://github.com/frostschutz/MyBB-PluginLibrary) - A collection of useful functions for MyBB
+- [PHP](https://www.php.net/) - Server Environment
+
+[Go up to Table of Contents](#table_of_contents)
+
+## ✍️ Authors <a name = "authors"></a>
+
+- [@Omar G](https://github.com/Sama34) - Idea & Initial work
+
+[Go up to Table of Contents](#table_of_contents)
+
+## 🎉 Acknowledgements <a name = "acknowledgement"></a>
+
+- [The Documentation Compendium](https://github.com/kylelobo/The-Documentation-Compendium)
+
+[Go up to Table of Contents](#table_of_contents)
+
+## 🎈 Support & Feedback <a name="support"></a>
+
+This is free development and any contribution is welcome. Get support or leave feedback at the
+official [MyBB Community](https://community.mybb.com/thread-159249.html).
+
+Thanks for downloading and using our plugins!
+
+[Go up to Table of Contents](#table_of_contents)
