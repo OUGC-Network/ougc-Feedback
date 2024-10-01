@@ -2,38 +2,36 @@
 
 /***************************************************************************
  *
- *	OUGC Feedback plugin (/inc/languages/english/admin/ougc_feedback.lang.php)
- *	Author: Omar Gonzalez
- *	Copyright: © 2012-2019 Omar Gonzalez
+ *    OUGC Feedback plugin (/inc/languages/english/admin/ougc_feedback.lang.php)
+ *    Author: Omar Gonzalez
+ *    Copyright: © 2012 Omar Gonzalez
  *
- *	Website: https://omarg.me
+ *    Website: https://ougc.network
  *
- *	Adds a powerful feedback system to your forum.
+ *    Adds a powerful feedback system to your forum.
  *
  ***************************************************************************
+ ****************************************************************************
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ****************************************************************************/
 
-****************************************************************************
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-****************************************************************************/
- 
 // Plugin API
 $l['ougc_feedback'] = 'OUGC Feedback';
 $l['ougc_feedback_desc'] = 'Adds a powerful feedback system to your forum.';
 
 // PluginLibrary
 $l['ougc_feedback_pluginlibrary_required'] = 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or later to be uploaded to your forum.';
-$l['ougc_feedback_pluginlibrary_old'] = 'This plugin requires PluginLibrary version {2} or later, whereas your current version is {1}. Please do update <a href="{3}">PluginLibrary</a>.';
 
 // Settings
 $l['setting_group_ougc_feedback'] = 'Feedback System';
@@ -54,6 +52,10 @@ $l['setting_ougc_feedback_allow_pm_notifications_desc'] = 'Allow users to be not
 //$l['setting_ougc_feedback_allow_alert_notifications_desc'] = 'Allow users to be notified via a plugin alert.';
 $l['setting_ougc_feedback_showin_profile'] = 'Show In Profile';
 $l['setting_ougc_feedback_showin_profile_desc'] = 'Show feedback status in profiles.';
+$l['setting_ougc_feedback_latest_profile_feedback'] = 'Latest Feedback Count';
+$l['setting_ougc_feedback_latest_profile_feedback_desc'] = 'Set amount of latest feedback to show in user profiles.';
+$l['setting_ougc_feedback_latest_profile_comment_groups'] = 'Latest Feedback Comments Permission';
+$l['setting_ougc_feedback_latest_profile_comment_groups_desc'] = 'Select which groups are allowed to see the latest feedback comment in user profiles.';
 $l['setting_ougc_feedback_showin_postbit'] = 'Show In Posts';
 $l['setting_ougc_feedback_showin_postbit_desc'] = 'Show feedback status in posts.';
 $l['setting_ougc_feedback_showin_forums'] = 'Show In Forums';
@@ -62,8 +64,8 @@ $l['setting_ougc_feedback_postbit_hide_button'] = 'Hide Post-bit Button';
 $l['setting_ougc_feedback_postbit_hide_button_desc'] = 'Turn this on to hide the post-bit feedback button if not allowed to use it. Save one query turning this off.';
 $l['setting_ougc_feedback_profile_hide_add'] = 'Hide Profile Add Link';
 $l['setting_ougc_feedback_profile_hide_add_desc'] = 'Turn this on to hide the profile feedback add link if not allowed to use it. Save one query turning this off.';
-//$l['setting_ougc_feedback_showin_memberlist'] = 'Show In Member List';
-//$l['setting_ougc_feedback_showin_memberlist_desc'] = 'Whether if to show feedback status in the member list page.';
+$l['setting_ougc_feedback_showin_memberlist'] = 'Show In Member List';
+$l['setting_ougc_feedback_showin_memberlist_desc'] = 'Whether if to show feedback status in the member list page.';
 $l['setting_ougc_feedback_perpage'] = 'Pagination Per-Page Setting';
 $l['setting_ougc_feedback_perpage_desc'] = 'Maximum number of items to show per page in pagination enabled features.';
 
@@ -82,7 +84,7 @@ $l['ougc_feedback_permission_mod_candelete'] = 'Can this moderator hard delete f
 
 // Reort system
 $l['report_content_feedback'] = 'OUGC Feedback';
- 
+
 // Forums
 $l['ougc_feedback_permission_allow_threads'] = 'Yes, allow feedback for threads';
 $l['ougc_feedback_permission_allow_posts'] = 'Yes, allow feedback for posts';

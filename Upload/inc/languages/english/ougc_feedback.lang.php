@@ -2,31 +2,30 @@
 
 /***************************************************************************
  *
- *	OUGC Feedback plugin (/inc/languages/english/ougc_feedback.lang.php)
- *	Author: Omar Gonzalez
- *	Copyright: © 2012-2019 Omar Gonzalez
+ *    OUGC Feedback plugin (/inc/languages/english/ougc_feedback.lang.php)
+ *    Author: Omar Gonzalez
+ *    Copyright: © 2012 Omar Gonzalez
  *
- *	Website: https://omarg.me
+ *    Website: https://ougc.network
  *
- *	Adds a powerful feedback system to your forum.
+ *    Adds a powerful feedback system to your forum.
  *
  ***************************************************************************
+ ****************************************************************************
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ ****************************************************************************/
 
-****************************************************************************
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-****************************************************************************/
- 
 // Plugin API
 $l['ougc_feedback'] = 'OUGC Feedback';
 
@@ -41,6 +40,20 @@ $l['ougc_feedback_profile_users'] = 'users';
 $l['ougc_feedback_profile_average'] = 'Average';
 $l['ougc_feedback_profile_add'] = 'Add Feedback';
 $l['ougc_feedback_profile_edit'] = 'Update Feedback';
+$l['ougc_feedback_profile_latest_title'] = 'Feedback for {1}';
+
+// Member list
+$l['ougc_feedback_member_list_title'] = 'Feedback';
+$l['ougc_feedback_member_list_view'] = 'View All';
+$l['ougc_feedback_member_list_total'] = 'Total';
+$l['ougc_feedback_member_list_positive'] = 'Positive';
+$l['ougc_feedback_member_list_neutral'] = 'Neutral';
+$l['ougc_feedback_member_list_negative'] = 'Negative';
+$l['ougc_feedback_member_list_users'] = 'users';
+$l['ougc_feedback_member_list_average'] = 'Average';
+
+// Posts
+$l['ougc_feedback_post_view'] = 'View All';
 
 // Modal
 $l['ougc_feedback_modal_type'] = 'Transaction Type:';
@@ -58,7 +71,7 @@ $l['ougc_feedback_page_summary'] = 'Summary';
 $l['ougc_feedback_page_profile'] = 'Profile of {1}';
 $l['ougc_feedback_confirm_delete'] = 'Are you sure you wish to delete this feedback?';
 $l['ougc_feedback_confirm_restore'] = 'Are you sure you wish to restore this feedback?';
-$l['ougc_feedback_page_empty'] = 'This user currently does not have any feedback with the specified criteria below.';
+$l['ougc_feedback_page_empty'] = 'This user currently does not have any feedback with the specified criteria.';
 $l['ougc_feedback_page_report'] = 'Report';
 $l['ougc_feedback_page_edit'] = 'Edit';
 $l['ougc_feedback_page_delete'] = 'Delete';
@@ -69,12 +82,15 @@ $l['ougc_feedback_page_post_given'] = 'Feedback given for <a href="{1}">{2}\'s p
 $l['ougc_feedback_page_post_nolink'] = 'Feedback given for {1}\'s post<br />';
 $l['ougc_feedback_page_post_given_thread'] = 'in <a href="{1}">{2}</a>';
 $l['ougc_feedback_no_comment'] = '[No comment]';
+$l['ougc_feedback_no_allowed_to_view_comment'] = '<i>You are no allowed to see comments.</i>';
 $l['ougc_feedback_page_stats_total'] = 'Total Feedback';
 $l['ougc_feedback_page_stats_members'] = 'Feedback from members';
 $l['ougc_feedback_page_stats_posts'] = 'Feedback from posts';
 $l['ougc_feedback_page_type_buyer'] = '[Buyer] ';
 $l['ougc_feedback_page_type_seller'] = '[Seller] ';
 $l['ougc_feedback_page_type_trader'] = '[Trader] ';
+
+$l['ougc_feedback_profile_empty'] = 'This user currently does not have any feedback.';
 
 // Took from reputation feature
 $l['show_all'] = 'Show: All Votes';
@@ -126,7 +142,7 @@ $l['ougc_feedback_error_invalid_type'] = 'Invalid feedback type selected.';
 $l['ougc_feedback_error_invalid_feedback'] = 'Invalid feedback selected.';
 $l['ougc_feedback_error_invalid_feedback_value'] = 'Invalid feedback value selected.';
 $l['ougc_feedback_error_invalid_status'] = 'Invalid feedback status selected.';
-$l['ougc_feedback_error_invalid_comment'] = 'Invalid feedback comment entered. The minimum and maximum characters count is {1} and {2} respectively, whereas your message is {3} characters long.';
+$l['ougc_feedback_error_invalid_comment'] = 'Invalid comment, make sure your comment is at between {1} and {2} characters long. Your message is {3} characters long.';
 $l['ougc_feedback_error_invalid_maxperday'] = 'You have already given as many feedback  as you are allowed to for today.';
 
 // Redirect messages
