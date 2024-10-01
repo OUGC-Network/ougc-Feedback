@@ -83,6 +83,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $feedback_code = $mybb->get_input('feedback_code', MyBB::INPUT_INT);
     }
 
+    $processed = false;
+
     $hook_arguments = [
         'processed' => &$processed,
         'feedback_code' => &$feedback_code,
@@ -218,9 +220,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
     $hide_add = 0;
 
-    $processed = false;
-
-    run_hooks('add_edit_intermediate', $hook_arguments);
+    $hook_arguments = run_hooks('add_edit_intermediate', $hook_arguments);
 
     set_data($feedback);
 
@@ -383,9 +383,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             );
         }
 
-        run_hooks('add_edit_do_start', $hook_arguments);
+        $hook_arguments = run_hooks('add_edit_do_start', $hook_arguments);
 
-        // Validate, throw error if not valid
         if ($processed && validate_feedback()) {
             if ($edit) {
                 // Insert feedback
@@ -888,10 +887,10 @@ $feedback_list = '';
 foreach ($feedback_cache as $feedback) {
     $feedback['fid'] = (int)$feedback['fid'];
 
-    $postfeed_given = '';
+    $feedback_post_given = '';
 
     if ($feedback['unique_id']) {
-        $postfeed_given = $lang->sprintf($lang->ougc_feedback_page_post_nolink, $user['username']);
+        $feedback_post_given = $lang->sprintf($lang->ougc_feedback_page_post_nolink, $user['username']);
 
         if (isset($post_reputation[$feedback['unique_id']])) {
             $post = $post_reputation[$feedback['unique_id']];
@@ -904,7 +903,7 @@ foreach ($feedback_cache as $feedback) {
 
             $link = get_post_link($feedback['unique_id']) . '#pid' . $feedback['unique_id'];
 
-            $postfeed_given = $lang->sprintf(
+            $feedback_post_given = $lang->sprintf(
                 $lang->ougc_feedback_page_post_given,
                 $link,
                 $user['username'],

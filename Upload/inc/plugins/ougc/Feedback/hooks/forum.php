@@ -275,21 +275,21 @@ function member_profile_end10(): bool
 
                     $typeClass = 'reputation_negative';
 
-                    $rateType .= $lang->ougc_feedback_profile_negative;
+                    $rateType = $lang->ougc_feedback_profile_negative;
                     break;
                 case \ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL:
                     $statusClass = 'trow_reputation_neutral';
 
                     $typeClass = 'reputation_neutral';
 
-                    $rateType .= $lang->ougc_feedback_profile_neutral;
+                    $rateType = $lang->ougc_feedback_profile_neutral;
                     break;
                 case \ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE:
                     $statusClass = 'trow_reputation_positive';
 
                     $typeClass = 'reputation_positive';
 
-                    $rateType .= $lang->ougc_feedback_profile_positive;
+                    $rateType = $lang->ougc_feedback_profile_positive;
                     break;
             }
 
