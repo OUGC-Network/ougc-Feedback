@@ -32,12 +32,18 @@ namespace ougc\Feedback\Hooks\Forum;
 
 use MyBB;
 
+use postParser;
+
 use function ougc\Feedback\Core\getSetting;
 use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\getTemplateName;
+use function ougc\Feedback\Core\getUserStats;
 use function ougc\Feedback\Core\loadLanguage;
 
 use const ougc\Feedback\Core\DEBUG;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
 use const ougc\Feedback\ROOT;
 
@@ -98,13 +104,13 @@ function global_intermediate(): bool
 
     while ($feedbackData = $db->fetch_array($dbQuery)) {
         switch ((int)$feedbackData['feedback']) {
-            case \ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE:
+            case FEEDBACK_TYPE_POSITIVE:
                 ++$ougcFeedbackCounterPositive;
                 break;
-            case \ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL:
+            case FEEDBACK_TYPE_NEUTRAL:
                 ++$ougcFeedbackCounterNeutral;
                 break;
-            case \ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE:
+            case FEEDBACK_TYPE_NEGATIVE:
                 ++$ougcFeedbackCounterNegative;
                 break;
         }
@@ -127,7 +133,7 @@ function member_profile_end(): string
 
     $userID = (int)$memprofile['uid'];
 
-    $stats = \ougc\Feedback\Core\getUserStats($userID);
+    $stats = getUserStats($userID);
 
     $class = '_neutral';
 
@@ -213,10 +219,10 @@ function member_profile_end10(): bool
         return false;
     }
 
-    if (!($parser instanceof \postParser)) {
+    if (!($parser instanceof postParser)) {
         require_once MYBB_ROOT . 'inc/class_parser.php';
 
-        $parser = new \postParser();
+        $parser = new postParser();
     }
 
     loadLanguage();
@@ -270,21 +276,21 @@ function member_profile_end10(): bool
             }
 
             switch ($feedbackData['feedback']) {
-                case \ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE:
+                case FEEDBACK_TYPE_NEGATIVE:
                     $statusClass = 'trow_reputation_negative';
 
                     $typeClass = 'reputation_negative';
 
                     $rateType = $lang->ougc_feedback_profile_negative;
                     break;
-                case \ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL:
+                case FEEDBACK_TYPE_NEUTRAL:
                     $statusClass = 'trow_reputation_neutral';
 
                     $typeClass = 'reputation_neutral';
 
                     $rateType = $lang->ougc_feedback_profile_neutral;
                     break;
-                case \ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE:
+                case FEEDBACK_TYPE_POSITIVE:
                     $statusClass = 'trow_reputation_positive';
 
                     $typeClass = 'reputation_positive';
@@ -460,7 +466,7 @@ function postbit(array &$post): array
 
     global $plugins, $thread, $forum;
 
-    if (!$forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts']) {
+    if (empty($forum) || !$forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts']) {
         return $post;
     }
 
@@ -549,7 +555,7 @@ function memberlist_user(array &$userData): array
 
     $userID = (int)$userData['uid'];
 
-    $stats = \ougc\Feedback\Core\getUserStats($userID);
+    $stats = getUserStats($userID);
 
     $class = '_neutral';
 

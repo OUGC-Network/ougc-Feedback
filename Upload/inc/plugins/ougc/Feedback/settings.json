@@ -55,6 +55,10 @@
     "optionscode": "yesno",
     "value": 0
   },
+  "pm_user_id": {
+    "optionscode": "numeric",
+    "value": -1
+  },
   "perpage": {
     "optionscode": "numeric",
     "value": 20

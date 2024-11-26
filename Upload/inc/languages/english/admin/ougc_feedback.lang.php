@@ -46,6 +46,9 @@ $l['setting_ougc_feedback_comments_maxlength'] = 'Comments Maximum Length';
 $l['setting_ougc_feedback_comments_maxlength_desc'] = 'The maximum amount of characters for comments.';
 $l['setting_ougc_feedback_allow_email_notifications'] = 'Allow Email Notification';
 $l['setting_ougc_feedback_allow_email_notifications_desc'] = 'Allow users to be notified via e-mail.';
+$l['setting_ougc_feedback_pm_user_id'] = 'PM Author User ID';
+$l['setting_ougc_feedback_pm_user_id_desc'] = 'Select a set user to be marked as the sender of PM notifications. Default is <code>-1</code> for "MyBB Engine".';
+
 $l['setting_ougc_feedback_allow_pm_notifications'] = 'Allow PM Notification';
 $l['setting_ougc_feedback_allow_pm_notifications_desc'] = 'Allow users to be notified via PM.';
 //$l['setting_ougc_feedback_allow_alert_notifications'] = 'Allow Alert Notification';

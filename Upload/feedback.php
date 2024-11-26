@@ -409,7 +409,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
                         $mybb->settings['bbname']
                     ),
                     'touid' => $feedback['uid']
-                ], -1, true);
+                ], (int)$mybb->settings['ougc_feedback_pm_user_id'], true);
                 /*}*/
 
                 /*if(strpos(','.$user['ougc_feedback_notification'].',', ',`2,'))

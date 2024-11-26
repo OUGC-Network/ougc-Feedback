@@ -31,6 +31,7 @@ declare(strict_types=1);
 namespace ougc\Feedback\Core;
 
 use MyBB;
+use pluginSystem;
 use PMDataHandler;
 
 use const ougc\Feedback\ROOT;
@@ -76,7 +77,7 @@ function run_hooks(string $hook_name = '', &$hook_arguments = '')
 {
     global $plugins;
 
-    if ($plugins instanceof \pluginSystem) {
+    if ($plugins instanceof pluginSystem) {
         $hook_arguments = $plugins->run_hooks('ougc_feedback_' . $hook_name, $hook_arguments);
     }
 
@@ -339,61 +340,15 @@ function send_pm(array $pm, int $fromid = 0, bool $admin_override = false): bool
 {
     global $mybb;
 
-    if (!$mybb->settings['ougc_feedback_allow_pm_notifications'] || !$mybb->settings['enablepms'] || !is_array(
-            $pm
-        )) {
+    if (!$mybb->settings['ougc_feedback_allow_pm_notification']) {
         return false;
     }
 
-    if (!$pm['subject'] || !$pm['message'] || !$pm['touid'] || (!$pm['receivepms'] && !$admin_override)) {
-        return false;
-    }
+    global $session;
 
-    global $lang, $session;
+    $pm['ipaddress'] = $pm['ipaddress'] ?? $session->packedip;
 
-    $lang->load('messages');
-
-    require_once MYBB_ROOT . 'inc/datahandlers/pm.php';
-
-    $pmhandler = new PMDataHandler();
-
-    $user = get_user($pm['touid']);
-
-    // Build our final PM array
-    $pm = [
-        'subject' => $pm['subject'],
-        'message' => $lang->sprintf($pm['message'], $user['username'], $mybb->settings['bbname']),
-        'icon' => -1,
-        'fromid' => ($fromid == 0 ? (int)$mybb->user['uid'] : ($fromid < 0 ? 0 : $fromid)),
-        'toid' => [$pm['touid']],
-        'bccid' => [],
-        'do' => '',
-        'pmid' => '',
-        'saveasdraft' => 0,
-        'options' => [
-            'signature' => 0,
-            'disablesmilies' => 0,
-            'savecopy' => 0,
-            'readreceipt' => 0
-        ]
-    ];
-
-    if (isset($mybb->session)) {
-        $pm['ipaddress'] = $mybb->session->packedip;
-    }
-
-    // Admin override
-    $pmhandler->admin_override = (int)$admin_override;
-
-    $pmhandler->set_data($pm);
-
-    if ($pmhandler->validate_pm()) {
-        $pmhandler->insert_pm();
-
-        return true;
-    }
-
-    return false;
+    return \send_pm($pm, $fromid, $admin_override);
 }
 
 function send_email(array $email): bool
