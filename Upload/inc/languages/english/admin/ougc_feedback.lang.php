@@ -71,6 +71,9 @@ $l['setting_ougc_feedback_showin_memberlist'] = 'Show In Member List';
 $l['setting_ougc_feedback_showin_memberlist_desc'] = 'Whether if to show feedback status in the member list page.';
 $l['setting_ougc_feedback_perpage'] = 'Pagination Per-Page Setting';
 $l['setting_ougc_feedback_perpage_desc'] = 'Maximum number of items to show per page in pagination enabled features.';
+$l['setting_ougc_feedback_showin_postbit_thread'] = 'Show In Threads';
+$l['setting_newpoints_contracts_system_enableContractSystemIntegration'] = 'Enable Contract System Integration';
+$l['setting_newpoints_contracts_system_enableContractSystemIntegration_desc'] = 'If you enable this, users will be able to rate or review their contracts using the NewPoints Contract System plugin after fulfilling their contracts.';
 
 // Permissions
 $l['ougc_feedback_permission_canview'] = 'Can view feedback page?';

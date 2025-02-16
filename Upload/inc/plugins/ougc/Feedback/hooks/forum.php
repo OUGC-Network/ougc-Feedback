@@ -34,16 +34,28 @@ use MyBB;
 
 use postParser;
 
+use function NewPoints\ContractsSystem\Core\get_contract;
+use function ougc\Feedback\Core\enableContractSystemIntegration;
 use function ougc\Feedback\Core\getSetting;
 use function ougc\Feedback\Core\getTemplate;
-use function ougc\Feedback\Core\getTemplateName;
 use function ougc\Feedback\Core\getUserStats;
+use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
 
+use function ougc\Feedback\Core\set_go_back_button;
+use function ougc\Feedback\Core\trow_error;
+
+use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_ACCEPTED;
+use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_CLOSED;
+use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_AUCTION;
+use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_BUY;
+use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_SELL;
 use const ougc\Feedback\Core\DEBUG;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
 use const ougc\Feedback\ROOT;
 
@@ -166,7 +178,7 @@ function member_profile_end(): string
                 "fuid='{$mybb->user['uid']}'"
             ];
 
-            if (!$mybb->usergroup['ougc_feedback_ismod']) {
+            if (!isModerator()) {
                 $where[] = "status='1'";
             }
 
@@ -231,7 +243,7 @@ function member_profile_end10(): bool
 
     $whereClauses = ["f.uid='{$userID}'"];
 
-    if (!$mybb->usergroup['ougc_feedback_ismod']) {
+    if (!isModerator()) {
         $whereClauses[] = "f.status='1'";
     }
 
@@ -351,7 +363,7 @@ function postbit(array &$post): array
                 "status='1'"
             ];
 
-            /*if(!$mybb->usergroup['ougc_feedback_ismod'])
+            /*if(!isModerator())
             {
                 $where[] = "status='1'";
             }*/
@@ -488,7 +500,7 @@ function postbit(array &$post): array
 
             $where = ["f.fuid='{$mybb->user['uid']}'"];
 
-            if (!$mybb->usergroup['ougc_feedback_ismod']) {
+            if (!isModerator()) {
                 $where[] = "f.status='1'";
             }
 
@@ -658,4 +670,299 @@ function report_content_types(array &$args): array
     $args[] = 'feedback';
 
     return $args;
+}
+
+function newpoints_contract_system_parse_start(array $hookArguments): array
+{
+    if (!enableContractSystemIntegration()) {
+        return $hookArguments;
+    }
+
+    $hookArguments['vars']['buttons']['feedback'] = $hookArguments['vars']['rows']['feedback'] = '';
+
+    return $hookArguments;
+}
+
+function newpoints_contract_system_parse_intermediate(array $hookArguments): array
+{
+    if (!enableContractSystemIntegration() || empty($hookArguments['contract_data']['tid'])) {
+        return $hookArguments;
+    }
+
+    $display_feedback = false;
+
+    if (!empty($hookArguments['contract_data']['fid'])) {
+        $display_feedback = !empty(get_forum($hookArguments['contract_data']['fid'])['ougc_feedback_allow_threads']);
+    }
+
+    if ($display_feedback) {
+        global $mybb, $db;
+
+        $whereClauses = [
+            "fuid='{$hookArguments['offeree_user_id']}'",
+            "pid='{$hookArguments['contract_data']['firstpost']}'"
+        ];
+
+        if (!isModerator()) {
+            $whereClauses[] = "status='1'";
+        }
+
+        switch ($hookArguments['contract_data']['type']) {
+            case CONTRACT_TYPE_SELL:
+                $whereClauses[] = "type='1'";
+                break;
+            case CONTRACT_TYPE_BUY:
+                $whereClauses[] = "type='2'";
+                break;
+        }
+
+        $query = $db->simple_select('ougc_feedback', '*', implode(' AND ', $whereClauses));
+
+        $feedbackData = $db->fetch_array($query);
+
+        if (!empty($feedbackData)) {
+            $feedbackData['feedback'] = (int)$feedbackData['feedback'];
+
+            $value = my_number_format($feedbackData['feedback']);
+
+            $comment = '';
+
+            $feedback_class = 'neutral';
+
+            if ($feedbackData['comment']) {
+                $parser_options = array(
+                    'allow_html' => 0,
+                    'allow_mycode' => 0,
+                    'allow_smilies' => 1,
+                    'allow_imgcode' => 0,
+                    'filter_badwords' => 1,
+                );
+
+                $comment = $parser->parse_message($feedbackData['comment'], $parser_options);
+
+                $comment = eval(getTemplate('contractSystemParseStatusComment'));
+            }
+
+            if ($feedbackData['feedback'] > 0) {
+                $feedback_class = 'positive';
+            } elseif ($feedbackData['feedback'] < 0) {
+                $feedback_class = 'negative';
+            }
+
+            $feedback_row = eval(getTemplate('contractSystemParseStatus'));
+        }
+    }
+
+    return $hookArguments;
+}
+
+function newpoints_contract_system_parse_end(array $hookArguments): array
+{
+    if (!enableContractSystemIntegration()) {
+        return $hookArguments;
+    }
+
+    if ($hookArguments['contract_status'] !== CONTRACT_STATUS_ACCEPTED ||
+        $hookArguments['status_closed'] !== CONTRACT_STATUS_CLOSED) {
+        $hookArguments['vars']['buttons']['feedback'] = eval(getTemplate('contractSystemTableItemRowEmpty'));
+
+        return $hookArguments;
+    }
+
+    $contractID = (int)$hookArguments['contract_id'];
+
+    if ($hookArguments['offeror_user_id'] === $hookArguments['current_user_id']) {
+        $feedbackUserID = $hookArguments['offeree_user_id'];
+
+        switch ($hookArguments['contract_data']['type']) {
+            case CONTRACT_TYPE_AUCTION:
+            case CONTRACT_TYPE_SELL:
+                $feedbackType = FEEDBACK_TYPE_SELLER;
+                break;
+            default:
+                $feedbackType = FEEDBACK_TYPE_BUYER;
+                break;
+        }
+    } else {
+        $feedbackUserID = $hookArguments['offeror_user_id'];
+
+        switch ($hookArguments['contract_data']['contract_type']) {
+            case CONTRACT_TYPE_AUCTION:
+            case CONTRACT_TYPE_SELL:
+                $feedbackType = FEEDBACK_TYPE_BUYER;
+                break;
+            default:
+                $feedbackType = FEEDBACK_TYPE_SELLER;
+                break;
+        }
+    }
+
+    $feedbackPluginCode = \ougc\Feedback\Core\CONTRACT_SYSTEM_PLUGIN_CODE;
+
+    $whereClauses = [
+        "uid='{$feedbackUserID}'",
+        "fuid='{$hookArguments['current_user_id']}'"
+    ];
+
+    global $db, $lang;
+
+    loadLanguage();
+
+    if (!isModerator()) {
+        $whereClauses[] = "status='1'";
+    }
+
+    $dbQuery = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $whereClauses));
+
+    if ($db->num_rows($dbQuery)) {
+        $feedbackID = (int)$db->fetch_field($dbQuery, 'fid');
+
+        $buttonText = $lang->ougcFeedbackContractsSystemButtonEdit;
+
+        $hookArguments['vars']['buttons']['feedback'] = eval(getTemplate('contractSystemTableItemRowEdit'));
+    } else {
+        $buttonText = $lang->ougcFeedbackContractsSystemButtonAdd;
+
+        $hookArguments['vars']['buttons']['feedback'] = eval(getTemplate('contractSystemTableItemRow'));
+    }
+
+    return $hookArguments;
+}
+
+function newpoints_contract_system_page_table_start(array $hookArguments): array
+{
+    if (!enableContractSystemIntegration()) {
+        return $hookArguments;
+    }
+
+    global $lang;
+
+    loadLanguage();
+
+    ++$hookArguments['column_span'];
+
+    $hookArguments['extra_table_thead'][] = eval(getTemplate('contractSystemTableItemThead'));
+
+    return $hookArguments;
+}
+
+function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
+{
+    if (
+        $hookArguments['processed'] !== false ||
+        $hookArguments['feedback_code'] !== \ougc\Feedback\Core\CONTRACT_SYSTEM_PLUGIN_CODE
+    ) {
+        return $hookArguments;
+    }
+
+    global $lang;
+
+    loadLanguage();
+
+    \NewPoints\Core\language_load('contracts_system');
+
+    if (!enableContractSystemIntegration()) {
+        set_go_back_button(false);
+
+        trow_error($lang->ougcContractSystemErrorsFeedbackDisabled);
+
+        return $hookArguments;
+    }
+
+    global $mybb;
+
+    $contractID = (int)$hookArguments['feedback_data']['unique_id'];
+
+    $contractData = get_contract($contractID);
+
+    if (empty($contractData['contract_id'])) {
+        set_go_back_button(false);
+
+        trow_error($lang->ougcContractSystemErrorsInvalidContract);
+
+        return $hookArguments;
+    }
+
+    $userID = (int)$mybb->user['uid'];
+
+    $offerorUserID = (int)$contractData['seller_id'];
+
+    $offereeUserID = (int)$contractData['buyer_id'];
+
+    $feedbackUserID = (int)$hookArguments['feedback_data']['uid'];
+
+    if (!in_array($userID, [$offerorUserID, $offereeUserID], true) || $feedbackUserID === $userID) {
+        set_go_back_button(false);
+
+        trow_error($lang->newpoints_contracts_system_errors_invaliduser);
+
+        return $hookArguments;
+    }
+
+    $contractType = (int)$hookArguments['feedback_data']['type'];
+
+    if ($offerorUserID === $userID) {
+        switch ($contractData['contract_type']) {
+            case CONTRACT_TYPE_AUCTION:
+            case CONTRACT_TYPE_SELL:
+                $feedbackType = FEEDBACK_TYPE_SELLER;
+                break;
+            default:
+                $feedbackType = FEEDBACK_TYPE_BUYER;
+                break;
+        }
+    } else {
+        switch ($contractData['contract_type']) {
+            case CONTRACT_TYPE_AUCTION:
+            case CONTRACT_TYPE_SELL:
+                $feedbackType = FEEDBACK_TYPE_BUYER;
+                break;
+            default:
+                $feedbackType = FEEDBACK_TYPE_SELLER;
+                break;
+        }
+    }
+
+    if (
+        !in_array($contractType, [FEEDBACK_TYPE_SELLER, FEEDBACK_TYPE_BUYER]) ||
+        $contractType !== $feedbackType
+    ) {
+        trow_error($lang->ougcContractSystemErrorsFeedbackInvalidType);
+
+        return $hookArguments;
+    }
+
+    if ($mybb->get_input('action') !== 'edit') {
+        global $db;
+
+        $whereClauses = [
+            "uid='{$feedbackUserID}'",
+            "fuid='{$userID}'"
+        ];
+
+        if (!$mybb->usergroup['ougc_feedback_ismod']) {
+            $whereClauses[] = "status='1'";
+        }
+
+        $dbQuery = $db->simple_select('ougc_feedback', 'fid', implode(' AND ', $whereClauses));
+
+        if ($db->num_rows($dbQuery)) {
+            set_go_back_button(false);
+
+            trow_error($lang->ougcContractSystemErrorsFeedbackDuplicated);
+
+            return $hookArguments;
+        }
+    }
+
+    $hookArguments['processed'] = true;
+
+    return $hookArguments;
+}
+
+function ougc_feedback_add_edit_do_start(array &$hookArguments): array
+{
+    $hookArguments['processed'] = false;
+
+    return ougc_feedback_add_edit_intermediate($hookArguments);
 }

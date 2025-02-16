@@ -59,6 +59,7 @@ $l['ougc_feedback_post_view'] = 'View All';
 $l['ougc_feedback_modal_type'] = 'Transaction Type:';
 $l['ougc_feedback_modal_feedback'] = 'Feedback:';
 $l['ougc_feedback_modal_comment'] = 'Comment:';
+$l['ougc_feedback_modal_rating'] = 'Rating:';
 $l['ougc_feedback_type_buyer'] = 'Buyer';
 $l['ougc_feedback_type_seller'] = 'Seller';
 $l['ougc_feedback_type_trader'] = 'Trader';
@@ -153,3 +154,16 @@ $l['ougc_feedback_redirect_restored'] = 'The selected feedback was successfully 
 // Success
 $l['ougc_feedback_success_feedback_added'] = 'Your feedback was successfully added.';
 $l['ougc_feedback_success_feedback_edited'] = 'Your feedback was successfully edited.';
+
+$l = array_merge($l, [
+    'ougcFeedbackContractsSystemTableItemThead' => 'Feedback',
+
+    'ougcFeedbackContractsSystemButtonAdd' => 'Add Feedback',
+    'ougcFeedbackContractsSystemButtonEdit' => 'Edit Feedback',
+
+    'ougcContractSystemErrorsFeedbackDisabled' => 'Contracts feedback is disabled.',
+    'ougcContractSystemErrorsFeedbackInvalidType' => 'The selected transaction type is invalid.',
+    'ougcContractSystemErrorsFeedbackDuplicated' => 'It is possible to leave feedback only once per contract.',
+
+    'newpoints_contracts_system_feedback' => 'Feedback',
+]);

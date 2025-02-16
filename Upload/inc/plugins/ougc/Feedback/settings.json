@@ -62,5 +62,21 @@
   "perpage": {
     "optionscode": "numeric",
     "value": 20
+  },
+  "enableRateCommunication": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "enableRateValue": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "enableRateRecommendation": {
+    "optionscode": "yesno",
+    "value": 1
+  },
+  "enableContractSystemIntegration": {
+    "optionscode": "yesno",
+    "value": 0
   }
 }

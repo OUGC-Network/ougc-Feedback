@@ -31,6 +31,7 @@ use function ougc\Feedback\Core\delete_feedback;
 use function ougc\Feedback\Core\fetch_feedback;
 use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\insert_feedback;
+use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
 use function ougc\Feedback\Core\run_hooks;
 use function ougc\Feedback\Core\send_email;
@@ -169,7 +170,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     $user_perms = usergroup_permissions($user['usergroup'] . ',' . $user['additionalgroups']);
 
     if ($edit) {
-        if (!($mybb->usergroup['ougc_feedback_canedit'] && $mybb->user['uid'] == $feedback['fuid']) && !($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_canedit'])) {
+        if (!($mybb->usergroup['ougc_feedback_canedit'] && $mybb->user['uid'] == $feedback['fuid']) &&
+            !(isModerator() && $mybb->usergroup['ougc_feedback_mod_canedit'])) {
             set_go_back_button(false);
 
             trow_error($lang->error_nopermission_user_ajax);
@@ -339,7 +341,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
                 "fuid='{$feedback['fuid']}'"
             ];
 
-            if (!$mybb->usergroup['ougc_feedback_ismod']) {
+            if (!isModerator()) {
                 $where[] = "status='1'";
             }
 
@@ -454,12 +456,16 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         }
     }
 
+    $alternativeBackground = alt_trow(true);
+
     if ($comments_maxlength > 0) {
         $mybb->input['comment'] = $feedback['comment'];
 
         $mybb->input['comment'] = htmlspecialchars_uni($mybb->input['comment']);
 
         $comment_row = eval(getTemplate('form_comment', false));
+
+        $alternativeBackground = alt_trow();
     }
 
     if ($edit) {
@@ -485,7 +491,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         error($lang->ougc_feedback_error_invalid_feedback);
     }
 
-    if (!($mybb->usergroup['ougc_feedback_canremove'] && $mybb->user['uid'] == $feedback['fuid']) && !($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_canremove'])) {
+    if (!($mybb->usergroup['ougc_feedback_canremove'] && $mybb->user['uid'] == $feedback['fuid']) && !(isModerator(
+            ) && $mybb->usergroup['ougc_feedback_mod_canremove'])) {
         error_no_permission();
     }
 
@@ -524,7 +531,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         error($lang->ougc_feedback_error_invalid_feedback);
     }
 
-    if (!($mybb->usergroup['ougc_feedback_canremove'] && $mybb->user['uid'] == $feedback['fuid']) && !($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_canremove'])) {
+    if (!($mybb->usergroup['ougc_feedback_canremove'] && $mybb->user['uid'] == $feedback['fuid']) && !(isModerator(
+            ) && $mybb->usergroup['ougc_feedback_mod_canremove'])) {
         error_no_permission();
     }
 
@@ -599,7 +607,7 @@ $usertitle = htmlspecialchars_uni($usertitle);
 // Start building a where clause
 $where = ["f.uid='{$user['uid']}'"];
 
-if (!$mybb->usergroup['ougc_feedback_ismod']) {
+if (!isModerator()) {
     $where[] = "f.status='1'";
 }
 
@@ -985,11 +993,13 @@ foreach ($feedback_cache as $feedback) {
 
     $edit_link = $delete_link = $delete_hard_link = $report_link = '';
 
-    if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canedit']) || ($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_canedit']))) {
+    if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canedit']) || (isModerator(
+                ) && $mybb->usergroup['ougc_feedback_canedit']))) {
         $edit_link = eval(getTemplate('page_item_edit'));
     }
 
-    if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canremove']) || ($mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_canremove']))) {
+    if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canremove']) || (isModerator(
+                ) && $mybb->usergroup['ougc_feedback_mod_canremove']))) {
         if (!$feedback['status']) {
             $delete_link = eval($templates->render('ougcfeedback_page_item_restore'));
         } else {
@@ -997,7 +1007,7 @@ foreach ($feedback_cache as $feedback) {
         }
     }
 
-    if ($mybb->user['uid'] && $mybb->usergroup['ougc_feedback_ismod'] && $mybb->usergroup['ougc_feedback_mod_candelete']) {
+    if ($mybb->user['uid'] && isModerator() && $mybb->usergroup['ougc_feedback_mod_candelete']) {
         $delete_hard_link = eval(getTemplate('page_item_delete_hard'));
     }
 
@@ -1025,7 +1035,7 @@ if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_fee
             "fuid='{$mybb->user['uid']}'"
         ];
 
-        if (!$mybb->usergroup['ougc_feedback_ismod']) {
+        if (!isModerator()) {
             $where[] = "status='1'";
         }
 

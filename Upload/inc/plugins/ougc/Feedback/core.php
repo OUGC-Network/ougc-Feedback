@@ -36,6 +36,8 @@ use PMDataHandler;
 
 use const ougc\Feedback\ROOT;
 
+const CONTRACT_SYSTEM_PLUGIN_CODE = 21;
+
 function loadLanguage(bool $forceLoad = false): bool
 {
     global $lang;
@@ -440,7 +442,7 @@ function getUserStats(int $userID): array
         /*"fuid!='0'", */
         "status='1'"
     ];
-    /*if(!$mybb->usergroup['ougc_feedback_ismod'])
+    /*if(!isModerator())
     {
         $whereClauses[] = "status='1'";
     }*/
@@ -506,4 +508,16 @@ function getUserStats(int $userID): array
     $userStats = array_map('my_number_format', $userStats);
 
     return $userStats;
+}
+
+function enableContractSystemIntegration(): bool
+{
+    return (bool)getSetting('enableContractSystemIntegration');
+}
+
+function isModerator(): bool
+{
+    global $mybb;
+
+    return !empty($mybb->usergroup['ougc_feedback_ismod']);
 }
