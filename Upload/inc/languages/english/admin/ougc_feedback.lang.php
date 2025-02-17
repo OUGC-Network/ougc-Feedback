@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Feedback plugin (/inc/languages/english/admin/ougc_feedback.lang.php)
+ *    ougc Feedback plugin (/inc/languages/english/admin/ougc_feedback.lang.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2012 Omar Gonzalez
  *
@@ -27,7 +27,7 @@
  ****************************************************************************/
 
 // Plugin API
-$l['ougc_feedback'] = 'OUGC Feedback';
+$l['ougc_feedback'] = 'ougc Feedback';
 $l['ougc_feedback_desc'] = 'Adds a powerful feedback system to your forum.';
 
 // PluginLibrary
@@ -89,7 +89,7 @@ $l['ougc_feedback_permission_mod_canremove'] = 'Can this moderator soft delete f
 $l['ougc_feedback_permission_mod_candelete'] = 'Can this moderator hard delete feedbacks?';
 
 // Reort system
-$l['report_content_feedback'] = 'OUGC Feedback';
+$l['report_content_feedback'] = 'ougc Feedback';
 
 // Forums
 $l['ougc_feedback_permission_allow_threads'] = 'Yes, allow feedback for threads';

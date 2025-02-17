@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Feedback plugin (/inc/plugins/ougc/Feedback/admin.php)
+ *    ougc Feedback plugin (/inc/plugins/ougc/Feedback/admin.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2012 Omar Gonzalez
  *
@@ -51,7 +51,7 @@ function pluginInformation(): array
     loadLanguage();
 
     return [
-        'name' => 'OUGC Feedback',
+        'name' => 'ougc Feedback',
         'description' => $lang->ougc_feedback_desc,
         'website' => 'https://ougc.network',
         'author' => 'Omar G.',
@@ -140,7 +140,7 @@ function pluginActivation(): bool
     }
 
     if ($templatesList) {
-        $PL->templates('ougcfeedback', 'OUGC Feedback', $templatesList);
+        $PL->templates('ougcfeedback', 'ougc Feedback', $templatesList);
     }
 
     if ($stylesheetsList) {

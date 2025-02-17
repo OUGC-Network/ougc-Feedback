@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- *    OUGC Feedback plugin (/jscripts/ougc_feedback.js)
+ *    ougc Feedback plugin (/jscripts/ougc_feedback.js)
  *    Author: Omar Gonzalez
  *    Copyright: © 2012 Omar Gonzalez
  *

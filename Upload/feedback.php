@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Feedback plugin (/feedback.php)
+ *    ougc Feedback plugin (/feedback.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2012 Omar Gonzalez
  *

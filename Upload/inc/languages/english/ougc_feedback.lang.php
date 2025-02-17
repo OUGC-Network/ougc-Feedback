@@ -2,7 +2,7 @@
 
 /***************************************************************************
  *
- *    OUGC Feedback plugin (/inc/languages/english/ougc_feedback.lang.php)
+ *    ougc Feedback plugin (/inc/languages/english/ougc_feedback.lang.php)
  *    Author: Omar Gonzalez
  *    Copyright: © 2012 Omar Gonzalez
  *
@@ -27,7 +27,7 @@
  ****************************************************************************/
 
 // Plugin API
-$l['ougc_feedback'] = 'OUGC Feedback';
+$l['ougc_feedback'] = 'ougc Feedback';
 
 // Profile
 $l['ougc_feedback_profile_title'] = 'Feedback';
