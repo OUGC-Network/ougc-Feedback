@@ -400,6 +400,27 @@ function ratingGet(array $whereClauses, array $queryFields = [], array $queryOpt
     return $ratingObjects;
 }
 
+function ratingSyncUser(int $userID, int $ratingTypeID): bool
+{
+    global $db;
+
+    $query = $db->simple_select(
+        'ougc_feedback_ratings',
+        'AVG(ratingValue) AS averageRatingValue',
+        "userID='{$userID}' AND ratingTypeID='{$ratingTypeID}'"
+    );
+
+    $averageRatingValue = (float)$db->fetch_field($query, 'averageRatingValue');
+
+    $db->update_query(
+        'users',
+        [('ougcFeedbackRatingAverage' . $ratingTypeID) => $averageRatingValue],
+        "uid='{$userID}'"
+    );
+
+    return true;
+}
+
 function send_pm(array $pm, int $fromid = 0, bool $admin_override = false): bool
 {
     global $mybb;

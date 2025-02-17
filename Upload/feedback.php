@@ -680,7 +680,9 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $ratingID = ratingInsert($ratingData);
     }
 
-    echo json_encode(['success' => true, 'ratingID' => $ratingID]);
+    \ougc\Feedback\Core\ratingSyncUser($userID, $ratingTypeID);
+
+    echo json_encode(['success' => true]);
 
     exit;
 }

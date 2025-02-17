@@ -457,11 +457,11 @@ function buildDbFieldDefinition(array $fieldData): string
     return $fieldDefinition;
 }
 
-function dbVerifyColumns(array $fields_data = FIELDS_DATA): bool
+function dbVerifyColumns(array $fieldsData = FIELDS_DATA): bool
 {
     global $db;
 
-    foreach ($fields_data as $tableName => $tableColumns) {
+    foreach ($fieldsData as $tableName => $tableColumns) {
         foreach ($tableColumns as $fieldName => $fieldData) {
             if (!isset($fieldData['type'])) {
                 continue;
