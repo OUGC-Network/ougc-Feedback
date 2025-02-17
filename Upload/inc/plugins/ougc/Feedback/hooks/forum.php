@@ -35,6 +35,7 @@ use MyBB;
 use postParser;
 
 use function NewPoints\ContractsSystem\Core\get_contract;
+use function NewPoints\Core\language_load;
 use function ougc\Feedback\Core\enableContractSystemIntegration;
 use function ougc\Feedback\Core\getSetting;
 use function ougc\Feedback\Core\getTemplate;
@@ -50,6 +51,7 @@ use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_CLOSED;
 use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_AUCTION;
 use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_BUY;
 use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_SELL;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\DEBUG;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
@@ -672,7 +674,7 @@ function report_content_types(array &$args): array
     return $args;
 }
 
-function newpoints_contract_system_parse_start(array $hookArguments): array
+function newpoints_contracts_system_parse_start(array $hookArguments): array
 {
     if (!enableContractSystemIntegration()) {
         return $hookArguments;
@@ -683,7 +685,7 @@ function newpoints_contract_system_parse_start(array $hookArguments): array
     return $hookArguments;
 }
 
-function newpoints_contract_system_parse_intermediate(array $hookArguments): array
+function newpoints_contracts_system_parse_intermediate(array $hookArguments): array
 {
     if (!enableContractSystemIntegration() || empty($hookArguments['contract_data']['tid'])) {
         return $hookArguments;
@@ -756,7 +758,7 @@ function newpoints_contract_system_parse_intermediate(array $hookArguments): arr
     return $hookArguments;
 }
 
-function newpoints_contract_system_parse_end(array $hookArguments): array
+function newpoints_contracts_system_parse_end(array $hookArguments): array
 {
     if (!enableContractSystemIntegration()) {
         return $hookArguments;
@@ -797,7 +799,7 @@ function newpoints_contract_system_parse_end(array $hookArguments): array
         }
     }
 
-    $feedbackPluginCode = \ougc\Feedback\Core\CONTRACT_SYSTEM_PLUGIN_CODE;
+    $feedbackPluginCode = FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 
     $whereClauses = [
         "uid='{$feedbackUserID}'",
@@ -829,7 +831,7 @@ function newpoints_contract_system_parse_end(array $hookArguments): array
     return $hookArguments;
 }
 
-function newpoints_contract_system_page_table_start(array $hookArguments): array
+function newpoints_contracts_system_page_table_start(array $hookArguments): array
 {
     if (!enableContractSystemIntegration()) {
         return $hookArguments;
@@ -850,7 +852,7 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
 {
     if (
         $hookArguments['processed'] !== false ||
-        $hookArguments['feedback_code'] !== \ougc\Feedback\Core\CONTRACT_SYSTEM_PLUGIN_CODE
+        $hookArguments['feedback_code'] !== FEEDBACK_TYPE_CONTRACTS_SYSTEM
     ) {
         return $hookArguments;
     }
@@ -859,7 +861,7 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
 
     loadLanguage();
 
-    \NewPoints\Core\language_load('contracts_system');
+    language_load('contracts_system');
 
     if (!enableContractSystemIntegration()) {
         set_go_back_button(false);

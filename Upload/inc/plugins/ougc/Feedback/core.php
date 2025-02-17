@@ -36,8 +36,6 @@ use PMDataHandler;
 
 use const ougc\Feedback\ROOT;
 
-const CONTRACT_SYSTEM_PLUGIN_CODE = 21;
-
 function loadLanguage(bool $forceLoad = false): bool
 {
     global $lang;
@@ -336,6 +334,70 @@ function delete_feedback(int $fid): bool
     $db->delete_query('ougc_feedback', "fid='{$fid}'");
 
     return true;
+}
+
+function ratingInsert(array $ratingData, bool $isUpdate = false, int $ratingID = 0): int
+{
+    global $db;
+
+    $replaceData = [];
+
+    if (isset($ratingData['ratingTypeID'])) {
+        $replaceData['ratingTypeID'] = (int)$ratingData['ratingTypeID'];
+    }
+
+    if (isset($ratingData['userID'])) {
+        $replaceData['userID'] = (int)$ratingData['userID'];
+    }
+
+    if (isset($ratingData['uniqueID'])) {
+        $replaceData['uniqueID'] = (int)$ratingData['uniqueID'];
+    }
+
+    if (isset($ratingData['ratingValue'])) {
+        $replaceData['ratingValue'] = (int)$ratingData['ratingValue'];
+    }
+
+    if (isset($ratingData['feedbackCode'])) {
+        $replaceData['feedbackCode'] = (int)$ratingData['feedbackCode'];
+    }
+
+    if ($isUpdate) {
+        $db->update_query('ougc_feedback_ratings', $replaceData, "ratingID='{$ratingID}'");
+
+        return 0;
+    } else {
+        return (int)$db->insert_query('ougc_feedback_ratings', $replaceData);
+    }
+}
+
+function ratingUpdate(array $ratingData, int $ratingID): int
+{
+    return ratingInsert($ratingData, true, $ratingID);
+}
+
+function ratingGet(array $whereClauses, array $queryFields = [], array $queryOptions = []): array
+{
+    global $db;
+
+    $query = $db->simple_select(
+        'ougc_feedback_ratings',
+        implode(',', array_merge(['ratingID'], $queryFields)),
+        implode(' AND ', $whereClauses),
+        $queryOptions
+    );
+
+    if (isset($queryOptions['limit']) && $queryOptions['limit'] === 1) {
+        return (array)$db->fetch_array($query);
+    }
+
+    $ratingObjects = [];
+
+    while ($ratingData = $db->fetch_array($query)) {
+        $ratingObjects[(int)$ratingData['ratingID']] = $ratingData;
+    }
+
+    return $ratingObjects;
 }
 
 function send_pm(array $pm, int $fromid = 0, bool $admin_override = false): bool

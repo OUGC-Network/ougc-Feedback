@@ -50,6 +50,8 @@ const FEEDBACK_TYPE_POST = 1;
 
 const FEEDBACK_TYPE_PROFILE = 2;
 
+const FEEDBACK_TYPE_CONTRACTS_SYSTEM = 21;
+
 const TABLES_DATA = [
     'ougc_feedback' => [
         'fid' => [
@@ -101,6 +103,39 @@ const TABLES_DATA = [
             'default' => 0
         ],
         // todo, legacy KEY uid (uid) skipped
+    ],
+    'ougc_feedback_ratings' => [
+        'ratingID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'auto_increment' => true,
+            'primary_key' => true
+        ],
+        'ratingTypeID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'userID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'uniqueID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'ratingValue' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'feedbackCode' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
+        ],
     ]
 ];
 
@@ -186,6 +221,25 @@ const FIELDS_DATA = [
             'default' => 0
         ]
     ]
+];
+
+const RATING_TYPES = [
+    1 => [
+        'ratingTypeName' => 'Communication',
+        'ratingTypeDescription' => 'How well did the user communicate with you regarding support?',
+        'ratingTypeClass' => 'yellow',
+        'ratingTypeMaximumRating' => 5,
+        'feedbackCode' => 21,
+        'allowedGroups' => -1
+    ],
+    2 => [
+        'ratingTypeName' => 'Value',
+        'ratingTypeDescription' => 'Are you satisfied with the quality of the product or service?',
+        'ratingTypeClass' => 'blue',
+        'ratingTypeMaximumRating' => 5,
+        'feedbackCode' => 21,
+        'allowedGroups' => -1
+    ],
 ];
 
 class enums

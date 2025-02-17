@@ -26,6 +26,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
+use function NewPoints\ContractsSystem\Core\get_contract;
 use function ougc\Feedback\Core\default_status;
 use function ougc\Feedback\Core\delete_feedback;
 use function ougc\Feedback\Core\fetch_feedback;
@@ -33,6 +34,10 @@ use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\insert_feedback;
 use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
+use function ougc\Feedback\Core\ratingGet;
+use function ougc\Feedback\Core\ratingInsert;
+use function ougc\Feedback\Core\ratingReplace;
+use function ougc\Feedback\Core\ratingUpdate;
 use function ougc\Feedback\Core\run_hooks;
 use function ougc\Feedback\Core\send_email;
 use function ougc\Feedback\Core\set_data;
@@ -45,6 +50,7 @@ use function ougc\Feedback\Core\validate_feedback;
 use function ougc\Feedback\Hooks\Forum\member_profile_end;
 use function ougc\Feedback\Hooks\Forum\postbit;
 
+use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL;
@@ -53,6 +59,7 @@ use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
+use const ougc\Feedback\Core\RATING_TYPES;
 
 const IN_MYBB = 1;
 
@@ -75,14 +82,12 @@ $mybb->input['reload'] = $mybb->get_input('reload', MyBB::INPUT_INT);
 
 $mybb->input['action'] = $mybb->get_input('action');
 
+$currentUserID = (int)$mybb->user['uid'];
+
 if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit') {
     $edit = $mybb->get_input('action') == 'edit';
 
-    $feedback_code = 0;
-
-    if ($mybb->get_input('feedback_code', MyBB::INPUT_INT)) {
-        $feedback_code = $mybb->get_input('feedback_code', MyBB::INPUT_INT);
-    }
+    $feedback_code = $mybb->get_input('feedback_code', MyBB::INPUT_INT);
 
     $processed = false;
 
@@ -98,12 +103,14 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             trow_error($lang->ougc_feedback_error_invalid_feedback_value);
         }
 
-        $method = "DoEdit('{$feedback['uid']}', '{$feedback['unique_id']}', '{$feedback['fid']}')";
+        $feedbackUniqueID = (int)$feedback['unique_id'];
+
+        $method = "DoEdit('{$feedback['uid']}', '{$feedbackUniqueID}', '{$feedback['fid']}')";
 
         $mybb->input['reload'] = 1;
 
         // users can add but they can't edit.
-        if (!$mybb->user['uid']) {
+        if (!$currentUserID) {
             set_go_back_button(false);
 
             trow_error($lang->error_nopermission_user_ajax);
@@ -111,13 +118,15 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     } else {
         $feedback = [
             'uid' => $mybb->get_input('uid', MyBB::INPUT_INT),
-            'fuid' => $mybb->user['uid'],
+            'fuid' => $currentUserID,
             'unique_id' => $mybb->get_input('unique_id', MyBB::INPUT_INT),
             'status' => default_status(),
             'feedback_code' => $feedback_code
         ];
 
-        $method = "DoAdd('{$feedback['uid']}', '{$feedback['unique_id']}')";
+        $feedbackUniqueID = (int)$feedback['unique_id'];
+
+        $method = "DoAdd('{$feedback['uid']}', '{$feedbackUniqueID}')";
     }
 
     if (!$edit || $mybb->request_method == 'post' || $mybb->get_input('back_button', MyBB::INPUT_INT)) {
@@ -170,7 +179,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     $user_perms = usergroup_permissions($user['usergroup'] . ',' . $user['additionalgroups']);
 
     if ($edit) {
-        if (!($mybb->usergroup['ougc_feedback_canedit'] && $mybb->user['uid'] == $feedback['fuid']) &&
+        if (!($mybb->usergroup['ougc_feedback_canedit'] && $currentUserID == $feedback['fuid']) &&
             !(isModerator() && $mybb->usergroup['ougc_feedback_mod_canedit'])) {
             set_go_back_button(false);
 
@@ -183,7 +192,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             trow_error($lang->error_nopermission_user_ajax);
         }
 
-        if ($user['uid'] == $mybb->user['uid']) {
+        if ($user['uid'] == $currentUserID) {
             set_go_back_button(false);
 
             trow_error($lang->ougc_feedback_error_invalid_self_user);
@@ -207,7 +216,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
             $query = $db->simple_select(
                 'ougc_feedback',
                 'COUNT(fid) AS feedbacks',
-                "fuid='{$mybb->user['uid']}' AND dateline>'{$timesearch}'"
+                "fuid='{$currentUserID}' AND dateline>'{$timesearch}'"
             );
 
             $numtoday = $db->fetch_field($query, 'feedbacks');
@@ -226,10 +235,10 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
     set_data($feedback);
 
-    if (!$processed && !$edit && $feedback['unique_id']) {
+    if (!$processed && !$edit && $feedbackUniqueID) {
         $feedback_code = FEEDBACK_TYPE_POST;
 
-        if (!($post = get_post($feedback['unique_id']))) {
+        if (!($post = get_post($feedbackUniqueID))) {
             set_go_back_button(false);
 
             trow_error($lang->ougc_feedback_error_invalid_post);
@@ -309,7 +318,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $where = [
             "uid='{$feedback['uid']}'", /*"fuid!='0'", */
             "fuid='{$feedback['fuid']}'",
-            "unique_id='{$feedback['unique_id']}'",
+            "unique_id='{$feedbackUniqueID}'",
             "status='1'"
         ];
 
@@ -435,7 +444,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
                     \ougc\Feedback\Core\send_alert(array());
                 }*/
 
-                if ($feedback['unique_id'] && $feedback_code === FEEDBACK_TYPE_POST) {
+                if ($feedbackUniqueID && $feedback_code === FEEDBACK_TYPE_POST) {
                     postbit($post);
                     $replacement = $post['ougc_feedback'];
                 } else {
@@ -468,6 +477,41 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $alternativeBackground = alt_trow();
     }
 
+    $rating_rows = '';
+
+    foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+        if ((int)$ratingTypeData['feedbackCode'] !== $feedback_code ||
+            !is_member($ratingTypeData['allowedGroups'])) {
+            continue;
+        }
+
+        $ratingTypeName = $lang->sprintf(
+            $lang->ougc_feedback_modal_rating,
+            htmlspecialchars_uni($ratingTypeData['ratingTypeName'])
+        );
+
+        $ratingTypeDescription = htmlspecialchars_uni($ratingTypeData['ratingTypeDescription']);
+
+        $ratingTypeClass = htmlspecialchars_uni($ratingTypeData['ratingTypeClass']);
+
+        $ratingTypeMaximumRating = max(1, min(5, (int)$ratingTypeData['ratingTypeMaximumRating']));
+
+        $feedbackRatingValue = (int)(ratingGet(
+            [
+                "ratingTypeID='{$ratingTypeID}'",
+                "userID='{$currentUserID}'",
+                "uniqueID='{$feedbackUniqueID}'",
+                "feedbackCode='{$feedback_code}'",
+            ],
+            ['ratingValue'],
+            ['limit' => 1]
+        )['ratingValue'] ?? 0);
+
+        $rating_rows .= eval(getTemplate('form_rating', false));
+
+        $alternativeBackground = alt_trow();
+    }
+
     if ($edit) {
         $lang->ougc_feedback_profile_add = $lang->ougc_feedback_profile_edit;
     }
@@ -483,7 +527,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     verify_post_check($mybb->get_input('my_post_key'));
 
     // users can add but they can't delete.
-    if (!$mybb->user['uid']) {
+    if (!$currentUserID) {
         error_no_permission();
     }
 
@@ -491,7 +535,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         error($lang->ougc_feedback_error_invalid_feedback);
     }
 
-    if (!($mybb->usergroup['ougc_feedback_canremove'] && $mybb->user['uid'] == $feedback['fuid']) && !(isModerator(
+    if (!($mybb->usergroup['ougc_feedback_canremove'] && $currentUserID == $feedback['fuid']) && !(isModerator(
             ) && $mybb->usergroup['ougc_feedback_mod_canremove'])) {
         error_no_permission();
     }
@@ -523,7 +567,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     verify_post_check($mybb->get_input('my_post_key'));
 
     // users can add but they can't delete.
-    if (!$mybb->user['uid']) {
+    if (!$currentUserID) {
         error_no_permission();
     }
 
@@ -531,7 +575,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         error($lang->ougc_feedback_error_invalid_feedback);
     }
 
-    if (!($mybb->usergroup['ougc_feedback_canremove'] && $mybb->user['uid'] == $feedback['fuid']) && !(isModerator(
+    if (!($mybb->usergroup['ougc_feedback_canremove'] && $currentUserID == $feedback['fuid']) && !(isModerator(
             ) && $mybb->usergroup['ougc_feedback_mod_canremove'])) {
         error_no_permission();
     }
@@ -551,6 +595,94 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $mybb->settings['bburl'] . '/feedback.php?uid=' . $feedback['uid'],
         $lang->ougc_feedback_redirect_restored
     );
+} elseif ($mybb->get_input('action') === 'rate') {
+    header('Content-type: application/json; charset=' . $lang->settings['charset']);
+
+    $ratingTypeID = $mybb->get_input('ratingTypeID', MyBB::INPUT_INT);
+
+    $userID = $mybb->get_input('userID', MyBB::INPUT_INT);
+
+    $uniqueID = $mybb->get_input('uniqueID', MyBB::INPUT_INT);
+
+    $feedbackCode = $mybb->get_input('feedbackCode', MyBB::INPUT_INT);
+
+    $ratingValue = $mybb->get_input('ratingValue', MyBB::INPUT_INT);
+
+    if ($userID !== $currentUserID) {
+        echo json_encode(['error' => true]);
+
+        exit;
+    }
+
+    $ratingTypeData = RATING_TYPES[$ratingTypeID] ?? [];
+
+    if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
+        !is_member($ratingTypeData['allowedGroups'])) {
+        echo json_encode(['error' => true]);
+
+        exit;
+    }
+
+    $contentExists = false;
+
+    if ($feedbackCode === \ougc\Feedback\Core\FEEDBACK_TYPE_POST) {
+        $postData = get_post($uniqueID);
+
+        $contentExists = !empty($postData['pid']) && (int)$postData['uid'] !== $currentUserID;
+    } elseif ($feedbackCode === \ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE) {
+        $userData = get_user($uniqueID);
+
+        $contentExists = !empty($userData['uid']) && (int)$userData['uid'] !== $currentUserID;
+    } elseif ($feedbackCode === FEEDBACK_TYPE_CONTRACTS_SYSTEM) {
+        $contractData = get_contract($uniqueID);
+
+        $contentExists = !empty($contractData['contract_id']) && (int)$contractData['buyer_id'] === $currentUserID;
+    }
+
+    if (!$contentExists) {
+        echo json_encode(['error' => true]);
+
+        exit;
+    }
+
+    if ($ratingValue < 1) {
+        $ratingValue = 1;
+    }
+
+    if ($ratingValue > $ratingTypeData['ratingTypeMaximumRating']) {
+        $ratingValue = (int)$ratingTypeData['ratingTypeMaximumRating'];
+    }
+
+    $ratingData = [
+        'ratingTypeID' => $ratingTypeID,
+        'userID' => $userID,
+        'uniqueID' => $uniqueID,
+        'ratingValue' => $ratingValue,
+        'feedbackCode' => $feedbackCode,
+    ];
+
+    $ratingID = ratingGet(
+        [
+            "ratingTypeID='{$ratingTypeID}'",
+            "userID='{$currentUserID}'",
+            "uniqueID='{$uniqueID}'",
+            "feedbackCode='{$feedbackCode}'"
+        ],
+        ['ratingID'],
+        ['limit' => 1]
+    )['ratingID'] ?? 0;
+
+    $ratingID = (int)$ratingID;
+
+    if ($ratingID) {
+        ratingUpdate($ratingData, $ratingID);
+    } else {
+        $ratingID = ratingInsert($ratingData);
+    }
+
+    echo json_encode(['success' => true, 'ratingID' => $ratingID]);
+
+    exit;
 }
 
 require_once MYBB_ROOT . 'inc/class_parser.php';
@@ -835,9 +967,11 @@ $feedback_cache = $post_cache = $post_feedback = [];
 while ($feedback = $db->fetch_array($query)) {
     $feedback_cache[] = $feedback;
 
+    $feedbackUniqueID = (int)$feedback['unique_id'];
+
     // If this is a post, hold it and gather some information about it
-    if ($feedback['unique_id'] && !isset($post_cache[$feedback['unique_id']])) {
-        $post_cache[$feedback['unique_id']] = $feedback['unique_id'];
+    if ($feedbackUniqueID && !isset($post_cache[$feedbackUniqueID])) {
+        $post_cache[$feedbackUniqueID] = $feedbackUniqueID;
     }
 }
 
@@ -897,11 +1031,11 @@ foreach ($feedback_cache as $feedback) {
 
     $feedback_post_given = '';
 
-    if ($feedback['unique_id']) {
+    if (!empty($feedbackUniqueID)) {
         $feedback_post_given = $lang->sprintf($lang->ougc_feedback_page_post_nolink, $user['username']);
 
-        if (isset($post_reputation[$feedback['unique_id']])) {
-            $post = $post_reputation[$feedback['unique_id']];
+        if (isset($post_reputation[$feedbackUniqueID])) {
+            $post = $post_reputation[$feedbackUniqueID];
 
             $thread_link = get_thread_link($post['tid']);
 
@@ -909,7 +1043,7 @@ foreach ($feedback_cache as $feedback) {
 
             $thread_link = $lang->sprintf($lang->ougc_feedback_page_post_given_thread, $thread_link, $subject);
 
-            $link = get_post_link($feedback['unique_id']) . '#pid' . $feedback['unique_id'];
+            $link = get_post_link($feedbackUniqueID) . '#pid' . $feedbackUniqueID;
 
             $feedback_post_given = $lang->sprintf(
                 $lang->ougc_feedback_page_post_given,
@@ -993,12 +1127,12 @@ foreach ($feedback_cache as $feedback) {
 
     $edit_link = $delete_link = $delete_hard_link = $report_link = '';
 
-    if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canedit']) || (isModerator(
+    if ($currentUserID && (($feedback['fuid'] == $currentUserID && $mybb->usergroup['ougc_feedback_canedit']) || (isModerator(
                 ) && $mybb->usergroup['ougc_feedback_canedit']))) {
         $edit_link = eval(getTemplate('page_item_edit'));
     }
 
-    if ($mybb->user['uid'] && (($feedback['fuid'] == $mybb->user['uid'] && $mybb->usergroup['ougc_feedback_canremove']) || (isModerator(
+    if ($currentUserID && (($feedback['fuid'] == $currentUserID && $mybb->usergroup['ougc_feedback_canremove']) || (isModerator(
                 ) && $mybb->usergroup['ougc_feedback_mod_canremove']))) {
         if (!$feedback['status']) {
             $delete_link = eval($templates->render('ougcfeedback_page_item_restore'));
@@ -1007,11 +1141,11 @@ foreach ($feedback_cache as $feedback) {
         }
     }
 
-    if ($mybb->user['uid'] && isModerator() && $mybb->usergroup['ougc_feedback_mod_candelete']) {
+    if ($currentUserID && isModerator() && $mybb->usergroup['ougc_feedback_mod_candelete']) {
         $delete_hard_link = eval(getTemplate('page_item_delete_hard'));
     }
 
-    if ($mybb->user['uid']) {
+    if ($currentUserID) {
         $report_link = eval($templates->render('ougcfeedback_page_item_report'));
     }
 
@@ -1026,13 +1160,13 @@ $add_feedback = '';
 
 $user_perms = usergroup_permissions($user['usergroup'] . ',' . $user['additionalgroups']);
 
-if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_feedback_cangive'] && $user_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $user['uid']) {
+if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_feedback_cangive'] && $user_perms['ougc_feedback_canreceive'] && $currentUserID != $user['uid']) {
     $show = true;
 
     if (!$mybb->settings['ougc_feedback_allow_profile_multiple'] && $mybb->settings['ougc_feedback_profile_hide_add']) {
         $where = [
             "uid='{$user['uid']}'", /*"fuid!='0'", */
-            "fuid='{$mybb->user['uid']}'"
+            "fuid='{$currentUserID}'"
         ];
 
         if (!isModerator()) {

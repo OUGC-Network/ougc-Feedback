@@ -1,0 +1,32 @@
+<tr>
+    <td class="{$alternativeBackground}" width="40%"><strong>{$ratingTypeName}</strong></td>
+    <td class="{$alternativeBackground}">
+        <div class="ui large {$ratingTypeClass} rating" data-icon="star" data-rating="{$feedbackRatingValue}"
+             data-max-rating="{$ratingTypeMaximumRating}" id="feedbackRating{$ratingTypeID}"></div>
+        <script type="text/javascript">
+            $('#feedbackRating{$ratingTypeID}').rating({
+                clearable: false,
+                onRate: function (value) {
+                    $.ajax(
+                        {
+                            type: 'post',
+                            dataType: 'json',
+                            url: 'feedback.php',
+                            data: {
+                                action: 'rate',
+                                ratingTypeID: parseInt('{$ratingTypeID}'),
+                                userID: parseInt('{$currentUserID}'),
+                                uniqueID: parseInt("{$feedback['unique_id']}"),
+                                feedbackCode: parseInt('{$feedback_code}'),
+                                ratingValue: parseInt(value)
+                            },
+                            success: function (request) {
+                                //console.log(request);
+                            }
+                        });
+                }
+            });
+        </script>
+        <div class="smalltext">{$ratingTypeDescription}</div>
+    </td>
+</tr>

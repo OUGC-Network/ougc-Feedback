@@ -160,17 +160,29 @@ function pluginActivation(): bool
         $plugins['feedback'] = $pluginInfo['versioncode'];
     }
 
-    dbVerifyTables();
-
-    dbVerifyColumns();
-
     // TODO:: ip should be stored
 
     /*~*~* RUN UPDATES START *~*~*/
 
-    if ($plugins['feedback'] <= 1823) {
-        global $db;
+    global $db;
 
+    $tableRatingFields = [
+        'users' => [
+        ]
+    ];
+
+    foreach (\ougc\Feedback\Core\RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+        $tableRatingFields['users']['ougcFeedbackRatingAverage' . $ratingTypeID] = [
+            'type' => 'DECIMAL',
+            'unsigned' => true,
+            'size' => '16,4',
+            'default' => 0,
+        ];
+    }
+
+    dbVerifyColumns($tableRatingFields);
+
+    if ($plugins['feedback'] <= 1823) {
         if ($db->field_exists('pid', 'ougc_feedback') && !$db->field_exists('unique_id', 'ougc_feedback')) {
             $db->rename_column(
                 'ougc_feedback',
@@ -186,6 +198,10 @@ function pluginActivation(): bool
     }
 
     /*~*~* RUN UPDATES END *~*~*/
+
+    dbVerifyTables();
+
+    dbVerifyColumns();
 
     $cache->update_forums();
 
@@ -279,6 +295,12 @@ function pluginUninstallation(): bool
                     $db->drop_column($tableName, $fieldName);
                 }
             }
+        }
+    }
+
+    foreach (\ougc\Feedback\Core\RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+        if ($db->field_exists('ougcFeedbackRatingAverage' . $ratingTypeID, 'users')) {
+            $db->drop_column('users', 'ougcFeedbackRatingAverage' . $ratingTypeID);
         }
     }
 
@@ -435,11 +457,11 @@ function buildDbFieldDefinition(array $fieldData): string
     return $fieldDefinition;
 }
 
-function dbVerifyColumns(): bool
+function dbVerifyColumns(array $fields_data = FIELDS_DATA): bool
 {
     global $db;
 
-    foreach (FIELDS_DATA as $tableName => $tableColumns) {
+    foreach ($fields_data as $tableName => $tableColumns) {
         foreach ($tableColumns as $fieldName => $fieldData) {
             if (!isset($fieldData['type'])) {
                 continue;
