@@ -116,7 +116,17 @@ const TABLES_DATA = [
             'unsigned' => true,
             'default' => 0
         ],
+        'feedbackID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'default' => 0
+        ],
         'userID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'ratedUserID' => [
             'type' => 'INT',
             'unsigned' => true,
             'default' => 0
@@ -225,6 +235,22 @@ const FIELDS_DATA = [
 
 const RATING_TYPES = [
     1 => [
+        'ratingTypeName' => 'Content Quality',
+        'ratingTypeDescription' => 'Are you satisfied with the quality of the posts?',
+        'ratingTypeClass' => 'yellow',
+        'ratingTypeMaximumRating' => 5,
+        'feedbackCode' => 1,
+        'allowedGroups' => -1
+    ],
+    2 => [
+        'ratingTypeName' => 'Trusted User',
+        'ratingTypeDescription' => 'How trusted is the user perceived in the forums?',
+        'ratingTypeClass' => 'blue',
+        'ratingTypeMaximumRating' => 5,
+        'feedbackCode' => 2,
+        'allowedGroups' => -1
+    ],
+    3 => [
         'ratingTypeName' => 'Communication',
         'ratingTypeDescription' => 'How well did the user communicate with you regarding support?',
         'ratingTypeClass' => 'yellow',
@@ -232,7 +258,7 @@ const RATING_TYPES = [
         'feedbackCode' => 21,
         'allowedGroups' => -1
     ],
-    2 => [
+    4 => [
         'ratingTypeName' => 'Value',
         'ratingTypeDescription' => 'Are you satisfied with the quality of the product or service?',
         'ratingTypeClass' => 'blue',
@@ -244,7 +270,7 @@ const RATING_TYPES = [
 
 class enums
 {
-    public static $fid = 0;
+    public static $feedbackID = 0;
 
     public function __construct()
     {

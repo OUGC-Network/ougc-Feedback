@@ -26,7 +26,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-use function NewPoints\ContractsSystem\Core\get_contract;
+use ougc\Feedback\Core\enums;
+
 use function ougc\Feedback\Core\default_status;
 use function ougc\Feedback\Core\delete_feedback;
 use function ougc\Feedback\Core\fetch_feedback;
@@ -36,7 +37,7 @@ use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
 use function ougc\Feedback\Core\ratingGet;
 use function ougc\Feedback\Core\ratingInsert;
-use function ougc\Feedback\Core\ratingReplace;
+use function ougc\Feedback\Core\ratingSyncUser;
 use function ougc\Feedback\Core\ratingUpdate;
 use function ougc\Feedback\Core\run_hooks;
 use function ougc\Feedback\Core\send_email;
@@ -49,6 +50,7 @@ use function ougc\Feedback\Core\update_feedback;
 use function ougc\Feedback\Core\validate_feedback;
 use function ougc\Feedback\Hooks\Forum\member_profile_end;
 use function ougc\Feedback\Hooks\Forum\postbit;
+use function NewPoints\ContractsSystem\Core\get_contract;
 
 use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
@@ -129,6 +131,15 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $method = "DoAdd('{$feedback['uid']}', '{$feedbackUniqueID}')";
     }
 
+    switch ($feedback_code) {
+        case FEEDBACK_TYPE_POST:
+            $feedbackUniqueID = 1;
+            break;
+        case FEEDBACK_TYPE_PROFILE:
+            $feedbackUniqueID = 1;
+            break;
+    }
+
     if (!$edit || $mybb->request_method == 'post' || $mybb->get_input('back_button', MyBB::INPUT_INT)) {
         $feedback['type'] = $mybb->get_input('type', MyBB::INPUT_INT);
 
@@ -178,8 +189,10 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
     $user_perms = usergroup_permissions($user['usergroup'] . ',' . $user['additionalgroups']);
 
+    $feedbackUserID = (int)$feedback['uid'];
+
     if ($edit) {
-        if (!($mybb->usergroup['ougc_feedback_canedit'] && $currentUserID == $feedback['fuid']) &&
+        if (!($mybb->usergroup['ougc_feedback_canedit'] && $currentUserID == $feedbackUserID) &&
             !(isModerator() && $mybb->usergroup['ougc_feedback_mod_canedit'])) {
             set_go_back_button(false);
 
@@ -317,7 +330,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
         $where = [
             "uid='{$feedback['uid']}'", /*"fuid!='0'", */
-            "fuid='{$feedback['fuid']}'",
+            "fuid='{$feedbackUserID}'",
             "unique_id='{$feedbackUniqueID}'",
             "status='1'"
         ];
@@ -338,6 +351,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     } elseif (!$processed && !$edit) {
         $feedback_code = FEEDBACK_TYPE_PROFILE;
 
+        $feedbackUniqueID = (int)$feedback['uid'];
+
         if (!$mybb->settings['ougc_feedback_allow_profile']) {
             set_go_back_button(false);
 
@@ -347,7 +362,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         if (!$mybb->settings['ougc_feedback_allow_profile_multiple']) {
             $where = [
                 "uid='{$feedback['uid']}'", /*"fuid!='0'", */
-                "fuid='{$feedback['fuid']}'"
+                "fuid='{$feedbackUserID}'"
             ];
 
             if (!isModerator()) {
@@ -399,16 +414,40 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         if ($processed && validate_feedback()) {
             if ($edit) {
                 // Insert feedback
-                update_feedback();
+                $feedbackID = update_feedback();
+
+                $db->update_query(
+                    'ougc_feedback_ratings',
+                    ['feedbackID' => $feedbackID],
+                    "ratedUserID='{$feedbackUserID}' AND uniqueID='{$feedbackUniqueID}' AND feedbackCode='{$feedback_code}'"
+                );
 
                 sync_user($feedback['uid']);
+
+                foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+                    ratingSyncUser((int)$feedback['uid'], $ratingTypeID);
+
+                    ratingSyncUser($feedbackUserID, $ratingTypeID);
+                }
 
                 trow_success($lang->ougc_feedback_success_feedback_edited);
             } else {
                 // Insert feedback
-                insert_feedback();
+                $feedbackID = insert_feedback();
+
+                $db->update_query(
+                    'ougc_feedback_ratings',
+                    ['feedbackID' => $feedbackID],
+                    "userID='{$feedbackID}' AND ratedUserID='{$feedbackUserID}' AND uniqueID='{$feedbackUniqueID}' AND feedbackCode='{$feedback_code}'"
+                );
 
                 sync_user((int)$feedback['uid']);
+
+                foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+                    ratingSyncUser((int)$feedback['uid'], $ratingTypeID);
+
+                    ratingSyncUser($feedbackUserID, $ratingTypeID);
+                }
 
                 /*if(strpos(','.$user['ougc_feedback_notification'].',', ',1,'))
                 {*/
@@ -496,10 +535,14 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
         $ratingTypeMaximumRating = max(1, min(5, (int)$ratingTypeData['ratingTypeMaximumRating']));
 
+        $feedbackID = (int)$feedback['fid'];
+
         $feedbackRatingValue = (int)(ratingGet(
             [
                 "ratingTypeID='{$ratingTypeID}'",
+                "feedbackID='{$feedbackID}'",
                 "userID='{$currentUserID}'",
+                "ratedUserID='{$feedbackUserID}'",
                 "uniqueID='{$feedbackUniqueID}'",
                 "feedbackCode='{$feedback_code}'",
             ],
@@ -515,6 +558,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     if ($edit) {
         $lang->ougc_feedback_profile_add = $lang->ougc_feedback_profile_edit;
     }
+
+    $modalTitle = $lang->sprintf($lang->ougcFeedbackModalTitleProfileAdd, htmlspecialchars_uni($user['username']));
 
     echo eval(getTemplate('form', false));
 
@@ -600,6 +645,8 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
     $ratingTypeID = $mybb->get_input('ratingTypeID', MyBB::INPUT_INT);
 
+    $feedbackID = $mybb->get_input('feedbackID', MyBB::INPUT_INT);
+
     $userID = $mybb->get_input('userID', MyBB::INPUT_INT);
 
     $uniqueID = $mybb->get_input('uniqueID', MyBB::INPUT_INT);
@@ -625,21 +672,32 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
     $contentExists = false;
 
-    if ($feedbackCode === \ougc\Feedback\Core\FEEDBACK_TYPE_POST) {
+    if ($feedbackCode === FEEDBACK_TYPE_POST) {
         $postData = get_post($uniqueID);
 
-        $contentExists = !empty($postData['pid']) && (int)$postData['uid'] !== $currentUserID;
-    } elseif ($feedbackCode === \ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE) {
+        $ratedUserID = (int)($postData['uid'] ?? 0);
+
+        $contentExists = !empty($postData['pid']) && $ratedUserID !== $currentUserID;
+    } elseif ($feedbackCode === FEEDBACK_TYPE_PROFILE) {
         $userData = get_user($uniqueID);
 
-        $contentExists = !empty($userData['uid']) && (int)$userData['uid'] !== $currentUserID;
+        $ratedUserID = (int)($userData['uid'] ?? 0);
+
+        $contentExists = !empty($userData['uid']) && $ratedUserID !== $currentUserID;
     } elseif ($feedbackCode === FEEDBACK_TYPE_CONTRACTS_SYSTEM) {
         $contractData = get_contract($uniqueID);
 
-        $contentExists = !empty($contractData['contract_id']) && (int)$contractData['buyer_id'] === $currentUserID;
+        $sellerUserID = (int)$contractData['seller_id'];
+
+        $buyerUserID = (int)$contractData['buyer_id'];
+
+        $ratedUserID = $currentUserID === $sellerUserID ? $buyerUserID : $sellerUserID;
+
+        $contentExists = !empty($contractData['contract_id']) &&
+            in_array($currentUserID, [$sellerUserID, $buyerUserID]);
     }
 
-    if (!$contentExists) {
+    if (!$contentExists || empty($ratedUserID)) {
         echo json_encode(['error' => true]);
 
         exit;
@@ -655,7 +713,9 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
 
     $ratingData = [
         'ratingTypeID' => $ratingTypeID,
+        'feedbackID' => $feedbackID,
         'userID' => $userID,
+        'ratedUserID' => $ratedUserID,
         'uniqueID' => $uniqueID,
         'ratingValue' => $ratingValue,
         'feedbackCode' => $feedbackCode,
@@ -664,11 +724,13 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
     $ratingID = ratingGet(
         [
             "ratingTypeID='{$ratingTypeID}'",
+            'feedbackID' => $feedbackID,
             "userID='{$currentUserID}'",
+            "ratedUserID='{$ratedUserID}'",
             "uniqueID='{$uniqueID}'",
             "feedbackCode='{$feedbackCode}'"
         ],
-        ['ratingID'],
+        [],
         ['limit' => 1]
     )['ratingID'] ?? 0;
 
@@ -680,7 +742,7 @@ if ($mybb->get_input('action') == 'add' || $mybb->get_input('action') == 'edit')
         $ratingID = ratingInsert($ratingData);
     }
 
-    \ougc\Feedback\Core\ratingSyncUser($userID, $ratingTypeID);
+    //ratingSyncUser($ratedUserID, $ratingTypeID);
 
     echo json_encode(['success' => true]);
 

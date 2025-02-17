@@ -14,9 +14,10 @@
                             url: 'feedback.php',
                             data: {
                                 action: 'rate',
+                                feedbackID: parseInt('{$feedbackID}'),
                                 ratingTypeID: parseInt('{$ratingTypeID}'),
                                 userID: parseInt('{$currentUserID}'),
-                                uniqueID: parseInt("{$feedback['unique_id']}"),
+                                uniqueID: parseInt("{$feedbackUniqueID}"),
                                 feedbackCode: parseInt('{$feedback_code}'),
                                 ratingValue: parseInt(value)
                             },

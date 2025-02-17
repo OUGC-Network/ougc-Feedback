@@ -41,6 +41,7 @@ $l['ougc_feedback_profile_average'] = 'Average';
 $l['ougc_feedback_profile_add'] = 'Add Feedback';
 $l['ougc_feedback_profile_edit'] = 'Update Feedback';
 $l['ougc_feedback_profile_latest_title'] = 'Feedback for {1}';
+$l['ougc_feedback_profile_rating'] = '{1}';
 
 // Member list
 $l['ougc_feedback_member_list_title'] = 'Feedback';
@@ -166,5 +167,5 @@ $l = array_merge($l, [
     'ougcContractSystemErrorsFeedbackInvalidType' => 'The selected transaction type is invalid.',
     'ougcContractSystemErrorsFeedbackDuplicated' => 'It is possible to leave feedback only once per contract.',
 
-    'newpoints_contracts_system_feedback' => 'Feedback',
+    'ougcFeedbackModalTitleProfileAdd' => 'Add Feedback for {1}',
 ]);

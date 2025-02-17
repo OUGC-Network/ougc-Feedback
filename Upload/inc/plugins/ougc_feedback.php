@@ -30,7 +30,6 @@ declare(strict_types=1);
 
 use ougc\Feedback\Core\enums;
 
-use function ougc\Feedback\Admin\loadPluginLibrary;
 use function ougc\Feedback\Admin\pluginActivation;
 use function ougc\Feedback\Admin\pluginDeactivation;
 use function ougc\Feedback\Admin\pluginInformation;
@@ -38,8 +37,6 @@ use function ougc\Feedback\Admin\pluginInstallation;
 use function ougc\Feedback\Admin\pluginIsInstalled;
 use function ougc\Feedback\Admin\pluginUninstallation;
 use function ougc\Feedback\Core\addHooks;
-use function ougc\Feedback\Core\loadLanguage;
-use function ougc\Feedback\Core\set_go_back_button;
 
 use const ougc\Feedback\ROOT;
 

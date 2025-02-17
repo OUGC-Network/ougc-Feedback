@@ -32,7 +32,6 @@ namespace ougc\Feedback\Core;
 
 use MyBB;
 use pluginSystem;
-use PMDataHandler;
 
 use const ougc\Feedback\ROOT;
 
@@ -73,7 +72,7 @@ function addHooks(string $namespace): bool
     return true;
 }
 
-function run_hooks(string $hook_name = '', &$hook_arguments = '')
+function run_hooks(string $hook_name = '', array &$hook_arguments = []): array
 {
     global $plugins;
 
@@ -81,7 +80,7 @@ function run_hooks(string $hook_name = '', &$hook_arguments = '')
         $hook_arguments = $plugins->run_hooks('ougc_feedback_' . $hook_name, $hook_arguments);
     }
 
-    return $hook_arguments;
+    return (array)$hook_arguments;
 }
 
 function getSetting(string $settingKey = '')
@@ -275,7 +274,7 @@ function fetch_feedback(int $fid): array
     return [];
 }
 
-function insert_feedback(bool $update = false): array
+function insert_feedback(bool $update = false): int
 {
     global $db;
 
@@ -306,23 +305,23 @@ function insert_feedback(bool $update = false): array
     }
 
     if ($update) {
-        enums::$fid = $feedback['fid'];
+        enums::$feedbackID = $feedback['fid'];
 
         $db->update_query('ougc_feedback', $insert_data, "fid='{$feedback['fid']}'");
     } else {
         $insert_data['dateline'] = TIME_NOW;
 
-        enums::$fid = (int)$db->insert_query('ougc_feedback', $insert_data);
+        enums::$feedbackID = (int)$db->insert_query('ougc_feedback', $insert_data);
     }
 
     sync_user($insert_data['uid']);
 
     set_data($feedback);
 
-    return $insert_data;
+    return enums::$feedbackID;
 }
 
-function update_feedback(): array
+function update_feedback(): int
 {
     return insert_feedback(true);
 }
@@ -346,8 +345,16 @@ function ratingInsert(array $ratingData, bool $isUpdate = false, int $ratingID =
         $replaceData['ratingTypeID'] = (int)$ratingData['ratingTypeID'];
     }
 
+    if (isset($ratingData['feedbackID'])) {
+        $replaceData['feedbackID'] = (int)$ratingData['feedbackID'];
+    }
+
     if (isset($ratingData['userID'])) {
         $replaceData['userID'] = (int)$ratingData['userID'];
+    }
+
+    if (isset($ratingData['ratedUserID'])) {
+        $replaceData['ratedUserID'] = (int)$ratingData['ratedUserID'];
     }
 
     if (isset($ratingData['uniqueID'])) {
@@ -400,14 +407,16 @@ function ratingGet(array $whereClauses, array $queryFields = [], array $queryOpt
     return $ratingObjects;
 }
 
-function ratingSyncUser(int $userID, int $ratingTypeID): bool
+function ratingSyncUser(int $ratedUserID, int $ratingTypeID): bool
 {
     global $db;
+
+    $db->delete_query('ougc_feedback_ratings', "feedbackID<'1'");
 
     $query = $db->simple_select(
         'ougc_feedback_ratings',
         'AVG(ratingValue) AS averageRatingValue',
-        "userID='{$userID}' AND ratingTypeID='{$ratingTypeID}'"
+        "ratedUserID='{$ratedUserID}' AND ratingTypeID='{$ratingTypeID}'"
     );
 
     $averageRatingValue = (float)$db->fetch_field($query, 'averageRatingValue');
@@ -415,7 +424,7 @@ function ratingSyncUser(int $userID, int $ratingTypeID): bool
     $db->update_query(
         'users',
         [('ougcFeedbackRatingAverage' . $ratingTypeID) => $averageRatingValue],
-        "uid='{$userID}'"
+        "uid='{$ratedUserID}'"
     );
 
     return true;

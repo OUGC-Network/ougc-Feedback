@@ -36,13 +36,14 @@ use stdClass;
 
 use function ougc\Feedback\Core\loadLanguage;
 
+use const ougc\Feedback\ROOT;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FIELDS_DATA;
 use const ougc\Feedback\Core\PLUGIN_VERSION;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
+use const ougc\Feedback\Core\RATING_TYPES;
 use const ougc\Feedback\Core\TABLES_DATA;
-use const ougc\Feedback\ROOT;
 
 function pluginInformation(): array
 {
@@ -171,7 +172,7 @@ function pluginActivation(): bool
         ]
     ];
 
-    foreach (\ougc\Feedback\Core\RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+    foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
         $tableRatingFields['users']['ougcFeedbackRatingAverage' . $ratingTypeID] = [
             'type' => 'DECIMAL',
             'unsigned' => true,
@@ -298,7 +299,7 @@ function pluginUninstallation(): bool
         }
     }
 
-    foreach (\ougc\Feedback\Core\RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+    foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
         if ($db->field_exists('ougcFeedbackRatingAverage' . $ratingTypeID, 'users')) {
             $db->drop_column('users', 'ougcFeedbackRatingAverage' . $ratingTypeID);
         }

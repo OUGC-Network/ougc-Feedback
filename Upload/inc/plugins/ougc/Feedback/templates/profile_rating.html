@@ -1,0 +1,11 @@
+<tr>
+    <td class="{$alternativeBackground}" width="40%"><strong>{$ratingTypeName} ({$feedbackRatingValue})</strong></td>
+    <td class="{$alternativeBackground}">
+        <div class="ui large {$ratingTypeClass} disabled rating" data-icon="star" data-rating="{$feedbackRatingValue}"
+             data-max-rating="{$ratingTypeMaximumRating}" id="feedbackRatingProfile{$ratingTypeID}"
+             title="{$ratingTypeDescription} ({$feedbackRatingValue})"></div>
+        <script type="text/javascript">
+            $('#feedbackRatingProfile{$ratingTypeID}').rating();
+        </script>
+    </td>
+</tr>

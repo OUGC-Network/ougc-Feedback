@@ -34,23 +34,18 @@ use MyBB;
 
 use postParser;
 
-use function NewPoints\ContractsSystem\Core\get_contract;
-use function NewPoints\Core\language_load;
 use function ougc\Feedback\Core\enableContractSystemIntegration;
 use function ougc\Feedback\Core\getSetting;
 use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\getUserStats;
 use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
-
 use function ougc\Feedback\Core\set_go_back_button;
 use function ougc\Feedback\Core\trow_error;
+use function NewPoints\Core\language_load;
+use function Newpoints\Core\post_parser_parse_message;
+use function NewPoints\ContractsSystem\Core\get_contract;
 
-use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_ACCEPTED;
-use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_CLOSED;
-use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_AUCTION;
-use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_BUY;
-use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_SELL;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\DEBUG;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
@@ -59,7 +54,12 @@ use const ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
-use const ougc\Feedback\ROOT;
+use const ougc\Feedback\Core\RATING_TYPES;
+use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_ACCEPTED;
+use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_CLOSED;
+use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_AUCTION;
+use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_BUY;
+use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_SELL;
 
 function global_start(): bool
 {
@@ -165,17 +165,19 @@ function member_profile_end(): string
 
     $memprofile_perms = usergroup_permissions($memprofile['usergroup'] . ',' . $memprofile['additionalgroups']);
 
+    $alternativeBackground = alt_trow(true);
+
     if (
         getSetting('allow_profile') &&
         $mybb->usergroup['ougc_feedback_cangive'] &&
         $memprofile_perms['ougc_feedback_canreceive'] &&
-        $mybb->user['uid'] != $memprofile['uid']
+        $mybb->user['uid'] != $userID
     ) {
         $show = true;
 
         if (!getSetting('allow_profile_multiple') && getSetting('profile_hide_add')) {
             $where = [
-                "uid='{$memprofile['uid']}'",
+                "uid='{$userID}'",
                 /*"fuid!='0'", */
                 "fuid='{$mybb->user['uid']}'"
             ];
@@ -196,7 +198,7 @@ function member_profile_end(): string
 
             $pid = '';
 
-            $uid = $memprofile['uid'];
+            $uid = $userID;
 
             $mybb->input['type'] = isset($mybb->input['type']) ? $mybb->get_input('type', MyBB::INPUT_INT) : 1;
 
@@ -206,7 +208,30 @@ function member_profile_end(): string
             ) : 1;
 
             $add_row = eval(getTemplate('profile_add'));
+
+            $alternativeBackground = alt_trow();
         }
+    }
+
+    $rating_rows = '';
+
+    foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
+        $ratingTypeName = $lang->sprintf(
+            $lang->ougc_feedback_profile_rating,
+            htmlspecialchars_uni($ratingTypeData['ratingTypeName'])
+        );
+
+        $ratingTypeDescription = htmlspecialchars_uni($ratingTypeData['ratingTypeDescription']);
+
+        $ratingTypeClass = htmlspecialchars_uni($ratingTypeData['ratingTypeClass']);
+
+        $ratingTypeMaximumRating = max(1, min(5, (int)$ratingTypeData['ratingTypeMaximumRating']));
+
+        $feedbackRatingValue = (float)($memprofile['ougcFeedbackRatingAverage' . $ratingTypeID] ?? 0);
+
+        $rating_rows .= eval(getTemplate('profile_rating'));
+
+        $alternativeBackground = alt_trow();
     }
 
     $view_all = '';
@@ -740,7 +765,7 @@ function newpoints_contracts_system_parse_intermediate(array $hookArguments): ar
                     'filter_badwords' => 1,
                 );
 
-                $comment = $parser->parse_message($feedbackData['comment'], $parser_options);
+                $comment = post_parser_parse_message($feedbackData['comment'], $parser_options);
 
                 $comment = eval(getTemplate('contractSystemParseStatusComment'));
             }
@@ -776,7 +801,7 @@ function newpoints_contracts_system_parse_end(array $hookArguments): array
     if ($hookArguments['offeror_user_id'] === $hookArguments['current_user_id']) {
         $feedbackUserID = $hookArguments['offeree_user_id'];
 
-        switch ($hookArguments['contract_data']['type']) {
+        switch ($hookArguments['contract_data']['contract_type']) {
             case CONTRACT_TYPE_AUCTION:
             case CONTRACT_TYPE_SELL:
                 $feedbackType = FEEDBACK_TYPE_SELLER;
@@ -885,7 +910,7 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
         return $hookArguments;
     }
 
-    $userID = (int)$mybb->user['uid'];
+    $currentUserID = (int)$mybb->user['uid'];
 
     $offerorUserID = (int)$contractData['seller_id'];
 
@@ -893,7 +918,7 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
 
     $feedbackUserID = (int)$hookArguments['feedback_data']['uid'];
 
-    if (!in_array($userID, [$offerorUserID, $offereeUserID], true) || $feedbackUserID === $userID) {
+    if (!in_array($currentUserID, [$offerorUserID, $offereeUserID]) || $feedbackUserID === $currentUserID) {
         set_go_back_button(false);
 
         trow_error($lang->newpoints_contracts_system_errors_invaliduser);
@@ -903,7 +928,7 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
 
     $contractType = (int)$hookArguments['feedback_data']['type'];
 
-    if ($offerorUserID === $userID) {
+    if ($offerorUserID === $currentUserID) {
         switch ($contractData['contract_type']) {
             case CONTRACT_TYPE_AUCTION:
             case CONTRACT_TYPE_SELL:
@@ -939,7 +964,7 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
 
         $whereClauses = [
             "uid='{$feedbackUserID}'",
-            "fuid='{$userID}'"
+            "fuid='{$currentUserID}'"
         ];
 
         if (!$mybb->usergroup['ougc_feedback_ismod']) {

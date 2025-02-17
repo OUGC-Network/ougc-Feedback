@@ -30,13 +30,11 @@ declare(strict_types=1);
 
 namespace ougc\Feedback\Hooks\Admin;
 
-use FormContainer;
 use MyBB;
 
 use function ougc\Feedback\Core\loadLanguage;
 
 use const ougc\Feedback\Core\FIELDS_DATA;
-use const ougc\Feedback\ROOT;
 
 function admin_config_plugins_deactivate(): bool
 {
