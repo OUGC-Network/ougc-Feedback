@@ -54,50 +54,50 @@ const FEEDBACK_TYPE_CONTRACTS_SYSTEM = 21;
 
 const TABLES_DATA = [
     'ougc_feedback' => [
-        'fid' => [
+        'feedbackID' => [
             'type' => 'INT',
             'unsigned' => true,
             'auto_increment' => true,
             'primary_key' => true
         ],
-        'uid' => [
+        'userID' => [
             'type' => 'INT',
             'unsigned' => true,
             'default' => 0
         ],
-        'fuid' => [
+        'feedbackUserID' => [
             'type' => 'INT',
             'unsigned' => true,
             'default' => 0
         ],
-        'unique_id' => [
+        'uniqueID' => [
             'type' => 'INT',
             'unsigned' => true,
             'default' => 0
         ],
-        'type' => [
+        'feedbackType' => [
             'type' => 'INT',
             'unsigned' => true,
             'default' => 0
         ],
-        'feedback' => [
+        'feedbackValue' => [
             'type' => 'INT',
             'default' => 0
         ],
-        'comment' => [
+        'feedbackComment' => [
             'type' => 'TEXT',
             'null' => true
         ],
-        'status' => [
+        'feedbackStatus' => [
             'type' => 'TINYINT',
             'default' => 1
         ],
-        'feedback_code' => [
+        'feedbackCode' => [
             'type' => 'TINYINT',
             'unsigned' => true,
             'default' => 0
         ],
-        'dateline' => [
+        'createStamp' => [
             'type' => 'INT',
             'unsigned' => true,
             'default' => 0

@@ -33,21 +33,21 @@ let OUGC_Feedback = {
         });
     },
 
-    Add: function (uid, unique_id, type, feedback, reload, comment, back_button, feedback_code) {
-        let postData = 'action=add&uid=' + parseInt(uid) + '&unique_id=' + parseInt(unique_id) + '&type=' + parseInt(type) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&comment=' + String(comment) + '&back_button=' + parseInt(back_button) + '&feedback_code=' + String(feedback_code);
+    Add: function (uid, uniqueID, feedbackType, feedback, reload, feedbackComment, back_button, feedbackCode) {
+        let postData = 'action=add&uid=' + parseInt(uid) + '&uniqueID=' + parseInt(uniqueID) + '&feedbackType=' + parseInt(feedbackType) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&feedbackComment=' + String(feedbackComment) + '&back_button=' + parseInt(back_button) + '&feedbackCode=' + String(feedbackCode);
 
         MyBB.popupWindow('/feedback.php?' + postData);
     },
 
-    Edit: function (fid, reload, feedback_code) {
-        let postData = 'action=edit&fid=' + parseInt(fid) + '&reload=' + parseInt(reload) + '&feedback_code=' + parseInt(feedback_code);
+    Edit: function (feedbackID, reload, feedbackCode) {
+        let postData = 'action=edit&feedbackID=' + parseInt(feedbackID) + '&reload=' + parseInt(reload) + '&feedbackCode=' + parseInt(feedbackCode);
 
         MyBB.popupWindow('/feedback.php?' + postData);
     },
 
-    DoAdd: function (uid, unique_id) {
+    DoAdd: function (uid, uniqueID) {
         // Get form, serialize it and send it
-        let postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(unique_id)).serialize();
+        let postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(uniqueID)).serialize();
 
         $.ajax(
             {
@@ -87,9 +87,9 @@ let OUGC_Feedback = {
             });
     },
 
-    DoEdit: function (uid, unique_id, fid) {
+    DoEdit: function (uid, uniqueID, feedbackID) {
         // Get form, serialize it and send it
-        let postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(unique_id)).serialize();
+        let postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(uniqueID)).serialize();
 
         $.ajax(
             {
@@ -130,11 +130,11 @@ let OUGC_Feedback = {
             });
     },
 
-    Report: function (fid) {
-        MyBB.popupWindow('/report.php?type=feedback&pid=' + parseInt(fid));
+    Report: function (feedbackID) {
+        MyBB.popupWindow('/report.php?type=feedback&pid=' + parseInt(feedbackID));
     },
 
-    Delete: function (fid, my_post_key, hard) {
+    Delete: function (feedbackID, my_post_key, hard) {
         let result = confirm(delete_feedback_confirm);
 
         if (result) {
@@ -154,9 +154,9 @@ let OUGC_Feedback = {
             form.append(
                 $('<input />',
                     {
-                        name: 'fid',
+                        name: 'feedbackID',
                         type: 'hidden',
-                        value: fid
+                        value: feedbackID
                     })
             );
 
@@ -176,7 +176,7 @@ let OUGC_Feedback = {
         }
     },
 
-    Restore: function (fid) {
+    Restore: function (feedbackID) {
         let result = confirm(delete_feedback_confirm);
 
         if (result) {
@@ -190,9 +190,9 @@ let OUGC_Feedback = {
             form.append(
                 $('<input />',
                     {
-                        name: 'fid',
+                        name: 'feedbackID',
                         type: 'hidden',
-                        value: fid
+                        value: feedbackID
                     })
             );
 

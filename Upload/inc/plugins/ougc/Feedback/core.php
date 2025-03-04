@@ -206,19 +206,19 @@ function get_go_back_button(): string
 
     loadLanguage();
 
-    $mybb->input['type'] = $mybb->get_input('type', MyBB::INPUT_INT);
+    $mybb->input['feedbackType'] = $mybb->get_input('feedbackType', MyBB::INPUT_INT);
 
-    $mybb->input['feedback'] = $mybb->get_input('feedback', MyBB::INPUT_INT);
+    $mybb->input['feedbackValue'] = $mybb->get_input('feedbackValue', MyBB::INPUT_INT);
 
     $mybb->input['reload'] = $mybb->get_input('reload', MyBB::INPUT_INT);
 
-    $mybb->input['comment'] = $mybb->get_input('comment', MyBB::INPUT_STRING);
+    $mybb->input['feedbackComment'] = $mybb->get_input('feedbackComment', MyBB::INPUT_STRING);
 
-    $uid = set_data()['uid'];
+    $uid = set_data()['userID'];
 
-    $unique_id = set_data()['unique_id'];
+    $unique_id = set_data()['uniqueID'];
 
-    $feedbackPluginCode = $mybb->get_input('feedback_code', MyBB::INPUT_INT);
+    $feedbackPluginCode = $mybb->get_input('feedbackCode', MyBB::INPUT_INT);
 
     return eval(getTemplate('modal_tfoot'));
 }
@@ -227,27 +227,27 @@ function set_data(array $feedback = []): array
 {
     static $data;
 
-    !isset($feedback['fid']) || $data['fid'] = (int)$feedback['fid'];
+    !isset($feedback['feedbackID']) || $data['feedbackID'] = (int)$feedback['feedbackID'];
 
-    !isset($feedback['fid']) || $data['fid'] = (int)$feedback['fid'];
+    !isset($feedback['feedbackID']) || $data['feedbackID'] = (int)$feedback['feedbackID'];
 
-    !isset($feedback['uid']) || $data['uid'] = (int)$feedback['uid'];
+    !isset($feedback['userID']) || $data['userID'] = (int)$feedback['userID'];
 
-    !isset($feedback['fuid']) || $data['fuid'] = (int)$feedback['fuid'];
+    !isset($feedback['feedbackUserID']) || $data['feedbackUserID'] = (int)$feedback['feedbackUserID'];
 
-    !isset($feedback['unique_id']) || $data['unique_id'] = (int)$feedback['unique_id'];
+    !isset($feedback['uniqueID']) || $data['uniqueID'] = (int)$feedback['uniqueID'];
 
-    !isset($feedback['type']) || $data['type'] = (int)$feedback['type'];
+    !isset($feedback['feedbackType']) || $data['feedbackType'] = (int)$feedback['feedbackType'];
 
-    !isset($feedback['feedback']) || $data['feedback'] = (int)$feedback['feedback'];
+    !isset($feedback['feedbackValue']) || $data['feedbackValue'] = (int)$feedback['feedbackValue'];
 
-    !isset($feedback['comment']) || $data['comment'] = (string)$feedback['comment'];
+    !isset($feedback['feedbackComment']) || $data['feedbackComment'] = (string)$feedback['feedbackComment'];
 
-    !isset($feedback['status']) || $data['status'] = (int)$feedback['status'];
+    !isset($feedback['feedbackStatus']) || $data['feedbackStatus'] = (int)$feedback['feedbackStatus'];
 
-    !isset($feedback['feedback_code']) || $data['feedback_code'] = (int)$feedback['feedback_code'];
+    !isset($feedback['feedbackCode']) || $data['feedbackCode'] = (int)$feedback['feedbackCode'];
 
-    !isset($feedback['dateline']) || $data['dateline'] = TIME_NOW;
+    !isset($feedback['createStamp']) || $data['createStamp'] = TIME_NOW;
 
     return $data;
 }
@@ -265,7 +265,7 @@ function fetch_feedback(int $fid): array
 {
     global $db;
 
-    $query = $db->simple_select('ougc_feedback', '*', "fid='{$fid}'");
+    $query = $db->simple_select('ougc_feedback', '*', "feedbackID='{$fid}'");
 
     if ($db->num_rows($query)) {
         return $db->fetch_array($query);
@@ -282,39 +282,41 @@ function insert_feedback(bool $update = false): int
 
     $insert_data = [];
 
-    //!isset($feedback['fid']) || $insert_data['fid'] = (int)$feedback['fid'];
+    //!isset($feedback['feedbackID']) || $insert_data['feedbackID'] = (int)$feedback['feedbackID'];
 
-    !isset($feedback['uid']) || $insert_data['uid'] = (int)$feedback['uid'];
+    !isset($feedback['userID']) || $insert_data['userID'] = (int)$feedback['userID'];
 
-    !isset($feedback['fuid']) || $insert_data['fuid'] = (int)$feedback['fuid'];
+    !isset($feedback['feedbackUserID']) || $insert_data['feedbackUserID'] = (int)$feedback['feedbackUserID'];
 
-    !isset($feedback['unique_id']) || $insert_data['unique_id'] = (int)$feedback['unique_id'];
+    !isset($feedback['uniqueID']) || $insert_data['uniqueID'] = (int)$feedback['uniqueID'];
 
-    !isset($feedback['type']) || $insert_data['type'] = (int)$feedback['type'];
+    !isset($feedback['feedbackType']) || $insert_data['feedbackType'] = (int)$feedback['feedbackType'];
 
-    !isset($feedback['feedback']) || $insert_data['feedback'] = (int)$feedback['feedback'];
+    !isset($feedback['feedbackValue']) || $insert_data['feedbackValue'] = (int)$feedback['feedbackValue'];
 
-    !isset($feedback['comment']) || $insert_data['comment'] = $db->escape_string($feedback['comment']);
+    !isset($feedback['feedbackComment']) || $insert_data['feedbackComment'] = $db->escape_string(
+        $feedback['feedbackComment']
+    );
 
-    !isset($feedback['status']) || $insert_data['status'] = (int)$feedback['status'];
+    !isset($feedback['feedbackStatus']) || $insert_data['feedbackStatus'] = (int)$feedback['feedbackStatus'];
 
-    !isset($feedback['feedback_code']) || $insert_data['feedback_code'] = (int)$feedback['feedback_code'];
+    !isset($feedback['feedbackCode']) || $insert_data['feedbackCode'] = (int)$feedback['feedbackCode'];
 
     if (!$update) {
-        !isset($feedback['dateline']) || $insert_data['dateline'] = (int)$feedback['dateline'];
+        !isset($feedback['createStamp']) || $insert_data['createStamp'] = (int)$feedback['createStamp'];
     }
 
     if ($update) {
-        enums::$feedbackID = $feedback['fid'];
+        enums::$feedbackID = $feedback['feedbackID'];
 
-        $db->update_query('ougc_feedback', $insert_data, "fid='{$feedback['fid']}'");
+        $db->update_query('ougc_feedback', $insert_data, "feedbackID='{$feedback['feedbackID']}'");
     } else {
-        $insert_data['dateline'] = TIME_NOW;
+        $insert_data['createStamp'] = TIME_NOW;
 
         enums::$feedbackID = (int)$db->insert_query('ougc_feedback', $insert_data);
     }
 
-    sync_user($insert_data['uid']);
+    sync_user($insert_data['userID']);
 
     set_data($feedback);
 
@@ -330,7 +332,7 @@ function delete_feedback(int $fid): bool
 {
     global $db;
 
-    $db->delete_query('ougc_feedback', "fid='{$fid}'");
+    $db->delete_query('ougc_feedback', "feedbackID='{$fid}'");
 
     return true;
 }
@@ -489,7 +491,7 @@ function send_email(array $email): bool
         $entry = [
             'subject' => $db->escape_string($email['subject']),
             'message' => $db->escape_string($email['message']),
-            'dateline' => TIME_NOW,
+            'createStamp' => TIME_NOW,
             'fromuid' => 0,
             'fromemail' => $db->escape_string($email['from']),
             'touid' => $email['touid'],
@@ -516,9 +518,13 @@ function sync_user(int $uid): bool
 {
     global $db;
 
-    $query = $db->simple_select('ougc_feedback', 'SUM(feedback) AS feedback', "uid='{$uid}' AND status='1'");
+    $query = $db->simple_select(
+        'ougc_feedback',
+        'SUM(feedbackValue) AS totalFeedback',
+        "userID='{$uid}' AND feedbackStatus='1'"
+    );
 
-    $feedback = (int)$db->fetch_field($query, 'feedback');
+    $feedback = (int)$db->fetch_field($query, 'totalFeedback');
 
     $db->update_query('users', ['ougc_feedback' => $feedback], "uid='{$uid}'");
 
@@ -530,13 +536,13 @@ function getUserStats(int $userID): array
     global $db;
 
     $whereClauses = [
-        "uid='{$userID}'",
-        /*"fuid!='0'", */
-        "status='1'"
+        "userID='{$userID}'",
+        /*"feedbackUserID!='0'", */
+        "feedbackStatus='1'"
     ];
     /*if(!isModerator())
     {
-        $whereClauses[] = "status='1'";
+        $whereClauses[] = "feedbackStatus='1'";
     }*/
 
     $userStats = [
@@ -558,23 +564,23 @@ function getUserStats(int $userID): array
     while ($feedbackData = $db->fetch_array($dbQuery)) {
         ++$userStats['total'];
 
-        $feedbackData['feedback'] = (int)$feedbackData['feedback'];
+        $feedbackData['feedbackValue'] = (int)$feedbackData['feedbackValue'];
 
-        switch ($feedbackData['feedback']) {
+        switch ($feedbackData['feedbackValue']) {
             case 1:
                 ++$userStats['positive'];
 
-                $userStats['positive_users'][$feedbackData['fuid']] = 1;
+                $userStats['positive_users'][$feedbackData['feedbackUserID']] = 1;
                 break;
             case 0:
                 ++$userStats['neutral'];
 
-                $userStats['neutral_users'][$feedbackData['fuid']] = 1;
+                $userStats['neutral_users'][$feedbackData['feedbackUserID']] = 1;
                 break;
             case -1:
                 ++$userStats['negative'];
 
-                $userStats['negative_users'][$feedbackData['fuid']] = 1;
+                $userStats['negative_users'][$feedbackData['feedbackUserID']] = 1;
                 break;
         }
     }

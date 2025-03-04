@@ -112,11 +112,11 @@ function pluginActivation(): bool
 
     $templatesList = $stylesheetsList = [];
 
-    /*'memberlist_header'	=> '<td class="tcat" width="10%" align="center"><span class="smalltext"><a href="{$sorturl}&amp;sort=feedbacks&amp;order=descending"><strong>{$lang->ougc_feedback_profile_title}</strong></a> {$orderarrow[\'feedback\']}</span></td>',
+    /*'memberlist_header'	=> '<td class="tcat" width="10%" align="center"><span class="smalltext"><a href="{$sorturl}&amp;sort=feedbacks&amp;order=descending"><strong>{$lang->ougc_feedback_profile_title}</strong></a> {$orderarrow[\'feedbackValue\']}</span></td>',
     'memberlist_sort'	=> '<option value="positive_feedback"{$sort_selected[\'positive_feedback\']}>{$lang->ougc_feedback_memberlist_sort_positive}</option>
 <option value="neutral_feedback"{$sort_selected[\'neutral_feedback\']}>{$lang->ougc_feedback_memberlist_sort_neutral}</option>
 <option value="negative_feedback"{$sort_selected[\'negative_feedback\']}>{$lang->ougc_feedback_memberlist_sort_negative}</option>',
-    'memberlist_user'	=> '<td class="{$alt_bg}" align="center">{$user[\'uid\']}{$user[\'feedback\']}</td>',*/
+    'memberlist_user'	=> '<td class="{$alt_bg}" align="center">{$user[\'uid\']}{$user[\'feedbackValue\']}</td>',*/
 
     if (file_exists(ROOT . '/templates')) {
         $templatesDirIterator = new DirectoryIterator(ROOT . '/templates');
@@ -167,6 +167,38 @@ function pluginActivation(): bool
 
     global $db;
 
+    foreach (
+        [
+            'ougc_feedback' => [
+                'fid' => 'feedbackID',
+                'uid' => 'userID',
+                'fuid' => 'feedbackUserID',
+                'unique_id' => 'uniqueID',
+                'type' => 'feedbackType',
+                'feedback' => 'feedbackValue',
+                'comment' => 'feedbackComment',
+                'status' => 'feedbackStatus',
+                'feedback_code' => 'feedbackCode',
+                'dateline' => 'createStamp'
+            ],
+        ] as $tableName => $tableData
+    ) {
+        {
+            if ($db->table_exists($tableName)) {
+                foreach ($tableData as $oldFieldName => $newFieldName) {
+                    if ($db->field_exists($oldFieldName, $tableName) && !$db->field_exists($newFieldName, $tableName)) {
+                        $db->rename_column(
+                            $tableName,
+                            $oldFieldName,
+                            $newFieldName,
+                            buildDbFieldDefinition(TABLES_DATA[$tableName][$newFieldName])
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     $tableRatingFields = [
         'users' => [
         ]
@@ -184,18 +216,18 @@ function pluginActivation(): bool
     dbVerifyColumns($tableRatingFields);
 
     if ($plugins['feedback'] <= 1823) {
-        if ($db->field_exists('pid', 'ougc_feedback') && !$db->field_exists('unique_id', 'ougc_feedback')) {
+        if ($db->field_exists('pid', 'ougc_feedback') && !$db->field_exists('uniqueID', 'ougc_feedback')) {
             $db->rename_column(
                 'ougc_feedback',
                 'pid',
-                'unique_id',
-                buildDbFieldDefinition(TABLES_DATA['ougc_feedback']['unique_id'])
+                'uniqueID',
+                buildDbFieldDefinition(TABLES_DATA['ougc_feedback']['uniqueID'])
             );
         }
 
-        $db->update_query('ougc_feedback', ['feedback_code' => FEEDBACK_TYPE_POST], "unique_id='0'");
+        $db->update_query('ougc_feedback', ['feedbackCode' => FEEDBACK_TYPE_POST], "uniqueID='0'");
 
-        $db->update_query('ougc_feedback', ['feedback_code' => FEEDBACK_TYPE_PROFILE], "unique_id!='0'");
+        $db->update_query('ougc_feedback', ['feedbackCode' => FEEDBACK_TYPE_PROFILE], "uniqueID!='0'");
     }
 
     /*~*~* RUN UPDATES END *~*~*/

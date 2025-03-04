@@ -4,8 +4,8 @@
     {$headerinclude}
     <script type="text/javascript">
         <!--
-            var delete_feedback_confirm = "{$lang->ougc_feedback_confirm_delete}";
-            var restore_feedback_confirm = "{$lang->ougc_feedback_confirm_restore}";
+        var delete_feedback_confirm = "{$lang->ougc_feedback_confirm_delete}";
+        var restore_feedback_confirm = "{$lang->ougc_feedback_confirm_restore}";
         // -->
     </script>
     <script type="text/javascript" src="{$mybb->settings['bburl']}/jscripts/report.js?ver=1804"></script>
@@ -91,7 +91,7 @@
                     <option value="gived" {$show_selected_given}>{$lang->show_gived}</option>
                 </select>
                 <select name="sort">
-                    <option value="dateline" {$sort_selected_last_updated}>{$lang->sort_updated}</option>
+                    <option value="createStamp" {$sort_selected_last_updated}>{$lang->sort_updated}</option>
                     <option value="username" {$sort_selected_username}>{$lang->sort_username}</option>
                 </select>
                 {$gobutton}
