@@ -36,6 +36,7 @@ use stdClass;
 
 use function ougc\Feedback\Core\loadLanguage;
 
+use const ougc\Feedback\Core\URL;
 use const ougc\Feedback\ROOT;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
@@ -146,7 +147,11 @@ function pluginActivation(): bool
 
     if ($stylesheetsList) {
         foreach ($stylesheetsList as $stylesheetName => $stylesheetContents) {
-            $PL->stylesheet($stylesheetName, $stylesheetContents, ['feedback.php' => '', 'member.php' => 'profile']);
+            $PL->stylesheet(
+                $stylesheetName,
+                $stylesheetContents,
+                [URL => '', 'member.php' => 'profile']
+            );
         }
     }
 

@@ -1,0 +1,10 @@
+<hr/>
+<div>
+    <strong>{$ratingName}</strong>
+    <div class="ui large {$ratingClass} disabled rating" data-icon="star" data-rating="{$ratingValue}"
+         data-max-rating="{$ratingMaximumValue}" id="feedbackRating{$ratingID}"></div>
+    <script type="text/javascript">
+        $('#feedbackRating{$ratingID}').rating();
+    </script>
+    <div class="smalltext">{$ratingDescription}</div>
+</div>

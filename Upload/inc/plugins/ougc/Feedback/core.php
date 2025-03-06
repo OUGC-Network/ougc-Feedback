@@ -37,6 +37,8 @@ use function send_pm;
 
 use const ougc\Feedback\ROOT;
 
+const URL = 'feedback.php';
+
 function loadLanguage(bool $forceLoad = false): bool
 {
     global $lang;
@@ -85,6 +87,45 @@ function runHooks(string $hookName = '', array &$hookArguments = []): array
     return (array)$hookArguments;
 }
 
+function urlHandler(string $newUrl = ''): string
+{
+    static $setUrl = URL;
+
+    if (($newUrl = trim($newUrl))) {
+        $setUrl = $newUrl;
+    }
+
+    return $setUrl;
+}
+
+function urlHandlerSet(string $newUrl)
+{
+    urlHandler($newUrl);
+}
+
+function urlHandlerGet(): string
+{
+    return urlHandler();
+}
+
+function urlHandlerBuild(array $urlAppend = [], bool $fetchImportUrl = false, bool $encode = true): string
+{
+    global $PL;
+
+    if (!is_object($PL)) {
+        $PL or require_once PLUGINLIBRARY;
+    }
+
+    if ($fetchImportUrl === false) {
+        if ($urlAppend && !is_array($urlAppend)) {
+            $urlAppend = explode('=', $urlAppend);
+            $urlAppend = [$urlAppend[0] => $urlAppend[1]];
+        }
+    }
+
+    return $PL->url_append(urlHandlerGet(), $urlAppend, '&amp;', $encode);
+}
+
 function getSetting(string $settingKey = '')
 {
     global $mybb;
@@ -121,8 +162,8 @@ function getTemplate(string $templateName = '', bool $enableHTMLComments = true)
 }
 
 function trowError(
-    string $errorMessage,
-    string $errorTitle = '',
+    string $modalMessage,
+    string $modalTitle = '',
     bool $isSuccess = false,
     string $replacement = '',
     int $hide_add = 1
@@ -131,9 +172,9 @@ function trowError(
 
     loadLanguage();
 
-    $errorTitle = $errorTitle ?: $lang->error;
+    $modalTitle = $modalTitle ?: $lang->error;
 
-    $errorMessage = $errorMessage ?: $lang->message;
+    $modalMessage = $modalMessage ?: $lang->message;
 
     if ($isSuccess) {
         header('Content-type: application/json; charset=' . $lang->settings['charset']);
@@ -148,7 +189,7 @@ function trowError(
 
         echo json_encode($data);
     } else {
-        $errorMessage = eval(getTemplate('modal_error'));
+        $modalMessage = eval(getTemplate('modal_error'));
 
         $tfoot = backButtonGet();
 
@@ -294,27 +335,6 @@ function feedbackDelete(int $feedbackID): bool
     return true;
 }
 
-function ratingSyncUser(int $userID, int $ratingID, int $feedbackCode): bool
-{
-    global $db;
-
-    $query = $db->simple_select(
-        'ougc_feedback',
-        "AVG(ratingID{$ratingID}) AS averageRatingValue",
-        "userID='{$userID}' AND ratingTypeID='{$ratingID}' AND feedbackCode='{$feedbackCode}' AND feedbackStatus='1'"
-    );
-
-    $averageRatingValue = (float)$db->fetch_field($query, 'averageRatingValue');
-
-    $db->update_query(
-        'users',
-        [('ougcFeedbackRatingAverage' . $ratingID) => $averageRatingValue],
-        "uid='{$userID}'"
-    );
-
-    return true;
-}
-
 function sendPrivateMessage(array $privateMessageData, int $fromUserID = 0, bool $adminOverride = false): bool
 {
     global $mybb;
@@ -416,7 +436,21 @@ function feedbackUserSync(int $userID): bool
     $db->update_query('users', ['ougc_feedback' => $feedbackData], "uid='{$userID}'");
 
     foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-        ratingSyncUser($userID, $ratingID, (int)$ratingTypeData['feedbackCode']);
+        $feedbackCode = (int)$ratingTypeData['feedbackCode'];
+
+        $query = $db->simple_select(
+            'ougc_feedback',
+            "AVG(ratingID{$ratingID}) AS averageRatingValue",
+            "userID='{$userID}' AND feedbackCode='{$feedbackCode}' AND feedbackStatus='1'"
+        );
+
+        $averageRatingValue = (float)$db->fetch_field($query, 'averageRatingValue');
+
+        $db->update_query(
+            'users',
+            [('ougcFeedbackRatingAverage' . $ratingID) => $averageRatingValue],
+            "uid='{$userID}'"
+        );
     }
 
     return true;

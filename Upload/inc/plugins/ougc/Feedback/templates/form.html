@@ -1,6 +1,6 @@
 <div class="modal">
     <div style="overflow-y: auto; max-height: 400px;" class="modal_{$userID}_{$uniqueID}">
-        <form method="post" action="{$mybb->settings['bburl']}/feedback.php" id="ougcfeedback_form"
+        <form method="post" action="{$mybb->settings['bburl']}/{$formUrl}" id="ougcfeedback_form"
               class="feedback_{$userID}_{$uniqueID}"
               onsubmit="return OUGC_Feedback.{$method}">
             <input name="action" type="hidden" value="{$mybb->input['action']}"/>

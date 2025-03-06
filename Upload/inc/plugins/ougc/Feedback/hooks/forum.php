@@ -46,6 +46,10 @@ use function NewPoints\Core\language_load;
 use function Newpoints\Core\post_parser_parse_message;
 use function NewPoints\ContractsSystem\Core\get_contract;
 
+use function ougc\Feedback\Core\urlHandlerBuild;
+
+use function ougc\Feedback\Core\urlHandlerGet;
+
 use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\DEBUG;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
@@ -100,6 +104,8 @@ function global_intermediate(): bool
         $version = TIME_NOW;
     }
 
+    $feedbackSystemUrl = urlHandlerGet();
+
     $ougc_feedback_js = eval(getTemplate('js'));
 
     global $db;
@@ -150,6 +156,8 @@ function member_profile_end(): string
     }
 
     $userID = (int)$memprofile['uid'];
+
+    $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
 
     $statsData = getUserStats($userID);
 
@@ -275,6 +283,8 @@ function member_profile_end10(): bool
 
     $userID = (int)$memprofile['uid'];
 
+    $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
+
     $whereClauses = ["f.userID='{$userID}'"];
 
     if (!isModerator()) {
@@ -299,6 +309,8 @@ function member_profile_end10(): bool
     } else {
         $feedback_list = '';
 
+        $alternativeBackground = alt_trow(true);
+
         while ($feedbackData = $db->fetch_array($dbQuery)) {
             $feedbackType = (int)$feedbackData['feedbackType'];
 
@@ -307,6 +319,8 @@ function member_profile_end10(): bool
             $feedbackRate = (int)$feedbackData['feedbackValue'];
 
             $uniqueID = (int)$feedbackData['uniqueID'];
+
+            $feedbackCode = (int)$feedbackData['feedbackCode'];
 
             if (empty($feedbackData['feedbackUserID'])) {
                 $userName = $lang->guest;
@@ -369,9 +383,29 @@ function member_profile_end10(): bool
                 }
             }
 
-            _dump(12345);
+            $rating_rows = '';
+
+            foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+                if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode) {
+                    continue;
+                }
+
+                $ratingName = htmlspecialchars_uni($ratingTypeData['ratingName']);
+
+                $ratingDescription = htmlspecialchars_uni($ratingTypeData['ratingDescription']);
+
+                $ratingClass = htmlspecialchars_uni($ratingTypeData['ratingClass']);
+
+                $ratingMaximumValue = max(1, min(5, (int)$ratingTypeData['ratingMaximumValue']));
+
+                $ratingValue = (int)$feedbackData['ratingID' . $ratingID];
+
+                $rating_rows .= eval(getTemplate('profile_latest_row_rating'));
+            }
 
             $feedback_list .= eval(getTemplate('profile_latest_row'));
+
+            $alternativeBackground = alt_trow();
         }
 
         $viewAllLink = eval(getTemplate('profile_latest_view_all'));
@@ -540,6 +574,8 @@ function postbit(array &$post): array
 
     $post_perms = usergroup_permissions($post['usergroup'] . ',' . $post['additionalgroups']);
 
+    $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
+
     if ($mybb->usergroup['ougc_feedback_cangive'] && $post_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $post['uid']) {
         static $button_query_cache;
 
@@ -627,6 +663,8 @@ function memberlist_user(array &$userData): array
 
     $userData['feedback_average'] = eval(getTemplate('memberlist_average'));
 
+    $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
+
     $view_all = '';
 
     if ($mybb->usergroup['ougc_feedback_canview']) {
@@ -698,11 +736,18 @@ function modcp_reports_report(): bool
 
     $userData = get_user($report['id3']);
 
-    $reputation_link = "feedback.php?userID={$userData['uid']}&amp;feedbackID={$report['id']}";
+    $reputation_link = urlHandlerBuild(['userID' => $userData['uid'], 'feedbackID' => $report['id']]);
 
     $bad_user = build_profile_link($usercache[$report['id2']]['username'], $usercache[$report['id2']]['uid']);
 
-    $report_data['content'] = $lang->sprintf($lang->ougc_feedback_report_info, $reputation_link, $bad_user);
+    global $mybb;
+
+    $report_data['content'] = $lang->sprintf(
+        $lang->ougc_feedback_report_info,
+        $reputation_link,
+        $bad_user,
+        $mybb->settings['bburl']
+    );
 
     $good_user = build_profile_link($userData['username'], $userData['uid']);
 

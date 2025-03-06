@@ -33,16 +33,16 @@ let OUGC_Feedback = {
         });
     },
 
-    Add: function (userID, uniqueID, feedbackType, feedback, reload, feedbackComment, back_button, feedbackCode) {
-        let postData = 'action=add&userID=' + parseInt(userID) + '&uniqueID=' + parseInt(uniqueID) + '&feedbackType=' + parseInt(feedbackType) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&feedbackComment=' + String(feedbackComment) + '&back_button=' + parseInt(back_button) + '&feedbackCode=' + String(feedbackCode);
+    Add: function (userID, uniqueID, feedbackType, feedbackValue, reload, feedbackComment, back_button, feedbackCode) {
+        let postData = 'action=add&userID=' + parseInt(userID) + '&uniqueID=' + parseInt(uniqueID) + '&feedbackType=' + parseInt(feedbackType) + '&feedbackValue=' + parseInt(feedbackValue) + '&reload=' + parseInt(reload) + '&feedbackComment=' + String(feedbackComment) + '&back_button=' + parseInt(back_button) + '&feedbackCode=' + String(feedbackCode);
 
-        MyBB.popupWindow('/feedback.php?' + postData);
+        MyBB.popupWindow('/' + feedbackSystemUrl + '?' + postData);
     },
 
     Edit: function (feedbackID, reload, feedbackCode) {
         let postData = 'action=edit&feedbackID=' + parseInt(feedbackID) + '&reload=' + parseInt(reload) + '&feedbackCode=' + parseInt(feedbackCode);
 
-        MyBB.popupWindow('/feedback.php?' + postData);
+        MyBB.popupWindow('/' + feedbackSystemUrl + '?' + postData);
     },
 
     DoAdd: function (userID, uniqueID) {
@@ -53,7 +53,7 @@ let OUGC_Feedback = {
             {
                 type: 'post',
                 dataType: 'json',
-                url: 'feedback.php',
+                url: feedbackSystemUrl,
                 data: postData,
                 success: function (request) {
                     if (request.error) {
@@ -95,7 +95,7 @@ let OUGC_Feedback = {
             {
                 type: 'post',
                 dataType: 'json',
-                url: 'feedback.php',
+                url: feedbackSystemUrl,
                 data: postData,
                 success: function (request) {
                     if (request.error) {
@@ -147,7 +147,7 @@ let OUGC_Feedback = {
             let form = $('<form />',
                 {
                     method: 'post',
-                    action: 'feedback.php?action=delete' + postData,
+                    action: feedbackSystemUrl + '?action=delete' + postData,
                     style: 'display: none;'
                 });
 
@@ -183,7 +183,7 @@ let OUGC_Feedback = {
             let form = $('<form />',
                 {
                     method: 'post',
-                    action: 'feedback.php?action=restore',
+                    action: feedbackSystemUrl + '?action=restore',
                     style: 'display: none;'
                 });
 

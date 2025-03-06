@@ -81,7 +81,7 @@
     {$feedback_list}
     <tr>
         <td class="tfoot" align="right">
-            <form action="{$mybb->settings['bburl']}/feedback.php" method="get">
+            <form action="{$mybb->settings['bburl']}/{$formUrl}" method="get">
                 <input type="hidden" name="userID" value="{$userID}"/>
                 <select name="show">
                     <option value="all" {$show_selected_all}>{$lang->show_all}</option>

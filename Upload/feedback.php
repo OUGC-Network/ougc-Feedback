@@ -32,7 +32,6 @@ use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\feedbackInsert;
 use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
-use function ougc\Feedback\Core\ratingSyncUser;
 use function ougc\Feedback\Core\runHooks;
 use function ougc\Feedback\Core\sendEmail;
 use function ougc\Feedback\Core\backButtonSet;
@@ -41,6 +40,8 @@ use function ougc\Feedback\Core\sendPrivateMessage;
 use function ougc\Feedback\Core\trowError;
 use function ougc\Feedback\Core\trowSuccess;
 use function ougc\Feedback\Core\feedbackUpdate;
+use function ougc\Feedback\Core\urlHandlerBuild;
+use function ougc\Feedback\Core\urlHandlerGet;
 use function ougc\Feedback\Hooks\Forum\member_profile_end;
 use function ougc\Feedback\Hooks\Forum\postbit;
 
@@ -78,7 +79,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     $hook_arguments = [
         'processed' => &$processed,
-        'feedbackCode' => &$feedback_code,
+        'feedbackCode' => &$feedbackCode,
     ];
 
     $mybb->input['reload'] = $mybb->get_input('reload', MyBB::INPUT_INT);
@@ -89,9 +90,11 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     $uniqueID = $mybb->get_input('uniqueID', MyBB::INPUT_INT);
 
-    $feedback_code = $mybb->get_input('feedbackCode', MyBB::INPUT_INT);
+    $feedbackCode = $mybb->get_input('feedbackCode', MyBB::INPUT_INT);
 
     $feedbackUserID = $currentUserID;
+
+    $feedbackValue = 0;
 
     if ($edit) {
         if (!($feedbackData = feedbackGet($mybb->get_input('feedbackID', MyBB::INPUT_INT)))) {
@@ -103,6 +106,8 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         $uniqueID = (int)$feedbackData['uniqueID'];
 
         $feedbackID = (int)$feedbackData['feedbackID'];
+
+        $feedbackValue = (int)$feedbackData['feedbackValue'];
 
         $method = "DoEdit('{$feedbackData['userID']}', '{$uniqueID}', '{$feedbackID}')";
 
@@ -123,17 +128,22 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             'userID' => $userID,
             'feedbackUserID' => $feedbackUserID,
             'uniqueID' => $uniqueID,
-            'feedbackCode' => $feedback_code
+            'feedbackCode' => $feedbackCode
         ];
 
         foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+            if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
+                !is_member($ratingTypeData['allowedGroups'])) {
+                continue;
+            }
+
             $feedbackData['ratingID' . $ratingID] = 0;
         }
 
         $method = "DoAdd('{$feedbackData['userID']}', '{$uniqueID}')";
     }
 
-    switch ($feedback_code) {
+    switch ($feedbackCode) {
         case FEEDBACK_TYPE_PROFILE:
         case FEEDBACK_TYPE_POST:
             $uniqueID = 1;
@@ -143,11 +153,16 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
     if (!$edit || $mybb->request_method == 'post' || $mybb->get_input('back_button', MyBB::INPUT_INT)) {
         $feedbackData['feedbackType'] = $mybb->get_input('feedbackType', MyBB::INPUT_INT);
 
-        $feedbackData['feedbackValue'] = $mybb->get_input('feedbackValue', MyBB::INPUT_INT);
+        $feedbackValue = $mybb->get_input('feedbackValue', MyBB::INPUT_INT);
 
         $feedbackData['feedbackComment'] = $mybb->get_input('feedbackComment');
 
         foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+            if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
+                !is_member($ratingTypeData['allowedGroups'])) {
+                continue;
+            }
+
             $feedbackData['ratingID' . $ratingID] = $mybb->get_input('ratingID' . $ratingID, MyBB::INPUT_INT);
         }
     }
@@ -170,7 +185,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     $feedback_selected_positive = $feedback_selected_neutral = $feedback_selected_negative = '';
 
-    switch ((int)$feedbackData['feedbackValue']) {
+    switch ($feedbackValue) {
         case FEEDBACK_TYPE_POSITIVE:
             $feedback_selected_positive = ' selected="selected"';
             break;
@@ -215,7 +230,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         }
 
         if (!in_array(
-            $feedbackData['feedbackValue'],
+            $feedbackValue,
             [FEEDBACK_TYPE_NEGATIVE, FEEDBACK_TYPE_NEUTRAL, FEEDBACK_TYPE_POSITIVE]
         )) {
             trowError($lang->ougc_feedback_error_invalid_feedback_value);
@@ -249,7 +264,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
     $hook_arguments = runHooks('add_edit_intermediate', $hook_arguments);
 
     if (!$processed && !$edit && $uniqueID) {
-        $feedback_code = FEEDBACK_TYPE_POST;
+        $feedbackCode = FEEDBACK_TYPE_POST;
 
         if (!($post = get_post($uniqueID))) {
             backButtonSet(false);
@@ -349,7 +364,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
         $processed = true;
     } elseif (!$processed && !$edit) {
-        $feedback_code = FEEDBACK_TYPE_PROFILE;
+        $feedbackCode = FEEDBACK_TYPE_PROFILE;
 
         if (!$mybb->settings['ougc_feedback_allow_profile']) {
             backButtonSet(false);
@@ -460,7 +475,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
                     \ougc\Feedback\Core\send_alert(array());
                 }*/
 
-                if ($uniqueID && $feedback_code === FEEDBACK_TYPE_POST) {
+                if ($uniqueID && $feedbackCode === FEEDBACK_TYPE_POST) {
                     postbit($post);
                     $replacement = $post['ougc_feedback'];
                 } else {
@@ -494,7 +509,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
     $rating_rows = '';
 
     foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-        if ((int)$ratingTypeData['feedbackCode'] !== $feedback_code ||
+        if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
             !is_member($ratingTypeData['allowedGroups'])) {
             continue;
         }
@@ -524,6 +539,8 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
     $modalTitle = $lang->sprintf($lang->ougcFeedbackModalTitleProfileAdd, htmlspecialchars_uni($userData['username']));
 
     $feedbackCode = htmlspecialchars_uni($mybb->get_input('feedbackCode'));
+
+    $formUrl = urlHandlerGet();
 
     echo eval(getTemplate('form', false));
 
@@ -566,7 +583,10 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     feedbackUserSync($feedbackData['userID']);
 
-    redirect($mybb->settings['bburl'] . '/feedback.php?userID=' . $feedbackData['userID'], $lang->{$lang_string});
+    redirect(
+        $mybb->settings['bburl'] . '/' . urlHandlerBuild(['userID' => $feedbackData['userID']]),
+        $lang->{$lang_string}
+    );
 } elseif ($mybb->get_input('action') == 'restore') {
     // Verify incoming POST request
     verify_post_check($mybb->get_input('my_post_key'));
@@ -593,7 +613,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
     feedbackUserSync($feedbackData['userID']);
 
     redirect(
-        $mybb->settings['bburl'] . '/feedback.php?userID=' . $feedbackData['userID'],
+        $mybb->settings['bburl'] . '/' . urlHandlerBuild(['userID' => $feedbackData['userID']]),
         $lang->ougc_feedback_redirect_restored
     );
 }
@@ -865,7 +885,7 @@ $multipage = $feedback_count ? (string)multipage(
     $feedback_count,
     $perpage,
     $page,
-    $PL->url_append('feedback.php', $url_params)
+    urlHandlerBuild($url_params)
 ) : '';
 
 // Fetch the reputations which will be displayed on this page
@@ -1114,6 +1134,8 @@ if ($userData['ougc_feedback'] < 0) {
 } else {
     $total_class = '_neutral';
 }
+
+$formUrl = urlHandlerGet();
 
 $page = eval(getTemplate('page'));
 

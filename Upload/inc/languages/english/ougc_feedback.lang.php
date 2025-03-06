@@ -129,7 +129,7 @@ Cheers, {2}.';
 
 // Report center
 $l['report_reason_feedback'] = 'Report Feedback';
-$l['ougc_feedback_report_info'] = '<a href="{1}">Feedback</a> from {2}';
+$l['ougc_feedback_report_info'] = '<a href="{3}/{1}">Feedback</a> from {2}';
 $l['ougc_feedback_report_info_profile'] = '<br /><span class="smalltext">On {1}\'s profile</span';
 
 // Errors
