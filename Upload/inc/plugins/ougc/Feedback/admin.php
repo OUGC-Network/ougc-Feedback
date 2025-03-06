@@ -204,12 +204,18 @@ function pluginActivation(): bool
         ]
     ];
 
-    foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
-        $tableRatingFields['users']['ougcFeedbackRatingAverage' . $ratingTypeID] = [
+    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        $tableRatingFields['users']['ougcFeedbackRatingAverage' . $ratingID] = [
             'type' => 'DECIMAL',
             'unsigned' => true,
             'size' => '16,4',
             'default' => 0,
+        ];
+
+        $tableRatingFields['ougc_feedback']['ratingID' . $ratingID] = [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
         ];
     }
 
@@ -331,9 +337,9 @@ function pluginUninstallation(): bool
         }
     }
 
-    foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
-        if ($db->field_exists('ougcFeedbackRatingAverage' . $ratingTypeID, 'users')) {
-            $db->drop_column('users', 'ougcFeedbackRatingAverage' . $ratingTypeID);
+    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        if ($db->field_exists('ougcFeedbackRatingAverage' . $ratingID, 'users')) {
+            $db->drop_column('users', 'ougcFeedbackRatingAverage' . $ratingID);
         }
     }
 

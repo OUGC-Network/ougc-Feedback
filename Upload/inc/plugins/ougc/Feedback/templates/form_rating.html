@@ -1,33 +1,20 @@
 <tr>
-    <td class="{$alternativeBackground}" width="40%"><strong>{$ratingTypeName}</strong></td>
+    <td class="{$alternativeBackground}" width="40%"><strong>{$ratingName}</strong></td>
     <td class="{$alternativeBackground}">
-        <div class="ui large {$ratingTypeClass} rating" data-icon="star" data-rating="{$feedbackRatingValue}"
-             data-max-rating="{$ratingTypeMaximumRating}" id="feedbackRating{$ratingTypeID}"></div>
+        <div class="ui large {$ratingClass} rating" data-icon="star" data-rating="{$ratingValue}"
+             data-max-rating="{$ratingMaximumValue}" id="feedbackRating{$ratingID}"></div>
         <script type="text/javascript">
-            $('#feedbackRating{$ratingTypeID}').rating({
+            $('#feedbackRating{$ratingID}').rating({
                 clearable: false,
                 onRate: function (value) {
-                    $.ajax(
-                        {
-                            type: 'post',
-                            dataType: 'json',
-                            url: 'feedback.php',
-                            data: {
-                                action: 'rate',
-                                feedbackID: parseInt('{$feedbackID}'),
-                                ratingTypeID: parseInt('{$ratingTypeID}'),
-                                userID: parseInt('{$currentUserID}'),
-                                uniqueID: parseInt("{$feedbackUniqueID}"),
-                                feedbackCode: parseInt('{$feedback_code}'),
-                                ratingValue: parseInt(value)
-                            },
-                            success: function (request) {
-                                //console.log(request);
-                            }
-                        });
+                    $('<input>').attr({
+                        type: 'hidden',
+                        name: 'ratingID{$ratingID}',
+                        value: value
+                    }).appendTo('#ougcfeedback_form');
                 }
             });
         </script>
-        <div class="smalltext">{$ratingTypeDescription}</div>
+        <div class="smalltext">{$ratingDescription}</div>
     </td>
 </tr>

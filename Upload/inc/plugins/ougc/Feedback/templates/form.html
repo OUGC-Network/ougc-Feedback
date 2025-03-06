@@ -1,11 +1,11 @@
 <div class="modal">
-    <div style="overflow-y: auto; max-height: 400px;" class="modal_{$UserID}_{$feedbackUniqueID}">
+    <div style="overflow-y: auto; max-height: 400px;" class="modal_{$userID}_{$uniqueID}">
         <form method="post" action="{$mybb->settings['bburl']}/feedback.php" id="ougcfeedback_form"
-              class="feedback_{$UserID}_{$feedbackUniqueID}"
+              class="feedback_{$userID}_{$uniqueID}"
               onsubmit="return OUGC_Feedback.{$method}">
             <input name="action" type="hidden" value="{$mybb->input['action']}"/>
-            <input name="userID" type="hidden" value="{$UserID}"/>
-            <input name="uniqueID" type="hidden" value="{$feedbackUniqueID}"/>
+            <input name="userID" type="hidden" value="{$userID}"/>
+            <input name="uniqueID" type="hidden" value="{$uniqueID}"/>
             <input name="feedbackID" type="hidden" value="{$feedbackID}"/>
             <input name="my_post_key" type="hidden" value="{$mybb->post_code}"/>
             <input name="reload" type="hidden" value="{$mybb->input['reload']}"/>

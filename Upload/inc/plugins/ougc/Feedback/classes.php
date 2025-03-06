@@ -103,49 +103,6 @@ const TABLES_DATA = [
             'default' => 0
         ],
         // todo, legacy KEY uid (uid) skipped
-    ],
-    'ougc_feedback_ratings' => [
-        'ratingID' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'auto_increment' => true,
-            'primary_key' => true
-        ],
-        'ratingTypeID' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'feedbackID' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'userID' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'ratedUserID' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'uniqueID' => [
-            'type' => 'INT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'ratingValue' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 0
-        ],
-        'feedbackCode' => [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 0
-        ],
     ]
 ];
 
@@ -235,35 +192,35 @@ const FIELDS_DATA = [
 
 const RATING_TYPES = [
     1 => [
-        'ratingTypeName' => 'Content Quality',
-        'ratingTypeDescription' => 'Are you satisfied with the quality of the posts?',
-        'ratingTypeClass' => 'yellow',
-        'ratingTypeMaximumRating' => 5,
-        'feedbackCode' => 1,
+        'ratingName' => 'Content Quality',
+        'ratingDescription' => 'Are you satisfied with the quality of the posts?',
+        'ratingClass' => 'yellow',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_POST,
         'allowedGroups' => -1
     ],
     2 => [
-        'ratingTypeName' => 'Trusted User',
-        'ratingTypeDescription' => 'How trusted is the user perceived in the forums?',
-        'ratingTypeClass' => 'blue',
-        'ratingTypeMaximumRating' => 5,
-        'feedbackCode' => 2,
+        'ratingName' => 'Trusted User',
+        'ratingDescription' => 'How trusted is the user perceived in the forums?',
+        'ratingClass' => 'blue',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_PROFILE,
         'allowedGroups' => -1
     ],
     3 => [
-        'ratingTypeName' => 'Communication',
-        'ratingTypeDescription' => 'How well did the user communicate with you regarding support?',
-        'ratingTypeClass' => 'yellow',
-        'ratingTypeMaximumRating' => 5,
-        'feedbackCode' => 21,
+        'ratingName' => 'Communication',
+        'ratingDescription' => 'How well did the user communicate with you regarding support?',
+        'ratingClass' => 'yellow',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
         'allowedGroups' => -1
     ],
     4 => [
-        'ratingTypeName' => 'Value',
-        'ratingTypeDescription' => 'Are you satisfied with the quality of the product or service?',
-        'ratingTypeClass' => 'blue',
-        'ratingTypeMaximumRating' => 5,
-        'feedbackCode' => 21,
+        'ratingName' => 'Value',
+        'ratingDescription' => 'Are you satisfied with the quality of the product or service?',
+        'ratingClass' => 'blue',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
         'allowedGroups' => -1
     ],
 ];
@@ -274,6 +231,6 @@ class enums
 
     public function __construct()
     {
-        set_go_back_button();
+        backButtonSet();
     }
 }

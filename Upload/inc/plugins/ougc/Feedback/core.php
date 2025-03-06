@@ -33,6 +33,8 @@ namespace ougc\Feedback\Core;
 use MyBB;
 use pluginSystem;
 
+use function send_pm;
+
 use const ougc\Feedback\ROOT;
 
 function loadLanguage(bool $forceLoad = false): bool
@@ -72,15 +74,15 @@ function addHooks(string $namespace): bool
     return true;
 }
 
-function run_hooks(string $hook_name = '', array &$hook_arguments = []): array
+function runHooks(string $hookName = '', array &$hookArguments = []): array
 {
     global $plugins;
 
     if ($plugins instanceof pluginSystem) {
-        $hook_arguments = $plugins->run_hooks('ougc_feedback_' . $hook_name, $hook_arguments);
+        $hookArguments = $plugins->run_hooks('ougc_feedback_' . $hookName, $hookArguments);
     }
 
-    return (array)$hook_arguments;
+    return (array)$hookArguments;
 }
 
 function getSetting(string $settingKey = '')
@@ -118,15 +120,10 @@ function getTemplate(string $templateName = '', bool $enableHTMLComments = true)
     return $templates->render(getTemplateName($templateName), true, $enableHTMLComments);
 }
 
-function default_status(): int
-{
-    return 1;
-}
-
-function trow_error(
-    string $message,
-    string $title = '',
-    bool $success = false,
+function trowError(
+    string $errorMessage,
+    string $errorTitle = '',
+    bool $isSuccess = false,
     string $replacement = '',
     int $hide_add = 1
 ) {
@@ -134,11 +131,11 @@ function trow_error(
 
     loadLanguage();
 
-    $title = $title ?: $lang->error;
+    $errorTitle = $errorTitle ?: $lang->error;
 
-    $message = $message ?: $lang->message;
+    $errorMessage = $errorMessage ?: $lang->message;
 
-    if ($success) {
+    if ($isSuccess) {
         header('Content-type: application/json; charset=' . $lang->settings['charset']);
 
         $data = [
@@ -151,11 +148,9 @@ function trow_error(
 
         echo json_encode($data);
     } else {
-        $message = set_error($message);
+        $errorMessage = eval(getTemplate('modal_error'));
 
-        $message = eval(getTemplate('modal_error'));
-
-        $tfoot = get_go_back_button();
+        $tfoot = backButtonGet();
 
         echo eval(getTemplate('modal', false));
     }
@@ -163,42 +158,26 @@ function trow_error(
     exit;
 }
 
-function trow_success(string $message, string $title = '', string $replacement = '', int $hide_add = 1)
+function trowSuccess(string $successMessage, string $successTitle = '', string $replacement = '', int $hide_add = 1)
 {
     //set_go_back_button(false);
-    trow_error($message, $title, true, $replacement, $hide_add);
+    trowError($successMessage, $successTitle, true, $replacement, $hide_add);
 }
 
-function set_error(string $message = ''): string
+function backButtonSet(bool $backButtonSet = true): bool
 {
-    static $error = '';
+    static $backButtonShow = true;
 
-    if ($message !== '') {
-        $error = $message;
+    if ($backButtonSet !== true) {
+        $backButtonShow = false;
     }
 
-    return $error;
+    return $backButtonShow;
 }
 
-function get_error(): string
+function backButtonGet(): string
 {
-    return set_error();
-}
-
-function set_go_back_button(bool $set_go_back_button = true): bool
-{
-    static $go_back_button = true;
-
-    if ($set_go_back_button !== true) {
-        $go_back_button = false;
-    }
-
-    return $go_back_button;
-}
-
-function get_go_back_button(): string
-{
-    if (!set_go_back_button()) {
+    if (!backButtonSet()) {
         return '';
     }
 
@@ -214,58 +193,22 @@ function get_go_back_button(): string
 
     $feedbackComment = $mybb->get_input('feedbackComment');
 
-    $uid = set_data()['userID'];
+    global $feedbackData;
 
-    $unique_id = set_data()['uniqueID'];
+    $uid = $feedbackData['userID'];
+
+    $unique_id = $feedbackData['uniqueID'];
 
     $feedbackPluginCode = $mybb->get_input('feedbackCode', MyBB::INPUT_INT);
 
     return eval(getTemplate('modal_tfoot'));
 }
 
-function set_data(array $feedbackData = []): array
-{
-    static $data;
-
-    !isset($feedbackData['feedbackID']) || $data['feedbackID'] = (int)$feedbackData['feedbackID'];
-
-    !isset($feedbackData['feedbackID']) || $data['feedbackID'] = (int)$feedbackData['feedbackID'];
-
-    !isset($feedbackData['userID']) || $data['userID'] = (int)$feedbackData['userID'];
-
-    !isset($feedbackData['feedbackUserID']) || $data['feedbackUserID'] = (int)$feedbackData['feedbackUserID'];
-
-    !isset($feedbackData['uniqueID']) || $data['uniqueID'] = (int)$feedbackData['uniqueID'];
-
-    !isset($feedbackData['feedbackType']) || $data['feedbackType'] = (int)$feedbackData['feedbackType'];
-
-    !isset($feedbackData['feedbackValue']) || $data['feedbackValue'] = (int)$feedbackData['feedbackValue'];
-
-    !isset($feedbackData['feedbackComment']) || $data['feedbackComment'] = (string)$feedbackData['feedbackComment'];
-
-    !isset($feedbackData['feedbackStatus']) || $data['feedbackStatus'] = (int)$feedbackData['feedbackStatus'];
-
-    !isset($feedbackData['feedbackCode']) || $data['feedbackCode'] = (int)$feedbackData['feedbackCode'];
-
-    !isset($feedbackData['createStamp']) || $data['createStamp'] = TIME_NOW;
-
-    return $data;
-}
-
-function validate_feedback(): bool
-{
-    if (get_error() !== '') {
-        return false;
-    }
-
-    return true;
-}
-
-function fetch_feedback(int $fid): array
+function feedbackGet(int $feedbackID): array
 {
     global $db;
 
-    $query = $db->simple_select('ougc_feedback', '*', "feedbackID='{$fid}'");
+    $query = $db->simple_select('ougc_feedback', '*', "feedbackID='{$feedbackID}'");
 
     if ($db->num_rows($query)) {
         return $db->fetch_array($query);
@@ -274,165 +217,105 @@ function fetch_feedback(int $fid): array
     return [];
 }
 
-function insert_feedback(bool $update = false): int
+function feedbackInsert(array $feedbackData, bool $isUpdate = false, int $feedbackID = 0): int
 {
     global $db;
 
-    $feedbackData = set_data();
-
     $insert_data = [];
 
-    //!isset($feedbackData['feedbackID']) || $insert_data['feedbackID'] = (int)$feedbackData['feedbackID'];
-
-    !isset($feedbackData['userID']) || $insert_data['userID'] = (int)$feedbackData['userID'];
-
-    !isset($feedbackData['feedbackUserID']) || $insert_data['feedbackUserID'] = (int)$feedbackData['feedbackUserID'];
-
-    !isset($feedbackData['uniqueID']) || $insert_data['uniqueID'] = (int)$feedbackData['uniqueID'];
-
-    !isset($feedbackData['feedbackType']) || $insert_data['feedbackType'] = (int)$feedbackData['feedbackType'];
-
-    !isset($feedbackData['feedbackValue']) || $insert_data['feedbackValue'] = (int)$feedbackData['feedbackValue'];
-
-    !isset($feedbackData['feedbackComment']) || $insert_data['feedbackComment'] = $db->escape_string(
-        $feedbackData['feedbackComment']
-    );
-
-    !isset($feedbackData['feedbackStatus']) || $insert_data['feedbackStatus'] = (int)$feedbackData['feedbackStatus'];
-
-    !isset($feedbackData['feedbackCode']) || $insert_data['feedbackCode'] = (int)$feedbackData['feedbackCode'];
-
-    if (!$update) {
-        !isset($feedbackData['createStamp']) || $insert_data['createStamp'] = (int)$feedbackData['createStamp'];
+    if (isset($feedbackData['userID'])) {
+        $insert_data['userID'] = (int)$feedbackData['userID'];
     }
 
-    if ($update) {
-        enums::$feedbackID = $feedbackData['feedbackID'];
+    if (isset($feedbackData['feedbackUserID'])) {
+        $insert_data['feedbackUserID'] = (int)$feedbackData['feedbackUserID'];
+    }
 
-        $db->update_query('ougc_feedback', $insert_data, "feedbackID='{$feedbackData['feedbackID']}'");
-    } else {
+    if (isset($feedbackData['uniqueID'])) {
+        $insert_data['uniqueID'] = (int)$feedbackData['uniqueID'];
+    }
+
+    if (isset($feedbackData['feedbackType'])) {
+        $insert_data['feedbackType'] = (int)$feedbackData['feedbackType'];
+    }
+
+    if (isset($feedbackData['feedbackValue'])) {
+        $insert_data['feedbackValue'] = (int)$feedbackData['feedbackValue'];
+    }
+
+    if (isset($feedbackData['feedbackComment'])) {
+        $insert_data['feedbackComment'] = $db->escape_string($feedbackData['feedbackComment']);
+    }
+
+    if (isset($feedbackData['feedbackStatus'])) {
+        $insert_data['feedbackStatus'] = (int)$feedbackData['feedbackStatus'];
+    }
+
+    if (isset($feedbackData['feedbackCode'])) {
+        $insert_data['feedbackCode'] = (int)$feedbackData['feedbackCode'];
+    }
+
+    if (isset($feedbackData['createStamp'])) {
+        $insert_data['createStamp'] = (int)$feedbackData['createStamp'];
+    } elseif (!$isUpdate) {
         $insert_data['createStamp'] = TIME_NOW;
+    }
 
+    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        if (isset($feedbackData['ratingID' . $ratingID])) {
+            $insert_data['ratingID' . $ratingID] = (int)$feedbackData['ratingID' . $ratingID];
+        }
+    }
+
+    if ($isUpdate) {
+        enums::$feedbackID = $feedbackID;
+
+        $db->update_query('ougc_feedback', $insert_data, "feedbackID='{$feedbackID}'");
+    } else {
         enums::$feedbackID = (int)$db->insert_query('ougc_feedback', $insert_data);
     }
 
-    sync_user($insert_data['userID']);
-
-    set_data($feedbackData);
+    feedbackUserSync($insert_data['userID']);
 
     return enums::$feedbackID;
 }
 
-function update_feedback(): int
+function feedbackUpdate(array $feedbackData, int $feedbackID): int
 {
-    return insert_feedback(true);
+    return feedbackInsert($feedbackData, true, $feedbackID);
 }
 
-function delete_feedback(int $fid): bool
+function feedbackDelete(int $feedbackID): bool
 {
     global $db;
 
-    $db->delete_query('ougc_feedback', "feedbackID='{$fid}'");
+    $db->delete_query('ougc_feedback', "feedbackID='{$feedbackID}'");
 
     return true;
 }
 
-function ratingInsert(array $ratingData, bool $isUpdate = false, int $ratingID = 0): int
-{
-    global $db;
-
-    $replaceData = [];
-
-    if (isset($ratingData['ratingTypeID'])) {
-        $replaceData['ratingTypeID'] = (int)$ratingData['ratingTypeID'];
-    }
-
-    if (isset($ratingData['feedbackID'])) {
-        $replaceData['feedbackID'] = (int)$ratingData['feedbackID'];
-    }
-
-    if (isset($ratingData['userID'])) {
-        $replaceData['userID'] = (int)$ratingData['userID'];
-    }
-
-    if (isset($ratingData['ratedUserID'])) {
-        $replaceData['ratedUserID'] = (int)$ratingData['ratedUserID'];
-    }
-
-    if (isset($ratingData['uniqueID'])) {
-        $replaceData['uniqueID'] = (int)$ratingData['uniqueID'];
-    }
-
-    if (isset($ratingData['ratingValue'])) {
-        $replaceData['ratingValue'] = (int)$ratingData['ratingValue'];
-    }
-
-    if (isset($ratingData['feedbackCode'])) {
-        $replaceData['feedbackCode'] = (int)$ratingData['feedbackCode'];
-    }
-
-    if ($isUpdate) {
-        $db->update_query('ougc_feedback_ratings', $replaceData, "ratingID='{$ratingID}'");
-
-        return 0;
-    } else {
-        return (int)$db->insert_query('ougc_feedback_ratings', $replaceData);
-    }
-}
-
-function ratingUpdate(array $ratingData, int $ratingID): int
-{
-    return ratingInsert($ratingData, true, $ratingID);
-}
-
-function ratingGet(array $whereClauses, array $queryFields = [], array $queryOptions = []): array
+function ratingSyncUser(int $userID, int $ratingID, int $feedbackCode): bool
 {
     global $db;
 
     $query = $db->simple_select(
-        'ougc_feedback_ratings',
-        implode(',', array_merge(['ratingID'], $queryFields)),
-        implode(' AND ', $whereClauses),
-        $queryOptions
-    );
-
-    if (isset($queryOptions['limit']) && $queryOptions['limit'] === 1) {
-        return (array)$db->fetch_array($query);
-    }
-
-    $ratingObjects = [];
-
-    while ($ratingData = $db->fetch_array($query)) {
-        $ratingObjects[(int)$ratingData['ratingID']] = $ratingData;
-    }
-
-    return $ratingObjects;
-}
-
-function ratingSyncUser(int $ratedUserID, int $ratingTypeID): bool
-{
-    global $db;
-
-    $db->delete_query('ougc_feedback_ratings', "feedbackID<'1'");
-
-    $query = $db->simple_select(
-        'ougc_feedback_ratings',
-        'AVG(ratingValue) AS averageRatingValue',
-        "ratedUserID='{$ratedUserID}' AND ratingTypeID='{$ratingTypeID}'"
+        'ougc_feedback',
+        "AVG(ratingID{$ratingID}) AS averageRatingValue",
+        "userID='{$userID}' AND ratingTypeID='{$ratingID}' AND feedbackCode='{$feedbackCode}' AND feedbackStatus='1'"
     );
 
     $averageRatingValue = (float)$db->fetch_field($query, 'averageRatingValue');
 
     $db->update_query(
         'users',
-        [('ougcFeedbackRatingAverage' . $ratingTypeID) => $averageRatingValue],
-        "uid='{$ratedUserID}'"
+        [('ougcFeedbackRatingAverage' . $ratingID) => $averageRatingValue],
+        "uid='{$userID}'"
     );
 
     return true;
 }
 
-function send_pm(array $pm, int $fromid = 0, bool $admin_override = false): bool
+function sendPrivateMessage(array $privateMessageData, int $fromUserID = 0, bool $adminOverride = false): bool
 {
     global $mybb;
 
@@ -442,12 +325,12 @@ function send_pm(array $pm, int $fromid = 0, bool $admin_override = false): bool
 
     global $session;
 
-    $pm['ipaddress'] = $pm['ipaddress'] ?? $session->packedip;
+    $privateMessageData['ipaddress'] = $privateMessageData['ipaddress'] ?? $session->packedip;
 
-    return \send_pm($pm, $fromid, $admin_override);
+    return send_pm($privateMessageData, $fromUserID, $adminOverride);
 }
 
-function send_email(array $email): bool
+function sendEmail(array $emailData): bool
 {
     global $mybb, $db, $lang;
 
@@ -456,46 +339,50 @@ function send_email(array $email): bool
     }
 
     // Load language
-    if ($email['language'] != $mybb->user['language'] && $lang->language_exists($email['language'])) {
+    if ($emailData['language'] != $mybb->user['language'] && $lang->language_exists($emailData['language'])) {
         $reset_lang = true;
 
-        $lang->set_language($email['language']);
+        $lang->set_language($emailData['language']);
 
         loadLanguage(true);
     }
 
     foreach (['subject', 'message'] as $key) {
-        $lang_string = $email[$key];
+        $lang_string = $emailData[$key];
 
-        if (is_array($email[$key])) {
-            $num_args = count($email[$key]);
+        if (is_array($emailData[$key])) {
+            $num_args = count($emailData[$key]);
 
             for ($i = 1; $i < $num_args; $i++) {
-                $lang->{$email[$key][0]} = str_replace('{' . $i . '}', $email[$key][$i], $lang->{$email[$key][0]});
+                $lang->{$emailData[$key][0]} = str_replace(
+                    '{' . $i . '}',
+                    $emailData[$key][$i],
+                    $lang->{$emailData[$key][0]}
+                );
             }
 
-            $lang_string = $email[$key][0];
+            $lang_string = $emailData[$key][0];
         }
 
-        $email[$key] = $lang->{$lang_string};
+        $emailData[$key] = $lang->{$lang_string};
     }
 
-    if (!$email['subject'] || !$email['message'] || !$email['to']) {
+    if (!$emailData['subject'] || !$emailData['message'] || !$emailData['to']) {
         return false;
     }
 
-    my_mail($email['to'], $email['subject'], $email['message'], $email['from']);
+    my_mail($emailData['to'], $emailData['subject'], $emailData['message'], $emailData['from']);
 
     // Log the message
     if ($mybb->settings['mail_logging']) {
         $entry = [
-            'subject' => $db->escape_string($email['subject']),
-            'message' => $db->escape_string($email['message']),
+            'subject' => $db->escape_string($emailData['subject']),
+            'message' => $db->escape_string($emailData['message']),
             'createStamp' => TIME_NOW,
             'fromuid' => 0,
-            'fromemail' => $db->escape_string($email['from']),
-            'touid' => $email['touid'],
-            'toemail' => $db->escape_string($email['to']),
+            'fromemail' => $db->escape_string($emailData['from']),
+            'touid' => $emailData['touid'],
+            'toemail' => $db->escape_string($emailData['to']),
             'tid' => 0,
             'ipaddress' => $db->escape_binary($mybb->session->packedip),
             'type' => 1
@@ -514,19 +401,23 @@ function send_email(array $email): bool
     return true;
 }
 
-function sync_user(int $uid): bool
+function feedbackUserSync(int $userID): bool
 {
     global $db;
 
     $query = $db->simple_select(
         'ougc_feedback',
         'SUM(feedbackValue) AS totalFeedback',
-        "userID='{$uid}' AND feedbackStatus='1'"
+        "userID='{$userID}' AND feedbackStatus='1'"
     );
 
     $feedbackData = (int)$db->fetch_field($query, 'totalFeedback');
 
-    $db->update_query('users', ['ougc_feedback' => $feedbackData], "uid='{$uid}'");
+    $db->update_query('users', ['ougc_feedback' => $feedbackData], "uid='{$userID}'");
+
+    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        ratingSyncUser($userID, $ratingID, (int)$ratingTypeData['feedbackCode']);
+    }
 
     return true;
 }

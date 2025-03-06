@@ -40,8 +40,8 @@ use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\getUserStats;
 use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
-use function ougc\Feedback\Core\set_go_back_button;
-use function ougc\Feedback\Core\trow_error;
+use function ougc\Feedback\Core\backButtonSet;
+use function ougc\Feedback\Core\trowError;
 use function NewPoints\Core\language_load;
 use function Newpoints\Core\post_parser_parse_message;
 use function NewPoints\ContractsSystem\Core\get_contract;
@@ -222,19 +222,19 @@ function member_profile_end(): string
 
     $rating_rows = '';
 
-    foreach (RATING_TYPES as $ratingTypeID => $ratingTypeData) {
-        $ratingTypeName = $lang->sprintf(
+    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        $ratingName = $lang->sprintf(
             $lang->ougc_feedback_profile_rating,
-            htmlspecialchars_uni($ratingTypeData['ratingTypeName'])
+            htmlspecialchars_uni($ratingTypeData['ratingName'])
         );
 
-        $ratingTypeDescription = htmlspecialchars_uni($ratingTypeData['ratingTypeDescription']);
+        $ratingDescription = htmlspecialchars_uni($ratingTypeData['ratingDescription']);
 
-        $ratingTypeClass = htmlspecialchars_uni($ratingTypeData['ratingTypeClass']);
+        $ratingClass = htmlspecialchars_uni($ratingTypeData['ratingClass']);
 
-        $ratingTypeMaximumRating = max(1, min(5, (int)$ratingTypeData['ratingTypeMaximumRating']));
+        $ratingMaximumValue = max(1, min(5, (int)$ratingTypeData['ratingMaximumValue']));
 
-        $feedbackRatingValue = (float)($memprofile['ougcFeedbackRatingAverage' . $ratingTypeID] ?? 0);
+        $ratingValue = (float)($memprofile['ougcFeedbackRatingAverage' . $ratingID] ?? 0);
 
         $rating_rows .= eval(getTemplate('profile_rating'));
 
@@ -297,20 +297,16 @@ function member_profile_end10(): bool
 
         $viewAllLink = '';
     } else {
-        $feedbackCache = [];
-
-        while ($feedbackData = $db->fetch_array($dbQuery)) {
-            $feedbackCache[(int)$feedbackData['feedbackID']] = $feedbackData;
-        }
-
-        $feedbackIDs = array_keys($feedbackCache);
-
         $feedback_list = '';
 
-        foreach ($feedbackCache as $feedbackData) {
+        while ($feedbackData = $db->fetch_array($dbQuery)) {
+            $feedbackType = (int)$feedbackData['feedbackType'];
+
             $feedbackID = (int)$feedbackData['feedbackID'];
 
             $feedbackRate = (int)$feedbackData['feedbackValue'];
+
+            $uniqueID = (int)$feedbackData['uniqueID'];
 
             if (empty($feedbackData['feedbackUserID'])) {
                 $userName = $lang->guest;
@@ -372,6 +368,8 @@ function member_profile_end10(): bool
                     ]);
                 }
             }
+
+            _dump(12345);
 
             $feedback_list .= eval(getTemplate('profile_latest_row'));
         }
@@ -912,9 +910,9 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
     language_load('contracts_system');
 
     if (!enableContractSystemIntegration()) {
-        set_go_back_button(false);
+        backButtonSet(false);
 
-        trow_error($lang->ougcContractSystemErrorsFeedbackDisabled);
+        trowError($lang->ougcContractSystemErrorsFeedbackDisabled);
 
         return $hookArguments;
     }
@@ -926,9 +924,9 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
     $contractData = get_contract($contractID);
 
     if (empty($contractData['contract_id'])) {
-        set_go_back_button(false);
+        backButtonSet(false);
 
-        trow_error($lang->ougcContractSystemErrorsInvalidContract);
+        trowError($lang->ougcContractSystemErrorsInvalidContract);
 
         return $hookArguments;
     }
@@ -942,9 +940,9 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
     $feedbackUserID = (int)$hookArguments['feedback_data']['userID'];
 
     if (!in_array($currentUserID, [$offerorUserID, $offereeUserID]) || $feedbackUserID === $currentUserID) {
-        set_go_back_button(false);
+        backButtonSet(false);
 
-        trow_error($lang->newpoints_contracts_system_errors_invaliduser);
+        trowError($lang->newpoints_contracts_system_errors_invaliduser);
 
         return $hookArguments;
     }
@@ -977,7 +975,7 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
         !in_array($contractType, [FEEDBACK_TYPE_SELLER, FEEDBACK_TYPE_BUYER]) ||
         $contractType !== $feedbackType
     ) {
-        trow_error($lang->ougcContractSystemErrorsFeedbackInvalidType);
+        trowError($lang->ougcContractSystemErrorsFeedbackInvalidType);
 
         return $hookArguments;
     }
@@ -997,9 +995,9 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
         $dbQuery = $db->simple_select('ougc_feedback', 'feedbackID', implode(' AND ', $whereClauses));
 
         if ($db->num_rows($dbQuery)) {
-            set_go_back_button(false);
+            backButtonSet(false);
 
-            trow_error($lang->ougcContractSystemErrorsFeedbackDuplicated);
+            trowError($lang->ougcContractSystemErrorsFeedbackDuplicated);
 
             return $hookArguments;
         }
