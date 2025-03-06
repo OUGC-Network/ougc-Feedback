@@ -46,7 +46,6 @@ let OUGC_Feedback = {
     },
 
     DoAdd: function (userID, uniqueID) {
-        // Get form, serialize it and send it
         let postData = $('.feedback_' + parseInt(userID) + '_' + parseInt(uniqueID)).serialize();
 
         $.ajax(
@@ -88,7 +87,6 @@ let OUGC_Feedback = {
     },
 
     DoEdit: function (userID, uniqueID, feedbackID) {
-        // Get form, serialize it and send it
         let postData = $('.feedback_' + parseInt(userID) + '_' + parseInt(uniqueID)).serialize();
 
         $.ajax(

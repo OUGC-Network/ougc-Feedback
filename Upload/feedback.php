@@ -45,28 +45,31 @@ use function ougc\Feedback\Core\urlHandlerGet;
 use function ougc\Feedback\Hooks\Forum\member_profile_end;
 use function ougc\Feedback\Hooks\Forum\postbit;
 
+use const ougc\Feedback\Core\FEEDBACK_STATUS_ACTIVE;
+use const ougc\Feedback\Core\FEEDBACK_STATUS_SOFT_DELETED;
+use const ougc\Feedback\Core\FEEDBACK_STATUS_UNAPPROVED;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE;
+use const ougc\Feedback\Core\FEEDBACK_VALUE_NEGATIVE;
+use const ougc\Feedback\Core\FEEDBACK_VALUE_NEUTRAL;
+use const ougc\Feedback\Core\FEEDBACK_VALUE_POSITIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
+use const ougc\Feedback\Core\POST_VISIBILITY_APPROVED;
+use const ougc\Feedback\Core\POST_VISIBILITY_SOFT_DELETED;
+use const ougc\Feedback\Core\POST_VISIBILITY_UNAPPROVED;
 use const ougc\Feedback\Core\RATING_TYPES;
 
 const IN_MYBB = 1;
 
 const THIS_SCRIPT = 'feedback.php';
 
-$templatelist = 'ougcfeedback_page_item_edit, ougcfeedback_page_item_delete, ougcfeedback_page_item_delete_hard, ougcfeedback_page_item_report, ougcfeedback_page_item, ougcfeedback_page_addlink, ougcfeedback_page';
+$templatelist = 'ougcfeedback_js, ougcfeedback_page_item_edit, ougcfeedback_page_item_delete, ougcfeedback_page_item_delete_hard, ougcfeedback_page_item_report, ougcfeedback_page_item_rating, ougcfeedback_page_item, ougcfeedback_page_addlink, ougcfeedback_page';
 
 require_once './global.php';
 
 global $mybb, $lang, $db, $templates, $cache;
-global $PL;
-
-$PL || require_once PLUGINLIBRARY;
 
 loadLanguage();
 
@@ -75,10 +78,10 @@ $currentUserID = (int)$mybb->user['uid'];
 if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit') {
     $edit = $mybb->get_input('action') == 'edit';
 
-    $processed = false;
+    $feedbackProcessed = false;
 
-    $hook_arguments = [
-        'processed' => &$processed,
+    $hookArguments = [
+        'feedbackProcessed' => &$feedbackProcessed,
         'feedbackCode' => &$feedbackCode,
     ];
 
@@ -96,8 +99,25 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     $feedbackValue = 0;
 
+    $feedbackFields = [
+        'feedbackComment',
+        'feedbackStatus',
+        'feedbackType',
+        'userID',
+        'feedbackUserID',
+        'uniqueID',
+        'feedbackCode',
+        'feedbackValue'
+    ];
+
+    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        $feedbackFields[] = 'ratingID' . $ratingID;
+    }
+
     if ($edit) {
-        if (!($feedbackData = feedbackGet($mybb->get_input('feedbackID', MyBB::INPUT_INT)))) {
+        $feedbackID = $mybb->get_input('feedbackID', MyBB::INPUT_INT);
+
+        if (!($feedbackData = feedbackGet(["feedbackID='{$feedbackID}'"], $feedbackFields, ['limit' => 1]))) {
             backButtonSet(false);
 
             trowError($lang->ougc_feedback_error_invalid_feedback_value);
@@ -105,9 +125,9 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
         $uniqueID = (int)$feedbackData['uniqueID'];
 
-        $feedbackID = (int)$feedbackData['feedbackID'];
-
         $feedbackValue = (int)$feedbackData['feedbackValue'];
+
+        $feedbackCode = (int)$feedbackData['feedbackCode'];
 
         $method = "DoEdit('{$feedbackData['userID']}', '{$uniqueID}', '{$feedbackID}')";
 
@@ -117,7 +137,6 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
         $feedbackUserID = (int)$feedbackData['feedbackUserID'];
 
-        // users can add but they can't edit.
         if (!$currentUserID) {
             backButtonSet(false);
 
@@ -132,11 +151,6 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         ];
 
         foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-            if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
-                !is_member($ratingTypeData['allowedGroups'])) {
-                continue;
-            }
-
             $feedbackData['ratingID' . $ratingID] = 0;
         }
 
@@ -145,33 +159,34 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     switch ($feedbackCode) {
         case FEEDBACK_TYPE_PROFILE:
+            $uniqueID = 0;
+            break;
         case FEEDBACK_TYPE_POST:
-            $uniqueID = 1;
+            $uniqueID = 1; // todo, seems like a placeholder
             break;
     }
 
+    $feedbackType = (int)$feedbackData['feedbackType'];
+
+    $feedbackComment = $feedbackData['feedbackComment'];
+
     if (!$edit || $mybb->request_method == 'post' || $mybb->get_input('back_button', MyBB::INPUT_INT)) {
-        $feedbackData['feedbackType'] = $mybb->get_input('feedbackType', MyBB::INPUT_INT);
+        $feedbackType = $mybb->get_input('feedbackType', MyBB::INPUT_INT);
 
         $feedbackValue = $mybb->get_input('feedbackValue', MyBB::INPUT_INT);
 
-        $feedbackData['feedbackComment'] = $mybb->get_input('feedbackComment');
+        $feedbackComment = $mybb->get_input('feedbackComment');
 
         foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-            if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
-                !is_member($ratingTypeData['allowedGroups'])) {
-                continue;
-            }
-
             $feedbackData['ratingID' . $ratingID] = $mybb->get_input('ratingID' . $ratingID, MyBB::INPUT_INT);
         }
     }
 
-    $hook_arguments['feedback_data'] = &$feedbackData;
+    $hookArguments['feedback_data'] = &$feedbackData;
 
     $type_selected_buyer = $type_selected_seller = $type_selected_trader = '';
 
-    switch ((int)$feedbackData['feedbackType']) {
+    switch ($feedbackType) {
         case FEEDBACK_TYPE_BUYER:
             $type_selected_buyer = ' selected="selected"';
             break;
@@ -186,13 +201,13 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
     $feedback_selected_positive = $feedback_selected_neutral = $feedback_selected_negative = '';
 
     switch ($feedbackValue) {
-        case FEEDBACK_TYPE_POSITIVE:
+        case FEEDBACK_VALUE_POSITIVE:
             $feedback_selected_positive = ' selected="selected"';
             break;
-        case FEEDBACK_TYPE_NEUTRAL:
+        case FEEDBACK_VALUE_NEUTRAL:
             $feedback_selected_neutral = ' selected="selected"';
             break;
-        case FEEDBACK_TYPE_NEGATIVE:
+        case FEEDBACK_VALUE_NEGATIVE:
             $feedback_selected_negative = ' selected="selected"';
             break;
     }
@@ -203,7 +218,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         trowError($lang->ougc_feedback_error_invalid_user);
     }
 
-    $user_perms = usergroup_permissions($userData['usergroup'] . ',' . $userData['additionalgroups']);
+    $userPermissions = usergroup_permissions($userData['usergroup'] . ',' . $userData['additionalgroups']);
 
     if ($edit) {
         if (!($mybb->usergroup['ougc_feedback_canedit'] && $currentUserID == $feedbackUserID) &&
@@ -213,7 +228,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             trowError($lang->error_nopermission_user_ajax);
         }
     } else {
-        if (!$mybb->usergroup['ougc_feedback_cangive'] || !$user_perms['ougc_feedback_canreceive']) {
+        if (empty($mybb->usergroup['ougc_feedback_cangive']) || empty($userPermissions['ougc_feedback_canreceive'])) {
             backButtonSet(false);
 
             trowError($lang->error_nopermission_user_ajax);
@@ -225,18 +240,21 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             trowError($lang->ougc_feedback_error_invalid_self_user);
         }
 
-        if (!in_array($feedbackData['feedbackType'], [1, 2, 3])) {
+        if (!in_array($feedbackType, [FEEDBACK_TYPE_BUYER, FEEDBACK_TYPE_SELLER, FEEDBACK_TYPE_TRADER])) {
             trowError($lang->ougc_feedback_error_invalid_type);
         }
 
         if (!in_array(
             $feedbackValue,
-            [FEEDBACK_TYPE_NEGATIVE, FEEDBACK_TYPE_NEUTRAL, FEEDBACK_TYPE_POSITIVE]
+            [FEEDBACK_VALUE_NEGATIVE, FEEDBACK_VALUE_NEUTRAL, FEEDBACK_VALUE_POSITIVE]
         )) {
             trowError($lang->ougc_feedback_error_invalid_feedback_value);
         }
 
-        if (!in_array($feedbackData['feedbackStatus'], [-1, 0, 1])) {
+        if (!in_array(
+            $feedbackData['feedbackStatus'],
+            [FEEDBACK_STATUS_SOFT_DELETED, FEEDBACK_STATUS_UNAPPROVED, FEEDBACK_STATUS_ACTIVE]
+        )) {
             trowError($lang->ougc_feedback_error_invalid_status);
         }
 
@@ -261,11 +279,9 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     $hide_add = 0;
 
-    $hook_arguments = runHooks('add_edit_intermediate', $hook_arguments);
+    $hookArguments = runHooks('add_edit_intermediate', $hookArguments);
 
-    if (!$processed && !$edit && $uniqueID) {
-        $feedbackCode = FEEDBACK_TYPE_POST;
-
+    if (!$feedbackProcessed && $feedbackCode === FEEDBACK_TYPE_POST) {
         if (!($post = get_post($uniqueID))) {
             backButtonSet(false);
 
@@ -278,10 +294,10 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             trowError($lang->ougc_feedback_error_invalid_post);
         }
 
-        if (($post['visible'] == 0 && !is_moderator(
-                    $post['fid'],
-                    'canviewunapprove'
-                )) || ($post['visible'] == -1 && !is_moderator($post['fid'], 'canviewdeleted'))) {
+        $postVisibleStatus = (int)$post['visible'];
+
+        if (($postVisibleStatus === POST_VISIBILITY_UNAPPROVED && !is_moderator($post['fid'], 'canviewunapprove')) ||
+            ($postVisibleStatus === POST_VISIBILITY_SOFT_DELETED && !is_moderator($post['fid'], 'canviewdeleted'))) {
             backButtonSet(false);
 
             trowError($lang->ougc_feedback_error_invalid_post);
@@ -317,10 +333,11 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             trowError($lang->ougc_feedback_error_invalid_post);
         }
 
-        if (($thread['visible'] != 1 && !is_moderator($post['fid'])) || ($thread['visible'] == 0 && !is_moderator(
-                    $post['fid'],
-                    'canviewunapprove'
-                )) || ($thread['visible'] == -1 && !is_moderator($post['fid'], 'canviewdeleted'))) {
+        $threadVisibleStatus = (int)$thread['visible'];
+
+        if (($threadVisibleStatus !== POST_VISIBILITY_APPROVED && !is_moderator($post['fid'])) ||
+            ($threadVisibleStatus === POST_VISIBILITY_UNAPPROVED && !is_moderator($post['fid'], 'canviewunapprove')) ||
+            ($threadVisibleStatus === POST_VISIBILITY_SOFT_DELETED && !is_moderator($post['fid'], 'canviewdeleted'))) {
             backButtonSet(false);
 
             trowError($lang->ougc_feedback_error_invalid_post);
@@ -328,7 +345,6 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
         $forumpermissions = forum_permissions($post['fid']);
 
-        // Does the user have permission to view this thread?
         if (!$forumpermissions['canview'] || !$forumpermissions['canviewthreads']) {
             backButtonSet(false);
 
@@ -341,7 +357,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             trowError($lang->error_nopermission_user_ajax);
         }
 
-        check_forum_password($post['fid']); // this should at least stop the script
+        check_forum_password($post['fid']);
 
         $where = [
             "userID='{$userID}'", /*"feedbackUserID!='0'", */
@@ -350,9 +366,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             "feedbackStatus='1'"
         ];
 
-        $query = $db->simple_select('ougc_feedback', 'feedbackID', implode(' AND ', $where));
-
-        if ($db->num_rows($query)) {
+        if (feedbackGet($where, [], ['limit' => 1])) {
             backButtonSet(false);
 
             trowError($lang->ougc_feedback_error_post_multiple_disabled);
@@ -362,17 +376,15 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             $hide_add = 1;
         }
 
-        $processed = true;
-    } elseif (!$processed && !$edit) {
-        $feedbackCode = FEEDBACK_TYPE_PROFILE;
-
-        if (!$mybb->settings['ougc_feedback_allow_profile']) {
+        $feedbackProcessed = true;
+    } elseif (!$feedbackProcessed && $feedbackCode === FEEDBACK_TYPE_PROFILE) {
+        if (empty($mybb->settings['ougc_feedback_allow_profile'])) {
             backButtonSet(false);
 
             trowError($lang->ougc_feedback_error_profile_disabled);
         }
 
-        if (!$mybb->settings['ougc_feedback_allow_profile_multiple']) {
+        if (empty($mybb->settings['ougc_feedback_allow_profile_multiple'])) {
             $where = [
                 "userID='{$userID}'", /*"feedbackUserID!='0'", */
                 "feedbackUserID='{$feedbackUserID}'"
@@ -382,9 +394,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
                 $where[] = "feedbackStatus='1'";
             }
 
-            $query = $db->simple_select('ougc_feedback', 'feedbackID', implode(' AND ', $where));
-
-            if ($db->fetch_field($query, 'feedbackID')) {
+            if (feedbackGet($where, [], ['limit' => 1])) {
                 backButtonSet(false);
 
                 trowError($lang->ougc_feedback_error_profile_multiple_disabled);
@@ -393,22 +403,20 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             $hide_add = (int)$mybb->settings['ougc_feedback_profile_hide_add'];
         }
 
-        $processed = true;
+        $feedbackProcessed = true;
     }
 
     $comments_minlength = (int)$mybb->settings['ougc_feedback_comments_minlength'];
 
     $comments_maxlength = (int)$mybb->settings['ougc_feedback_comments_maxlength'];
 
-    // POST request
     if ($mybb->request_method == 'post') {
-        // Verify incoming POST request
         verify_post_check($mybb->get_input('my_post_key'));
 
-        $message_count = my_strlen($feedbackData['feedbackComment']);
+        $message_count = my_strlen($feedbackComment);
 
         if ($comments_maxlength < 1) {
-            $feedbackData['feedbackComment'] = '';
+            $feedbackComment = '';
         } elseif ($message_count < $comments_minlength || $message_count > $comments_maxlength) {
             backButtonSet();
 
@@ -422,11 +430,33 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             );
         }
 
-        $hook_arguments = runHooks('add_edit_do_start', $hook_arguments);
+        $hookArguments = runHooks('add_edit_do_start', $hookArguments);
 
-        if ($processed) {
+        if ($feedbackProcessed) {
+            $insertData = [
+                'feedbackComment' => $feedbackComment,
+                'feedbackStatus' => FEEDBACK_STATUS_ACTIVE,
+                'feedbackType' => $feedbackType,
+                'userID' => $userID,
+                'feedbackUserID' => $feedbackUserID,
+                'uniqueID' => $uniqueID,
+                'feedbackCode' => $feedbackCode,
+                'feedbackValue' => $feedbackValue
+            ];
+
+            foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+                if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
+                    !is_member($ratingTypeData['allowedGroups'])) {
+                    continue;
+                }
+
+                if (isset($mybb->input['ratingID' . $ratingID])) {
+                    $insertData['ratingID' . $ratingID] = $mybb->get_input('ratingID' . $ratingID, MyBB::INPUT_INT);
+                }
+            }
+
             if ($edit) {
-                $feedbackID = feedbackUpdate($feedbackData, $feedbackID);
+                feedbackUpdate($insertData, $feedbackID);
 
                 feedbackUserSync($userID);
 
@@ -434,8 +464,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
                 trowSuccess($lang->ougc_feedback_success_feedback_edited);
             } else {
-                // Insert feedback
-                $feedbackID = feedbackInsert($feedbackData);
+                $feedbackID = feedbackInsert($insertData);
 
                 feedbackUserSync($userID);
 
@@ -499,7 +528,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
     $alternativeBackground = alt_trow(true);
 
     if ($comments_maxlength > 0) {
-        $feedbackComment = htmlspecialchars_uni($feedbackData['feedbackComment']);
+        $feedbackComment = htmlspecialchars_uni($feedbackComment);
 
         $comment_row = eval(getTemplate('form_comment', false));
 
@@ -536,28 +565,38 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         $lang->ougc_feedback_profile_add = $lang->ougc_feedback_profile_edit;
     }
 
-    $modalTitle = $lang->sprintf($lang->ougcFeedbackModalTitleProfileAdd, htmlspecialchars_uni($userData['username']));
-
-    $feedbackCode = htmlspecialchars_uni($mybb->get_input('feedbackCode'));
+    if ($edit) {
+        $modalTitle = $lang->sprintf(
+            $lang->ougcFeedbackModalTitleProfileUpdate,
+            htmlspecialchars_uni($userData['username'])
+        );
+    } else {
+        $modalTitle = $lang->sprintf(
+            $lang->ougcFeedbackModalTitleProfileAdd,
+            htmlspecialchars_uni($userData['username'])
+        );
+    }
 
     $formUrl = urlHandlerGet();
 
     echo eval(getTemplate('form', false));
 
     exit;
-
-    // Send an error to the browser
-    //$ougcFeedback->send_form($form);
 } elseif ($mybb->get_input('action') == 'delete') {
-    // Verify incoming POST request
     verify_post_check($mybb->get_input('my_post_key'));
 
-    // users can add but they can't delete.
     if (!$currentUserID) {
         error_no_permission();
     }
 
-    if (!($feedbackData = feedbackGet($mybb->get_input('feedbackID', MyBB::INPUT_INT)))) {
+    $feedbackID = $mybb->get_input('feedbackID', MyBB::INPUT_INT);
+
+    $feedbackFields = [
+        'userID',
+        'feedbackUserID'
+    ];
+
+    if (!($feedbackData = feedbackGet(["feedbackID='{$feedbackID}'"], $feedbackFields, ['limit' => 1]))) {
         error($lang->ougc_feedback_error_invalid_feedback);
     }
 
@@ -588,15 +627,20 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         $lang->{$lang_string}
     );
 } elseif ($mybb->get_input('action') == 'restore') {
-    // Verify incoming POST request
     verify_post_check($mybb->get_input('my_post_key'));
 
-    // users can add but they can't delete.
     if (!$currentUserID) {
         error_no_permission();
     }
 
-    if (!($feedbackData = feedbackGet($mybb->get_input('feedbackID', MyBB::INPUT_INT)))) {
+    $feedbackID = $mybb->get_input('feedbackID', MyBB::INPUT_INT);
+
+    $feedbackFields = [
+        'userID',
+        'feedbackUserID'
+    ];
+
+    if (!($feedbackData = feedbackGet(["feedbackID='{$feedbackID}'"], $feedbackFields, ['limit' => 1]))) {
         error($lang->ougc_feedback_error_invalid_feedback);
     }
 
@@ -622,7 +666,7 @@ require_once MYBB_ROOT . 'inc/class_parser.php';
 
 $parser = new postParser();
 
-if (!$mybb->usergroup['canviewprofiles'] || !$mybb->usergroup['ougc_feedback_canview']) {
+if (empty($mybb->usergroup['canviewprofiles']) || empty($mybb->usergroup['ougc_feedback_canview'])) {
     error_no_permission();
 }
 
@@ -650,7 +694,6 @@ $userData['displaygroup'] = $userData['displaygroup'] ?: $userData['usergroup'];
 
 $display_group = usergroup_displaygroup($userData['displaygroup']);
 
-// Get user title
 $usertitle = '';
 
 if (trim($userData['usertitle'])) {
@@ -671,17 +714,14 @@ if (trim($userData['usertitle'])) {
 
 $usertitle = htmlspecialchars_uni($usertitle);
 
-// Start building a where clause
 $where = ["f.userID='{$userID}'"];
 
 if (!isModerator()) {
     $where[] = "f.feedbackStatus='1'";
 }
 
-// Start building the url params
 $url_params = ['userID' => $userID];
 
-// Build the show filter selected array
 $show_selected_all = $show_selected_positive = $show_selected_neutral = $show_selected_negative = $show_selected_given = '';
 
 switch ($mybb->get_input('show')) {
@@ -726,7 +766,6 @@ if ($mybb->get_input('feedbackID', MyBB::INPUT_INT)) {
     $url_params['feedbackID'] = $mybb->get_input('feedbackID', MyBB::INPUT_INT);
 }
 
-// Build the sort filter selected array
 $sort_selected_username = $sort_selected_last_updated = '';
 
 switch ($mybb->get_input('sort')) {
@@ -766,7 +805,6 @@ $statsData = [];
 
 $where_stats = array_merge($where, ["f.feedbackStatus='1'"]);
 
-// Get the total amount of feedbackValue
 $query = $db->simple_select(
     'ougc_feedback f',
     'COUNT(f.feedbackID) AS totalFeedbackCount',
@@ -777,7 +815,6 @@ $statsData['total'] = $db->fetch_field($query, 'totalFeedbackCount');
 
 $feedbackPostCode = FEEDBACK_TYPE_POST;
 
-// Get the total amount of feedbackValue from posts
 $query = $db->simple_select(
     'ougc_feedback f',
     'COUNT(f.feedbackID) AS total_posts_feedback',
@@ -786,12 +823,10 @@ $query = $db->simple_select(
 
 $statsData['posts'] = $db->fetch_field($query, 'total_posts_feedback');
 
-// Get the total amount of feedbackValue from users
 $statsData['members'] = ($statsData['total'] - $statsData['posts']);
 
 $statsData = array_map('my_number_format', $statsData);
 
-// Set default count variables to 0
 $positive_count = $negative_count = $neutral_count = 0;
 
 $positive_week = $negative_week = $neutral_week = 0;
@@ -800,19 +835,25 @@ $positive_month = $negative_month = $neutral_month = 0;
 
 $positive_6months = $negative_6months = $neutral_6months = 0;
 
-// Unix timestamps for when this week, month and last 6 months started
 $last_week = TIME_NOW - 604800;
 
 $last_month = TIME_NOW - 2678400;
 
 $last_6months = TIME_NOW - 16070400;
 
-// Query reputations for the "reputation card"
-$query = $db->simple_select('ougc_feedback f', 'f.feedbackValue, f.createStamp', implode(' AND ', $where_stats));
+// Query reputations for the "reputation card" table
+foreach (
+    feedbackGet(
+        array_map(function (string $whereClause): string {
+            return str_replace('f.', '', $whereClause);
+        }, $where_stats),
+        ['feedbackValue, createStamp']
+    ) as $feedbackData
+) {
+    $feedbackValue = (int)$feedbackData['feedbackValue'];
 
-while ($feedbackData = $db->fetch_array($query)) {
-    switch ($feedbackData['feedbackValue']) {
-        case -1:
+    switch ($feedbackValue) {
+        case FEEDBACK_VALUE_NEGATIVE:
             $negative_count++;
 
             if ($feedbackData['createStamp'] >= $last_week) {
@@ -825,7 +866,7 @@ while ($feedbackData = $db->fetch_array($query)) {
                 $negative_6months++;
             }
             break;
-        case 0:
+        case FEEDBACK_VALUE_NEUTRAL:
             $neutral_count++;
 
             if ($feedbackData['createStamp'] >= $last_week) {
@@ -838,7 +879,7 @@ while ($feedbackData = $db->fetch_array($query)) {
                 $neutral_6months++;
             }
             break;
-        case 1:
+        case FEEDBACK_VALUE_POSITIVE:
             $positive_count++;
 
             if ($feedbackData['createStamp'] >= $last_week) {
@@ -854,10 +895,13 @@ while ($feedbackData = $db->fetch_array($query)) {
     }
 }
 
-// Build multipage
-$query = $db->simple_select('ougc_feedback f', 'COUNT(f.feedbackID) AS feedback_count', implode(' AND ', $where));
-
-$feedback_count = $db->fetch_field($query, 'feedback_count');
+$feedback_count = feedbackGet(
+    array_map(function (string $whereClause): string {
+        return str_replace('f.', '', $whereClause);
+    }, $where),
+    ['COUNT(feedbackID) AS feedback_count'],
+    ['limit' => 1]
+)['feedback_count'] ?? 0;
 
 $perpage = (int)$mybb->settings['ougc_feedback_perpage'];
 
@@ -888,19 +932,17 @@ $multipage = $feedback_count ? (string)multipage(
     urlHandlerBuild($url_params)
 ) : '';
 
-// Fetch the reputations which will be displayed on this page
-$query = $db->query(
-    '
-	SELECT f.*, u.username AS user_username, u.usergroup AS user_usergroup, u.displaygroup AS user_displaygroup
-	FROM ' . TABLE_PREFIX . 'ougc_feedback f
-	LEFT JOIN ' . TABLE_PREFIX . 'users u ON (u.uid=f.feedbackUserID)
-	WHERE ' . implode(' AND ', $where) . "
-	ORDER BY {$order}
-	LIMIT {$start}, {$perpage}
-"
+$query = $db->simple_select(
+    "ougc_feedback f LEFT JOIN {$db->table_prefix}users u ON (u.uid=f.feedbackUserID)",
+    'f.*, u.username AS user_username, u.usergroup AS user_usergroup, u.displaygroup AS user_displaygroup',
+    implode(' AND ', $where),
+    [
+        'limit_start' => $start,
+        'limit' => $perpage,
+        'order_by' => $order
+    ]
 );
 
-// Gather a list of items that have post reputation
 $feedback_cache = $post_cache = $post_feedback = [];
 
 while ($feedbackData = $db->fetch_array($query)) {
@@ -908,7 +950,6 @@ while ($feedbackData = $db->fetch_array($query)) {
 
     $uniqueID = (int)$feedbackData['uniqueID'];
 
-    // If this is a post, hold it and gather some information about it
     if ($uniqueID && !isset($post_cache[$uniqueID])) {
         $post_cache[$uniqueID] = $uniqueID;
     }
@@ -929,33 +970,30 @@ if (!empty($post_cache)) {
         $where_post[] = "p.fid NOT IN ({$inactive})";
     }
 
-    if (!$mybb->user['ismoderator']) {
+    if (!is_moderator(0, '', $currentUserID)) {
         $where_post[] = "p.visible='1'";
 
         $where_post[] = "t.visible='1'";
     }
 
-    $query = $db->query(
-        '
-		SELECT p.pid, p.uid, p.fid, p.visible, p.message, t.tid, t.subject, t.visible AS thread_visible
-		FROM ' . TABLE_PREFIX . 'posts p
-		LEFT JOIN ' . TABLE_PREFIX . 'threads t ON (t.tid=p.tid)
-		WHERE ' . implode(' AND ', $where_post) . '
-	'
+    $query = $db->simple_select(
+        "posts p LEFT JOIN {$db->table_prefix}threads t ON (t.tid=p.tid)",
+        'p.pid, p.uid, p.fid, p.visible, p.message, t.tid, t.subject, t.visible AS thread_visible',
+        implode(' AND ', $where_post)
     );
 
     while ($post = $db->fetch_array($query)) {
-        if (($post['visible'] == 0 || $post['thread_visible'] == 0) && !is_moderator(
-                $post['fid'],
-                'canviewunapprove'
-            )) {
+        $postVisibleStatus = (int)$post['visible'];
+
+        $threadVisibleStatus = (int)$post['thread_visible'];
+
+        if (($postVisibleStatus === POST_VISIBILITY_UNAPPROVED || $threadVisibleStatus === POST_VISIBILITY_UNAPPROVED) &&
+            !is_moderator($post['fid'], 'canviewunapprove')) {
             continue;
         }
 
-        if (($post['visible'] == -1 || $post['thread_visible'] == -1) && !is_moderator(
-                $post['fid'],
-                'canviewdeleted'
-            )) {
+        if (($postVisibleStatus === POST_VISIBILITY_SOFT_DELETED || $threadVisibleStatus === POST_VISIBILITY_SOFT_DELETED) &&
+            !is_moderator($post['fid'], 'canviewdeleted')) {
             continue;
         }
 
@@ -963,12 +1001,16 @@ if (!empty($post_cache)) {
     }
 }
 
+$alternativeBackground = alt_trow(true);
+
 $feedback_list = '';
 
 foreach ($feedback_cache as $feedbackData) {
     $feedbackID = (int)$feedbackData['feedbackID'];
 
     $feedback_post_given = '';
+
+    $feedbackCode = (int)$feedbackData['feedbackCode'];
 
     if (!empty($uniqueID)) {
         $feedback_post_given = $lang->sprintf($lang->ougc_feedback_page_post_nolink, $userData['username']);
@@ -980,7 +1022,12 @@ foreach ($feedback_cache as $feedbackData) {
 
             $subject = htmlspecialchars_uni($parser->parse_badwords($post['subject']));
 
-            $thread_link = $lang->sprintf($lang->ougc_feedback_page_post_given_thread, $thread_link, $subject);
+            $thread_link = $lang->sprintf(
+                $lang->ougc_feedback_page_post_given_thread,
+                $thread_link,
+                $subject,
+                $mybb->settings['bburl']
+            );
 
             $link = get_post_link($uniqueID) . '#pid' . $uniqueID;
 
@@ -988,33 +1035,38 @@ foreach ($feedback_cache as $feedbackData) {
                 $lang->ougc_feedback_page_post_given,
                 $link,
                 $userData['username'],
-                $thread_link
+                $thread_link,
+                $mybb->settings['bburl']
             );
         }
     }
 
-    switch ($feedbackData['feedbackType']) {
-        case 1:
+    $feedbackType = (int)$feedbackData['feedbackType'];
+
+    switch ($feedbackType) {
+        case FEEDBACK_TYPE_BUYER:
             $vote_type = $lang->ougc_feedback_page_type_buyer;
             break;
-        case 2:
+        case FEEDBACK_TYPE_SELLER:
             $vote_type = $lang->ougc_feedback_page_type_seller;
             break;
-        case 3:
+        case FEEDBACK_TYPE_TRADER:
             $vote_type = $lang->ougc_feedback_page_type_trader;
             break;
     }
 
-    switch ($feedbackData['feedbackValue']) {
-        case -1:
+    $feedbackValue = (int)$feedbackData['feedbackValue'];
+
+    switch ($feedbackValue) {
+        case FEEDBACK_VALUE_NEGATIVE:
             $stylingClasses = ['status' => 'trow_reputation_negative', 'type' => 'reputation_negative'];
             $vote_type .= $lang->ougc_feedback_profile_negative;
             break;
-        case 0:
+        case FEEDBACK_VALUE_NEUTRAL:
             $stylingClasses = ['status' => 'trow_reputation_neutral', 'type' => 'reputation_neutral'];
             $vote_type .= $lang->ougc_feedback_profile_neutral;
             break;
-        case 1:
+        case FEEDBACK_VALUE_POSITIVE:
             $stylingClasses = ['status' => 'trow_reputation_positive', 'type' => 'reputation_positive'];
             $vote_type .= $lang->ougc_feedback_profile_positive;
             break;
@@ -1053,7 +1105,9 @@ foreach ($feedback_cache as $feedbackData) {
         );
     }
 
-    if ($feedbackData['feedbackComment']) {
+    $feedbackComment = $feedbackData['feedbackComment'];
+
+    if ($feedbackComment) {
         $parser_options = [
             'allow_html' => 0,
             'allow_mycode' => 0,
@@ -1062,9 +1116,9 @@ foreach ($feedback_cache as $feedbackData) {
             'filter_badwords' => 1,
         ];
 
-        $feedbackData['feedbackComment'] = $parser->parse_message($feedbackData['feedbackComment'], $parser_options);
+        $feedbackComment = $parser->parse_message($feedbackComment, $parser_options);
     } else {
-        $feedbackData['feedbackComment'] = $lang->ougc_feedback_no_comment;
+        $feedbackComment = $lang->ougc_feedback_no_comment;
     }
 
     $edit_link = $delete_link = $delete_hard_link = $report_link = '';
@@ -1091,7 +1145,29 @@ foreach ($feedback_cache as $feedbackData) {
         $report_link = eval(getTemplate('page_item_report'));
     }
 
+    $rating_rows = '';
+
+    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode) {
+            continue;
+        }
+
+        $ratingName = htmlspecialchars_uni($ratingTypeData['ratingName']);
+
+        $ratingDescription = htmlspecialchars_uni($ratingTypeData['ratingDescription']);
+
+        $ratingClass = htmlspecialchars_uni($ratingTypeData['ratingClass']);
+
+        $ratingMaximumValue = max(1, min(5, (int)$ratingTypeData['ratingMaximumValue']));
+
+        $ratingValue = (int)$feedbackData['ratingID' . $ratingID];
+
+        $rating_rows .= eval(getTemplate('page_item_rating'));
+    }
+
     $feedback_list .= eval(getTemplate('page_item'));
+
+    $alternativeBackground = alt_trow();
 }
 
 if (!$feedback_list) {
@@ -1100,12 +1176,12 @@ if (!$feedback_list) {
 
 $add_feedback = '';
 
-$user_perms = usergroup_permissions($userData['usergroup'] . ',' . $userData['additionalgroups']);
+$userPermissions = usergroup_permissions($userData['usergroup'] . ',' . $userData['additionalgroups']);
 
-if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_feedback_cangive'] && $user_perms['ougc_feedback_canreceive'] && $currentUserID !== $userID) {
+if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_feedback_cangive'] && $userPermissions['ougc_feedback_canreceive'] && $currentUserID !== $userID) {
     $show = true;
 
-    if (!$mybb->settings['ougc_feedback_allow_profile_multiple'] && $mybb->settings['ougc_feedback_profile_hide_add']) {
+    if (empty($mybb->settings['ougc_feedback_allow_profile_multiple']) && !empty($mybb->settings['ougc_feedback_profile_hide_add'])) {
         $where = [
             "userID='{$userID}'", /*"feedbackUserID!='0'", */
             "feedbackUserID='{$currentUserID}'"
@@ -1115,12 +1191,12 @@ if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_fee
             $where[] = "feedbackStatus='1'";
         }
 
-        $query = $db->simple_select('ougc_feedback', 'feedbackID', implode(' AND ', $where));
-
-        if ($db->fetch_field($query, 'feedbackID')) {
+        if (feedbackGet($where, [], ['limit' => 1])) {
             $show = false;
         }
     }
+
+    $feedbackCode = FEEDBACK_TYPE_PROFILE;
 
     if ($show) {
         $add_feedback = eval(getTemplate('page_addlink'));

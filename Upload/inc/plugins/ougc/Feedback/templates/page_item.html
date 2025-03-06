@@ -1,9 +1,10 @@
 <tr>
-    <td class="trow1 {$stylingClasses['status']}" id="feedbackID{$feedbackData['feedbackID']}">
+    <td class="{$alternativeBackground} {$stylingClasses['status']}" id="feedbackID{$feedbackData['feedbackID']}">
         {$report_link}{$edit_link}{$delete_hard_link}{$delete_link}
         {$feedbackData['user_username']} <span class="smalltext">{$last_updated}<br/>{$feedback_post_given}</span>
         <br/>
         <strong class="{$stylingClasses['type']}">{$vote_type} ({$feedbackData['feedbackValue']}):</strong>
         {$feedbackData['feedbackComment']}
+        {$rating_rows}
     </td>
 </tr>

@@ -35,6 +35,7 @@ use MyBB;
 use postParser;
 
 use function ougc\Feedback\Core\enableContractSystemIntegration;
+use function ougc\Feedback\Core\feedbackGet;
 use function ougc\Feedback\Core\getSetting;
 use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\getUserStats;
@@ -42,20 +43,18 @@ use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
 use function ougc\Feedback\Core\backButtonSet;
 use function ougc\Feedback\Core\trowError;
+use function ougc\Feedback\Core\urlHandlerBuild;
+use function ougc\Feedback\Core\urlHandlerGet;
 use function NewPoints\Core\language_load;
 use function Newpoints\Core\post_parser_parse_message;
 use function NewPoints\ContractsSystem\Core\get_contract;
 
-use function ougc\Feedback\Core\urlHandlerBuild;
-
-use function ougc\Feedback\Core\urlHandlerGet;
-
 use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\DEBUG;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_NEGATIVE;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_NEUTRAL;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_POSITIVE;
+use const ougc\Feedback\Core\FEEDBACK_VALUE_NEGATIVE;
+use const ougc\Feedback\Core\FEEDBACK_VALUE_NEUTRAL;
+use const ougc\Feedback\Core\FEEDBACK_VALUE_POSITIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
 use const ougc\Feedback\Core\RATING_TYPES;
@@ -79,15 +78,14 @@ function global_start(): bool
 
     switch (THIS_SCRIPT) {
         case 'member.php':
-            $templatelist .= ',ougcfeedback_profile,ougcfeedback_profile_add,ougcfeedback_add,ougcfeedback_add_comment,ougcfeedback_profile_average, ougcfeedback_profile_view_all';
-            $templatelist .= ', ougcfeedback_profile_latest_row, ougcfeedback_profile_latest_empty, ougcfeedback_profile_latest_view_all, ougcfeedback_profile_latest';
+            $templatelist .= ', ougcfeedback_profile_average, ougcfeedback_profile_add, ougcfeedback_profile_rating, ougcfeedback_profile_view_all, ougcfeedback_profile, ougcfeedback_profile_latest_row_rating, ougcfeedback_profile_latest_row, ougcfeedback_profile_latest_view_all, ougcfeedback_profile_latest';
             break;
         case 'showthread.php':
         case 'newthread.php':
         case 'newreply.php':
         case 'editpost.php':
         case 'private.php':
-            $templatelist .= ',ougcfeedback_postbit, ougcfeedback_postbit_average, ougcfeedback_postbit_button';
+            $templatelist .= ', ougcfeedback_postbit_view_all, ougcfeedback_postbit_average, ougcfeedback_postbit, ougcfeedback_postbit_button';
             break;
     }
 
@@ -113,10 +111,10 @@ function global_intermediate(): bool
 
     $ougcFeedbackCounterPositive = $ougcFeedbackCounterNeutral = $ougcFeedbackCounterNegative = 0;
 
-    $userID = (int)$mybb->user['uid'];
+    $currentUserID = (int)$mybb->user['uid'];
 
     $whereClauses = [
-        "userID='{$userID}'",
+        "userID='{$currentUserID}'",
         "feedbackStatus='1'"
     ];
 
@@ -127,14 +125,16 @@ function global_intermediate(): bool
     );
 
     while ($feedbackData = $db->fetch_array($dbQuery)) {
-        switch ((int)$feedbackData['feedbackValue']) {
-            case FEEDBACK_TYPE_POSITIVE:
+        $feedbackValue = (int)$feedbackData['feedbackValue'];
+
+        switch ($feedbackValue) {
+            case FEEDBACK_VALUE_POSITIVE:
                 ++$ougcFeedbackCounterPositive;
                 break;
-            case FEEDBACK_TYPE_NEUTRAL:
+            case FEEDBACK_VALUE_NEUTRAL:
                 ++$ougcFeedbackCounterNeutral;
                 break;
-            case FEEDBACK_TYPE_NEGATIVE:
+            case FEEDBACK_VALUE_NEGATIVE:
                 ++$ougcFeedbackCounterNegative;
                 break;
         }
@@ -175,14 +175,16 @@ function member_profile_end(): string
 
     $trow = 'trow1';
 
-    $memprofile_perms = usergroup_permissions($memprofile['usergroup'] . ',' . $memprofile['additionalgroups']);
+    $userPermissions = usergroup_permissions($memprofile['usergroup'] . ',' . $memprofile['additionalgroups']);
 
     $alternativeBackground = alt_trow(true);
+
+    $currentUserID = (int)$mybb->user['uid'];
 
     if (
         getSetting('allow_profile') &&
         $mybb->usergroup['ougc_feedback_cangive'] &&
-        $memprofile_perms['ougc_feedback_canreceive'] &&
+        $userPermissions['ougc_feedback_canreceive'] &&
         $mybb->user['uid'] != $userID
     ) {
         $show = true;
@@ -191,16 +193,14 @@ function member_profile_end(): string
             $where = [
                 "userID='{$userID}'",
                 /*"feedbackUserID!='0'", */
-                "feedbackUserID='{$mybb->user['uid']}'"
+                "feedbackUserID='{$currentUserID}'"
             ];
 
             if (!isModerator()) {
                 $where[] = "feedbackStatus='1'";
             }
 
-            $query = $db->simple_select('ougc_feedback', 'feedbackID', implode(' AND ', $where));
-
-            if ($db->fetch_field($query, 'feedbackID')) {
+            if (feedbackGet($where, [], ['limit' => 1])) {
                 $show = false;
             }
         }
@@ -316,7 +316,7 @@ function member_profile_end10(): bool
 
             $feedbackID = (int)$feedbackData['feedbackID'];
 
-            $feedbackRate = (int)$feedbackData['feedbackValue'];
+            $feedbackValue = (int)$feedbackData['feedbackValue'];
 
             $uniqueID = (int)$feedbackData['uniqueID'];
 
@@ -339,27 +339,27 @@ function member_profile_end10(): bool
                 );
             }
 
-            switch ($feedbackData['feedbackValue']) {
-                case FEEDBACK_TYPE_NEGATIVE:
-                    $statusClass = 'trow_reputation_negative';
+            switch ($feedbackValue) {
+                case FEEDBACK_VALUE_NEGATIVE:
+                    $feedbackStatusClass = 'trow_reputation_negative';
 
-                    $typeClass = 'reputation_negative';
+                    $feedbackClass = 'reputation_negative';
 
-                    $rateType = $lang->ougc_feedback_profile_negative;
+                    $feedbackType = $lang->ougc_feedback_profile_negative;
                     break;
-                case FEEDBACK_TYPE_NEUTRAL:
-                    $statusClass = 'trow_reputation_neutral';
+                case FEEDBACK_VALUE_NEUTRAL:
+                    $feedbackStatusClass = 'trow_reputation_neutral';
 
-                    $typeClass = 'reputation_neutral';
+                    $feedbackClass = 'reputation_neutral';
 
-                    $rateType = $lang->ougc_feedback_profile_neutral;
+                    $feedbackType = $lang->ougc_feedback_profile_neutral;
                     break;
-                case FEEDBACK_TYPE_POSITIVE:
-                    $statusClass = 'trow_reputation_positive';
+                case FEEDBACK_VALUE_POSITIVE:
+                    $feedbackStatusClass = 'trow_reputation_positive';
 
-                    $typeClass = 'reputation_positive';
+                    $feedbackClass = 'reputation_positive';
 
-                    $rateType = $lang->ougc_feedback_profile_positive;
+                    $feedbackType = $lang->ougc_feedback_profile_positive;
                     break;
             }
 
@@ -416,19 +416,21 @@ function member_profile_end10(): bool
     return true;
 }
 
-function postbit(array &$post): array
+function postbit(array &$postData): array
 {
     global $db, $templates, $theme, $lang, $mybb, $pids;
 
     loadLanguage();
 
-    $userID = (int)$post['uid'];
+    $userID = (int)$postData['uid'];
 
-    $postID = (int)$post['pid'];
+    $postID = (int)$postData['pid'];
 
-    $post['ougc_feedback'] = $post['ougc_feedback_button'] = $post['ougc_feedback_average'] = '';
+    $postData['ougc_feedback'] = $postData['ougc_feedback_button'] = $postData['ougc_feedback_average'] = '';
 
-    $show = (bool)is_member(getSetting('showin_forums'), ['usergroup' => $post['fid'], 'additionalgroups' => '']);
+    $show = (bool)is_member(getSetting('showin_forums'), ['usergroup' => $postData['fid'], 'additionalgroups' => '']);
+
+    $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
 
     if ($show && getSetting('showin_postbit')) {
         static $query_cache;
@@ -446,9 +448,10 @@ function postbit(array &$post): array
                 $where[] = "feedbackStatus='1'";
             }*/
 
-            if ($plugins->current_hook == 'postbit' && $mybb->get_input(
-                    'mode'
-                ) != 'threaded' && !empty($pids) && THIS_SCRIPT != 'newreply.php') {
+            if ($plugins->current_hook == 'postbit' &&
+                $mybb->get_input('mode') != 'threaded' &&
+                !empty($pids) &&
+                THIS_SCRIPT != 'newreply.php') {
                 $uids = [];
 
                 $query = $db->simple_select(
@@ -463,7 +466,7 @@ function postbit(array &$post): array
 
                 $where[] = "userID IN ('" . implode("','", $uids) . "')";
             } else {
-                $where[] = "userID='{$post['uid']}'";
+                $where[] = "userID='{$postData['uid']}'";
             }
 
             $query = $db->simple_select(
@@ -493,21 +496,22 @@ function postbit(array &$post): array
             'negative_users' => []
         ];
 
-        if (!empty($query_cache[$post['uid']])) {
-            foreach ($query_cache[$post['uid']] as $feedbackData) {
+        if (!empty($query_cache[$postData['uid']])) {
+            foreach ($query_cache[$postData['uid']] as $feedbackData) {
                 ++$statsData['total'];
 
-                $feedbackData['feedbackValue'] = (int)$feedbackData['feedbackValue'];
-                switch ((int)$feedbackData['feedbackValue']) {
-                    case 1:
+                $feedbackValue = (int)$feedbackData['feedbackValue'];
+
+                switch ($feedbackValue) {
+                    case FEEDBACK_VALUE_POSITIVE:
                         ++$statsData['positive'];
                         $statsData['positive_users'][$feedbackData['feedbackUserID']] = 1;
                         break;
-                    case 0:
+                    case FEEDBACK_VALUE_NEUTRAL:
                         ++$statsData['neutral'];
                         $statsData['neutral_users'][$feedbackData['feedbackUserID']] = 1;
                         break;
-                    case -1:
+                    case FEEDBACK_VALUE_NEGATIVE:
                         ++$statsData['negative'];
                         $statsData['negative_users'][$feedbackData['feedbackUserID']] = 1;
                         break;
@@ -551,51 +555,56 @@ function postbit(array &$post): array
 
         $average = my_number_format($average);
 
-        $post['ougc_feedback_average'] = eval(getTemplate('postbit_average'));
+        $postData['ougc_feedback_average'] = eval(getTemplate('postbit_average'));
 
-        $post['ougc_feedback'] = eval(getTemplate('postbit'));
+        $postData['ougc_feedback'] = eval(getTemplate('postbit'));
 
-        $post['user_details'] = str_replace('<!--OUGC_FEEDBACK-->', $post['ougc_feedback'], $post['user_details']);
+        $postData['user_details'] = str_replace(
+            '<!--OUGC_FEEDBACK-->',
+            $postData['ougc_feedback'],
+            $postData['user_details']
+        );
     }
 
     global $plugins, $thread, $forum;
 
     if (empty($forum) || !$forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts']) {
-        return $post;
+        return $postData;
     }
 
-    if ($forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'] && $thread['firstpost'] != $post['pid']) {
-        return $post;
+    if ($forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'] && $thread['firstpost'] != $postData['pid']) {
+        return $postData;
     }
 
-    if (!$forum['ougc_feedback_allow_threads'] && $forum['ougc_feedback_allow_posts'] && $thread['firstpost'] == $post['pid']) {
-        return $post;
+    if (!$forum['ougc_feedback_allow_threads'] && $forum['ougc_feedback_allow_posts'] && $thread['firstpost'] == $postData['pid']) {
+        return $postData;
     }
 
-    $post_perms = usergroup_permissions($post['usergroup'] . ',' . $post['additionalgroups']);
+    $userPermissions = usergroup_permissions($postData['usergroup'] . ',' . $postData['additionalgroups']);
 
-    $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
+    $currentUserID = (int)$mybb->user['uid'];
 
-    if ($mybb->usergroup['ougc_feedback_cangive'] && $post_perms['ougc_feedback_canreceive'] && $mybb->user['uid'] != $post['uid']) {
+    if ($mybb->usergroup['ougc_feedback_cangive'] && $userPermissions['ougc_feedback_canreceive'] && $currentUserID !== $userID) {
         static $button_query_cache;
 
         if (!isset($button_query_cache) && getSetting('postbit_hide_button')) {
             global $plugins;
 
-            $where = ["f.feedbackUserID='{$mybb->user['uid']}'"];
+            $where = ["f.feedbackUserID='{$currentUserID}'"];
 
             if (!isModerator()) {
                 $where[] = "f.feedbackStatus='1'";
             }
 
-            if ($plugins->current_hook == 'postbit' && $mybb->get_input(
-                    'mode'
-                ) != 'threaded' && !empty($pids) && THIS_SCRIPT != 'newreply.php') {
+            if ($plugins->current_hook == 'postbit' &&
+                $mybb->get_input('mode') != 'threaded' &&
+                !empty($pids) &&
+                THIS_SCRIPT != 'newreply.php') {
                 $where[] = "p.{$pids}";
 
                 $join = ' LEFT JOIN ' . TABLE_PREFIX . 'posts p ON (p.pid=f.uniqueID)';
             } else {
-                $where[] = "f.uniqueID='{$post['pid']}'";
+                $where[] = "f.uniqueID='{$postData['pid']}'";
 
                 $join = '';
             }
@@ -607,34 +616,34 @@ function postbit(array &$post): array
             }
         }
 
-        if (!isset($button_query_cache[$post['pid']])) {
-            $post['ougc_feedback_button'] = eval(getTemplate('postbit_button'));
+        if (!isset($button_query_cache[$postData['pid']])) {
+            $postData['ougc_feedback_button'] = eval(getTemplate('postbit_button'));
         }
     }
     #$plugins->remove_hook('postbit', array($this, 'hook_postbit'));
 
-    return $post;
+    return $postData;
 }
 
-function postbit_prev(array &$post): array
+function postbit_prev(array &$postData): array
 {
-    postbit($post);
+    postbit($postData);
 
-    return $post;
+    return $postData;
 }
 
-function postbit_pm(array &$post): array
+function postbit_pm(array &$postData): array
 {
-    postbit($post);
+    postbit($postData);
 
-    return $post;
+    return $postData;
 }
 
-function postbit_announcement(array &$post): array
+function postbit_announcement(array &$postData): array
 {
-    postbit($post);
+    postbit($postData);
 
-    return $post;
+    return $postData;
 }
 
 function memberlist_user(array &$userData): array
@@ -701,9 +710,12 @@ function report_type(): bool
     $feedbackID = $mybb->get_input('pid', MyBB::INPUT_INT);
 
     // Any member can report a reputation comment but let's make sure it exists first
-    $query = $db->simple_select('ougc_feedback', '*', "feedbackID='{$feedbackID}'");
+    $feedbackFields = [
+        'userID',
+        'feedbackUserID',
+    ];
 
-    $feedbackData = $db->fetch_array($query);
+    $feedbackData = feedbackGet(["feedbackID='{$feedbackID}'"], $feedbackFields, ['limit' => 1]);
 
     if (empty($feedbackData)) {
         $error = $lang->error_invalid_report;
@@ -756,16 +768,30 @@ function modcp_reports_report(): bool
     return true;
 }
 
-function report_content_types(array &$args): array
+function report_content_types(array &$hookArguments): array
 {
     loadLanguage();
 
-    $args[] = 'feedback';
+    $hookArguments[] = 'feedback';
 
-    return $args;
+    return $hookArguments;
 }
 
-function newpoints_contracts_system_parse_start(array $hookArguments): array
+function newpoints_global_start(array &$template_list): array
+{
+    $template_list['newpoints.php'] = array_merge($template_list['newpoints.php'], [
+        'ougcfeedback_contractSystemTableItemThead',
+        'ougcfeedback_contractSystemTableItemRow',
+        'ougcfeedback_contractSystemTableItemRowEdit',
+        'ougcfeedback_contractSystemTableItemRowEmpty',
+        'ougcfeedback_contractSystemParseStatus',
+        'ougcfeedback_contractSystemParseStatusComment',
+    ]);
+
+    return $template_list;
+}
+
+function newpoints_contracts_system_parse_start(array &$hookArguments): array
 {
     if (!enableContractSystemIntegration()) {
         return $hookArguments;
@@ -776,7 +802,7 @@ function newpoints_contracts_system_parse_start(array $hookArguments): array
     return $hookArguments;
 }
 
-function newpoints_contracts_system_parse_intermediate(array $hookArguments): array
+function newpoints_contracts_system_parse_intermediate(array &$hookArguments): array
 {
     if (!enableContractSystemIntegration() || empty($hookArguments['contract_data']['tid'])) {
         return $hookArguments;
@@ -809,20 +835,21 @@ function newpoints_contracts_system_parse_intermediate(array $hookArguments): ar
                 break;
         }
 
-        $query = $db->simple_select('ougc_feedback', '*', implode(' AND ', $whereClauses));
+        $feedbackFields = [
+            'feedbackComment',
+            'feedbackValue',
+        ];
 
-        $feedbackData = $db->fetch_array($query);
+        $feedbackData = feedbackGet($whereClauses, $feedbackFields, ['limit' => 1]);
 
         if (!empty($feedbackData)) {
-            $feedbackData['feedbackValue'] = (int)$feedbackData['feedbackValue'];
+            $feedbackValue = (int)$feedbackData['feedbackValue'];
 
-            $value = my_number_format($feedbackData['feedbackValue']);
+            $feedbackComment = '';
 
-            $comment = '';
+            $feedbackClass = 'neutral';
 
-            $feedback_class = 'neutral';
-
-            if ($feedbackData['feedbackComment']) {
+            if (!empty($feedbackData['feedbackComment'])) {
                 $parser_options = array(
                     'allow_html' => 0,
                     'allow_mycode' => 0,
@@ -831,16 +858,18 @@ function newpoints_contracts_system_parse_intermediate(array $hookArguments): ar
                     'filter_badwords' => 1,
                 );
 
-                $comment = post_parser_parse_message($feedbackData['feedbackComment'], $parser_options);
+                $feedbackComment = post_parser_parse_message($feedbackData['feedbackComment'], $parser_options);
 
-                $comment = eval(getTemplate('contractSystemParseStatusComment'));
+                $feedbackComment = eval(getTemplate('contractSystemParseStatusComment'));
             }
 
-            if ($feedbackData['feedbackValue'] > 0) {
-                $feedback_class = 'positive';
-            } elseif ($feedbackData['feedbackValue'] < 0) {
-                $feedback_class = 'negative';
+            if ($feedbackValue === FEEDBACK_VALUE_POSITIVE) {
+                $feedbackClass = 'positive';
+            } elseif ($feedbackValue === FEEDBACK_VALUE_NEGATIVE) {
+                $feedbackClass = 'negative';
             }
+
+            $feedbackValue = my_number_format($feedbackValue);
 
             $feedback_row = eval(getTemplate('contractSystemParseStatus'));
         }
@@ -849,7 +878,7 @@ function newpoints_contracts_system_parse_intermediate(array $hookArguments): ar
     return $hookArguments;
 }
 
-function newpoints_contracts_system_parse_end(array $hookArguments): array
+function newpoints_contracts_system_parse_end(array &$hookArguments): array
 {
     if (!enableContractSystemIntegration()) {
         return $hookArguments;
@@ -905,10 +934,8 @@ function newpoints_contracts_system_parse_end(array $hookArguments): array
         $whereClauses[] = "feedbackStatus='1'";
     }
 
-    $dbQuery = $db->simple_select('ougc_feedback', 'feedbackID', implode(' AND ', $whereClauses));
-
-    if ($db->num_rows($dbQuery)) {
-        $feedbackID = (int)$db->fetch_field($dbQuery, 'feedbackID');
+    if ($feedbackData = feedbackGet($whereClauses, [], ['limit' => 1])) {
+        $feedbackID = (int)$feedbackData['feedbackID'];
 
         $buttonText = $lang->ougcFeedbackContractsSystemButtonEdit;
 
@@ -922,7 +949,7 @@ function newpoints_contracts_system_parse_end(array $hookArguments): array
     return $hookArguments;
 }
 
-function newpoints_contracts_system_page_table_start(array $hookArguments): array
+function newpoints_contracts_system_page_table_start(array &$hookArguments): array
 {
     if (!enableContractSystemIntegration()) {
         return $hookArguments;
@@ -942,7 +969,7 @@ function newpoints_contracts_system_page_table_start(array $hookArguments): arra
 function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
 {
     if (
-        $hookArguments['processed'] !== false ||
+        $hookArguments['feedbackProcessed'] !== false ||
         $hookArguments['feedbackCode'] !== FEEDBACK_TYPE_CONTRACTS_SYSTEM
     ) {
         return $hookArguments;
@@ -1033,13 +1060,11 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
             "feedbackUserID='{$currentUserID}'"
         ];
 
-        if (!$mybb->usergroup['ougc_feedback_ismod']) {
+        if (empty($mybb->usergroup['ougc_feedback_ismod'])) {
             $whereClauses[] = "feedbackStatus='1'";
         }
 
-        $dbQuery = $db->simple_select('ougc_feedback', 'feedbackID', implode(' AND ', $whereClauses));
-
-        if ($db->num_rows($dbQuery)) {
+        if (feedbackGet($whereClauses, [], ['limit' => 1])) {
             backButtonSet(false);
 
             trowError($lang->ougcContractSystemErrorsFeedbackDuplicated);
@@ -1048,14 +1073,21 @@ function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
         }
     }
 
-    $hookArguments['processed'] = true;
+    $hookArguments['feedbackProcessed'] = true;
 
     return $hookArguments;
 }
 
 function ougc_feedback_add_edit_do_start(array &$hookArguments): array
 {
-    $hookArguments['processed'] = false;
+    if (
+        $hookArguments['feedbackProcessed'] === false &&
+        $hookArguments['feedbackCode'] === FEEDBACK_TYPE_CONTRACTS_SYSTEM
+    ) {
+        $hookArguments['feedbackProcessed'] = false;
 
-    return ougc_feedback_add_edit_intermediate($hookArguments);
+        return ougc_feedback_add_edit_intermediate($hookArguments);
+    }
+
+    return $hookArguments;
 }

@@ -82,11 +82,11 @@ function admin_config_settings_change(): bool
     return true;
 }
 
-function admin_formcontainer_end(array &$hook_arguments): array
+function admin_formcontainer_end(array &$hookArguments): array
 {
     global $run_module, $lang;
 
-    if ($run_module == 'user' && isset($lang->users_permissions) && $hook_arguments['this']->_title == $lang->users_permissions) {
+    if ($run_module == 'user' && isset($lang->users_permissions) && $hookArguments['this']->_title == $lang->users_permissions) {
         global $form, $mybb;
 
         loadLanguage();
@@ -108,7 +108,7 @@ function admin_formcontainer_end(array &$hook_arguments): array
             }
         }
 
-        $hook_arguments['this']->output_row(
+        $hookArguments['this']->output_row(
             $lang->setting_group_ougc_feedback,
             '',
             '<div class="group_settings_bit">' . implode(
@@ -120,10 +120,10 @@ function admin_formcontainer_end(array &$hook_arguments): array
 
     if (
         $run_module == 'forum' &&
-        isset($hook_arguments['this']->_title) &&
+        isset($hookArguments['this']->_title) &&
         (
-            $hook_arguments['this']->_title == $lang->additional_forum_options ||
-            $hook_arguments['this']->_title == "<div class=\"float_right\" style=\"font-weight: normal;\"><a href=\"#\" onclick=\"$('#additional_options_link').toggle(); $('#additional_options').fadeToggle('fast'); return false;\">{$lang->hide_additional_options}</a></div>" . $lang->additional_forum_options
+            $hookArguments['this']->_title == $lang->additional_forum_options ||
+            $hookArguments['this']->_title == "<div class=\"float_right\" style=\"font-weight: normal;\"><a href=\"#\" onclick=\"$('#additional_options_link').toggle(); $('#additional_options').fadeToggle('fast'); return false;\">{$lang->hide_additional_options}</a></div>" . $lang->additional_forum_options
         )
     ) {
         global $form, $forum_data;
@@ -142,7 +142,7 @@ function admin_formcontainer_end(array &$hook_arguments): array
             );
         }
 
-        $hook_arguments['this']->output_row(
+        $hookArguments['this']->output_row(
             $lang->setting_group_ougc_feedback,
             '',
             '<div class="forum_settings_bit">' . implode(
@@ -152,7 +152,7 @@ function admin_formcontainer_end(array &$hook_arguments): array
         );
     }
 
-    return $hook_arguments;
+    return $hookArguments;
 }
 
 function admin_user_groups_edit_commit(): bool

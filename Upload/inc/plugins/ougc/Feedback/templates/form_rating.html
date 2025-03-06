@@ -2,9 +2,9 @@
     <td class="{$alternativeBackground}" width="40%"><strong>{$ratingName}</strong></td>
     <td class="{$alternativeBackground}">
         <div class="ui large {$ratingClass} rating" data-icon="star" data-rating="{$ratingValue}"
-             data-max-rating="{$ratingMaximumValue}" id="feedbackRating{$ratingID}"></div>
+             data-max-rating="{$ratingMaximumValue}" id="feedbackRatingForm_{$userID}_{$ratingID}"></div>
         <script type="text/javascript">
-            $('#feedbackRating{$ratingID}').rating({
+            $('#feedbackRatingForm_{$userID}_{$ratingID}').rating({
                 clearable: false,
                 onRate: function (value) {
                     $('<input>').attr({

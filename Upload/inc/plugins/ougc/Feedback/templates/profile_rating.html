@@ -2,10 +2,10 @@
     <td class="{$alternativeBackground}" width="40%"><strong>{$ratingName} ({$ratingValue})</strong></td>
     <td class="{$alternativeBackground}">
         <div class="ui large {$ratingClass} disabled rating" data-icon="star" data-rating="{$ratingValue}"
-             data-max-rating="{$ratingMaximumValue}" id="feedbackRatingProfile{$ratingID}"
+             data-max-rating="{$ratingMaximumValue}" id="feedbackRatingProfile_{$userID}_{$ratingID}"
              title="{$ratingDescription} ({$ratingValue})"></div>
         <script type="text/javascript">
-            $('#feedbackRatingProfile{$ratingID}').rating();
+            $('#feedbackRatingProfile_{$userID}_{$ratingID}').rating();
         </script>
     </td>
 </tr>

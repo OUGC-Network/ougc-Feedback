@@ -26,14 +26,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-// Plugin API
 $l['ougc_feedback'] = 'ougc Feedback';
 $l['ougc_feedback_desc'] = 'Adds a powerful feedback system to your forum.';
 
-// PluginLibrary
 $l['ougc_feedback_pluginlibrary_required'] = 'This plugin requires <a href="{1}">PluginLibrary</a> version {2} or later to be uploaded to your forum.';
 
-// Settings
 $l['setting_group_ougc_feedback'] = 'Feedback System';
 $l['setting_group_ougc_feedback_desc'] = 'Modify the settings for the feedback system, a powerful reputation system for market traders.';
 $l['setting_ougc_feedback_allow_profile'] = 'Allow Profile Feedback';
@@ -77,7 +74,6 @@ $l['setting_ougc_feedback_showin_postbit_thread'] = 'Show In Threads';
 $l['setting_newpoints_contracts_system_enableContractSystemIntegration'] = 'Enable Contract System Integration';
 $l['setting_newpoints_contracts_system_enableContractSystemIntegration_desc'] = 'If you enable this, users will be able to rate or review their contracts using the NewPoints Contract System plugin after fulfilling their contracts.';
 
-// Permissions
 $l['ougc_feedback_permission_canview'] = 'Can view feedback page?';
 $l['ougc_feedback_permission_cangive'] = 'Can give feedback to users?';
 $l['ougc_feedback_permission_canreceive'] = 'Can receive feedback from users?';
@@ -90,9 +86,7 @@ $l['ougc_feedback_permission_mod_canedit'] = 'Can this moderator edit feedbacks?
 $l['ougc_feedback_permission_mod_canremove'] = 'Can this moderator soft delete feedbacks?';
 $l['ougc_feedback_permission_mod_candelete'] = 'Can this moderator hard delete feedbacks?';
 
-// Reort system
 $l['report_content_feedback'] = 'ougc Feedback';
 
-// Forums
 $l['ougc_feedback_permission_allow_threads'] = 'Yes, allow feedback for threads';
 $l['ougc_feedback_permission_allow_posts'] = 'Yes, allow feedback for posts';

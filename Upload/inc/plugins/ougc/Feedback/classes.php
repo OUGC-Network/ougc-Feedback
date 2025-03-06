@@ -34,23 +34,35 @@ const PLUGIN_VERSION = '1.8.24';
 
 const PLUGIN_VERSION_CODE = 1824;
 
+const FEEDBACK_STATUS_SOFT_DELETED = -1;
+
+const FEEDBACK_STATUS_UNAPPROVED = 0;
+
+const FEEDBACK_STATUS_ACTIVE = 1;
+
 const FEEDBACK_TYPE_BUYER = 1;
 
 const FEEDBACK_TYPE_SELLER = 2;
 
 const FEEDBACK_TYPE_TRADER = 3;
 
-const FEEDBACK_TYPE_POSITIVE = 1;
+const FEEDBACK_VALUE_POSITIVE = 1;
 
-const FEEDBACK_TYPE_NEUTRAL = 0;
+const FEEDBACK_VALUE_NEUTRAL = 0;
 
-const FEEDBACK_TYPE_NEGATIVE = -1;
+const FEEDBACK_VALUE_NEGATIVE = -1;
 
 const FEEDBACK_TYPE_POST = 1;
 
 const FEEDBACK_TYPE_PROFILE = 2;
 
 const FEEDBACK_TYPE_CONTRACTS_SYSTEM = 21;
+
+const POST_VISIBILITY_SOFT_DELETED = -1;
+
+const POST_VISIBILITY_UNAPPROVED = 0;
+
+const POST_VISIBILITY_APPROVED = 1;
 
 const TABLES_DATA = [
     'ougc_feedback' => [
@@ -81,7 +93,7 @@ const TABLES_DATA = [
             'default' => 0
         ],
         'feedbackValue' => [
-            'type' => 'INT',
+            'type' => 'TINYINT',
             'default' => 0
         ],
         'feedbackComment' => [
@@ -184,7 +196,6 @@ const FIELDS_DATA = [
         ],
         'ougc_feedback' => [
             'type' => 'INT',
-            'unsigned' => true,
             'default' => 0
         ]
     ]
@@ -210,7 +221,7 @@ const RATING_TYPES = [
     3 => [
         'ratingName' => 'Communication',
         'ratingDescription' => 'How well did the user communicate with you regarding support?',
-        'ratingClass' => 'yellow',
+        'ratingClass' => 'orange',
         'ratingMaximumValue' => 5,
         'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
         'allowedGroups' => -1
@@ -218,7 +229,7 @@ const RATING_TYPES = [
     4 => [
         'ratingName' => 'Value',
         'ratingDescription' => 'Are you satisfied with the quality of the product or service?',
-        'ratingClass' => 'blue',
+        'ratingClass' => 'green',
         'ratingMaximumValue' => 5,
         'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
         'allowedGroups' => -1

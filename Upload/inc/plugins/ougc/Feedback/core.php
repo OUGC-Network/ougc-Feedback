@@ -113,7 +113,7 @@ function urlHandlerBuild(array $urlAppend = [], bool $fetchImportUrl = false, bo
     global $PL;
 
     if (!is_object($PL)) {
-        $PL or require_once PLUGINLIBRARY;
+        $PL || require_once PLUGINLIBRARY;
     }
 
     if ($fetchImportUrl === false) {
@@ -245,17 +245,28 @@ function backButtonGet(): string
     return eval(getTemplate('modal_tfoot'));
 }
 
-function feedbackGet(int $feedbackID): array
+function feedbackGet(array $whereClauses, array $queryFields = [], array $queryOptions = []): array
 {
     global $db;
 
-    $query = $db->simple_select('ougc_feedback', '*', "feedbackID='{$feedbackID}'");
+    $query = $db->simple_select(
+        'ougc_feedback',
+        implode(',', array_merge(['feedbackID'], $queryFields)),
+        implode(' AND ', $whereClauses),
+        $queryOptions
+    );
 
-    if ($db->num_rows($query)) {
-        return $db->fetch_array($query);
+    if (isset($queryOptions['limit']) && $queryOptions['limit'] === 1) {
+        return (array)$db->fetch_array($query);
     }
 
-    return [];
+    $feedbackObjects = [];
+
+    while ($feedbackData = $db->fetch_array($query)) {
+        $feedbackObjects[(int)$feedbackData['feedbackID']] = $feedbackData;
+    }
+
+    return $feedbackObjects;
 }
 
 function feedbackInsert(array $feedbackData, bool $isUpdate = false, int $feedbackID = 0): int
@@ -339,7 +350,7 @@ function sendPrivateMessage(array $privateMessageData, int $fromUserID = 0, bool
 {
     global $mybb;
 
-    if (!$mybb->settings['ougc_feedback_allow_pm_notification']) {
+    if (empty($mybb->settings['ougc_feedback_allow_pm_notification'])) {
         return false;
     }
 
@@ -354,11 +365,10 @@ function sendEmail(array $emailData): bool
 {
     global $mybb, $db, $lang;
 
-    if (!$mybb->settings['ougc_feedback_allow_email_notifications']) {
+    if (empty($mybb->settings['ougc_feedback_allow_email_notifications'])) {
         return false;
     }
 
-    // Load language
     if ($emailData['language'] != $mybb->user['language'] && $lang->language_exists($emailData['language'])) {
         $reset_lang = true;
 
@@ -393,7 +403,6 @@ function sendEmail(array $emailData): bool
 
     my_mail($emailData['to'], $emailData['subject'], $emailData['message'], $emailData['from']);
 
-    // Log the message
     if ($mybb->settings['mail_logging']) {
         $entry = [
             'subject' => $db->escape_string($emailData['subject']),
@@ -411,7 +420,6 @@ function sendEmail(array $emailData): bool
         $db->insert_query('maillogs', $entry);
     }
 
-    // Reset language
     if (isset($reset_lang)) {
         $lang->set_language($mybb->user['language']);
 
@@ -484,25 +492,31 @@ function getUserStats(int $userID): array
         'average' => 0
     ];
 
-    $dbQuery = $db->simple_select('ougc_feedback', '*', implode(' AND ', $whereClauses));
+    $feedbackFields = [
+        'userID',
+        'feedbackUserID',
+        'feedbackValue'
+    ];
 
-    while ($feedbackData = $db->fetch_array($dbQuery)) {
+    $feedbackObjects = feedbackGet($whereClauses, $feedbackFields);
+
+    foreach ($feedbackObjects as $feedbackID => $feedbackData) {
         ++$userStats['total'];
 
-        $feedbackData['feedbackValue'] = (int)$feedbackData['feedbackValue'];
+        $feedbackValue = (int)$feedbackData['feedbackValue'];
 
-        switch ($feedbackData['feedbackValue']) {
-            case 1:
+        switch ($feedbackValue) {
+            case FEEDBACK_VALUE_POSITIVE:
                 ++$userStats['positive'];
 
                 $userStats['positive_users'][$feedbackData['feedbackUserID']] = 1;
                 break;
-            case 0:
+            case FEEDBACK_VALUE_NEUTRAL:
                 ++$userStats['neutral'];
 
                 $userStats['neutral_users'][$feedbackData['feedbackUserID']] = 1;
                 break;
-            case -1:
+            case FEEDBACK_VALUE_NEGATIVE:
                 ++$userStats['negative'];
 
                 $userStats['negative_users'][$feedbackData['feedbackUserID']] = 1;

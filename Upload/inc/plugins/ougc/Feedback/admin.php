@@ -155,7 +155,6 @@ function pluginActivation(): bool
         }
     }
 
-    // Insert/update version into cache
     $plugins = $cache->read('ougc_plugins');
 
     if (!$plugins) {
@@ -271,7 +270,6 @@ function pluginInstallation(): bool
 
     dbVerifyColumns();
 
-    // Administrators permissions
     $db->update_query(
         'usergroups',
         [
@@ -283,7 +281,6 @@ function pluginInstallation(): bool
         "gid='4'"
     );
 
-    // Super moderators permissions
     $db->update_query(
         'usergroups',
         [
@@ -352,7 +349,6 @@ function pluginUninstallation(): bool
 
     $PL->templates_delete('ougcfeedback');
 
-    // Delete version from cache
     $plugins = (array)$cache->read('ougc_plugins');
 
     if (isset($plugins['feedback'])) {

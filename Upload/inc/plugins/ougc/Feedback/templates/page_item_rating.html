@@ -1,0 +1,8 @@
+<div class="float_right">
+    <strong>{$ratingName}</strong>
+    <div class="ui large {$ratingClass} disabled rating" data-icon="star" data-rating="{$ratingValue}"
+         data-max-rating="{$ratingMaximumValue}" id="feedbackRatingPage_{$userID}_{$ratingID}"></div>
+    <script type="text/javascript">
+        $('#feedbackRatingPage_{$userID}_{$ratingID}').rating();
+    </script>
+</div>
