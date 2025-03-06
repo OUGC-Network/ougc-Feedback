@@ -42,6 +42,7 @@ use function ougc\Feedback\Core\getUserStats;
 use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
 use function ougc\Feedback\Core\backButtonSet;
+use function ougc\Feedback\Core\ratingGet;
 use function ougc\Feedback\Core\trowError;
 use function ougc\Feedback\Core\urlHandlerBuild;
 use function ougc\Feedback\Core\urlHandlerGet;
@@ -57,7 +58,6 @@ use const ougc\Feedback\Core\FEEDBACK_VALUE_NEUTRAL;
 use const ougc\Feedback\Core\FEEDBACK_VALUE_POSITIVE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
-use const ougc\Feedback\Core\RATING_TYPES;
 use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_ACCEPTED;
 use const NewPoints\ContractsSystem\Core\CONTRACT_STATUS_CLOSED;
 use const NewPoints\ContractsSystem\Core\CONTRACT_TYPE_AUCTION;
@@ -230,17 +230,22 @@ function member_profile_end(): string
 
     $rating_rows = '';
 
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+    foreach (
+        ratingGet(
+            [],
+            ['ratingName', 'ratingDescription', 'ratingClass', 'ratingMaximumValue']
+        ) as $ratingID => $ratingData
+    ) {
         $ratingName = $lang->sprintf(
             $lang->ougc_feedback_profile_rating,
-            htmlspecialchars_uni($ratingTypeData['ratingName'])
+            htmlspecialchars_uni($ratingData['ratingName'])
         );
 
-        $ratingDescription = htmlspecialchars_uni($ratingTypeData['ratingDescription']);
+        $ratingDescription = htmlspecialchars_uni($ratingData['ratingDescription']);
 
-        $ratingClass = htmlspecialchars_uni($ratingTypeData['ratingClass']);
+        $ratingClass = htmlspecialchars_uni($ratingData['ratingClass']);
 
-        $ratingMaximumValue = max(1, min(5, (int)$ratingTypeData['ratingMaximumValue']));
+        $ratingMaximumValue = max(1, min(5, (int)$ratingData['ratingMaximumValue']));
 
         $ratingValue = (float)($memprofile['ougcFeedbackRatingAverage' . $ratingID] ?? 0);
 
@@ -385,18 +390,23 @@ function member_profile_end10(): bool
 
             $rating_rows = '';
 
-            foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-                if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode) {
+            foreach (
+                ratingGet(
+                    [],
+                    ['ratingName', 'ratingDescription', 'ratingClass', 'ratingMaximumValue', 'feedbackCode']
+                ) as $ratingID => $ratingData
+            ) {
+                if ((int)$ratingData['feedbackCode'] !== $feedbackCode) {
                     continue;
                 }
 
-                $ratingName = htmlspecialchars_uni($ratingTypeData['ratingName']);
+                $ratingName = htmlspecialchars_uni($ratingData['ratingName']);
 
-                $ratingDescription = htmlspecialchars_uni($ratingTypeData['ratingDescription']);
+                $ratingDescription = htmlspecialchars_uni($ratingData['ratingDescription']);
 
-                $ratingClass = htmlspecialchars_uni($ratingTypeData['ratingClass']);
+                $ratingClass = htmlspecialchars_uni($ratingData['ratingClass']);
 
-                $ratingMaximumValue = max(1, min(5, (int)$ratingTypeData['ratingMaximumValue']));
+                $ratingMaximumValue = max(1, min(5, (int)$ratingData['ratingMaximumValue']));
 
                 $ratingValue = (int)$feedbackData['ratingID' . $ratingID];
 

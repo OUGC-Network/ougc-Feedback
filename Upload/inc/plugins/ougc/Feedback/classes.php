@@ -115,7 +115,44 @@ const TABLES_DATA = [
             'default' => 0
         ],
         // todo, legacy KEY uid (uid) skipped
-    ]
+    ],
+    'ougcFeedbackRatings' => [
+        'ratingID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'auto_increment' => true,
+            'primary_key' => true
+        ],
+        'ratingName' => [
+            'type' => 'VARCHAR',
+            'size' => 255,
+            'default' => ''
+        ],
+        'ratingDescription' => [
+            'type' => 'VARCHAR',
+            'size' => 255,
+            'default' => ''
+        ],
+        'ratingClass' => [
+            'type' => 'VARCHAR',
+            'size' => 255,
+            'default' => ''
+        ],
+        'ratingMaximumValue' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'feedbackCode' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'allowedGroups' => [
+            'type' => 'TEXT',
+            'null' => true
+        ],
+    ],
 ];
 
 const FIELDS_DATA = [
@@ -199,41 +236,6 @@ const FIELDS_DATA = [
             'default' => 0
         ]
     ]
-];
-
-const RATING_TYPES = [
-    1 => [
-        'ratingName' => 'Content Quality',
-        'ratingDescription' => 'Are you satisfied with the quality of the posts?',
-        'ratingClass' => 'yellow',
-        'ratingMaximumValue' => 5,
-        'feedbackCode' => FEEDBACK_TYPE_POST,
-        'allowedGroups' => -1
-    ],
-    2 => [
-        'ratingName' => 'Trusted User',
-        'ratingDescription' => 'How trusted is the user perceived in the forums?',
-        'ratingClass' => 'blue',
-        'ratingMaximumValue' => 5,
-        'feedbackCode' => FEEDBACK_TYPE_PROFILE,
-        'allowedGroups' => -1
-    ],
-    3 => [
-        'ratingName' => 'Communication',
-        'ratingDescription' => 'How well did the user communicate with you regarding support?',
-        'ratingClass' => 'orange',
-        'ratingMaximumValue' => 5,
-        'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
-        'allowedGroups' => -1
-    ],
-    4 => [
-        'ratingName' => 'Value',
-        'ratingDescription' => 'Are you satisfied with the quality of the product or service?',
-        'ratingClass' => 'green',
-        'ratingMaximumValue' => 5,
-        'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
-        'allowedGroups' => -1
-    ],
 ];
 
 class enums

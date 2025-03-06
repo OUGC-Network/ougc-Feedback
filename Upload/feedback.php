@@ -32,6 +32,7 @@ use function ougc\Feedback\Core\getTemplate;
 use function ougc\Feedback\Core\feedbackInsert;
 use function ougc\Feedback\Core\isModerator;
 use function ougc\Feedback\Core\loadLanguage;
+use function ougc\Feedback\Core\ratingGet;
 use function ougc\Feedback\Core\runHooks;
 use function ougc\Feedback\Core\sendEmail;
 use function ougc\Feedback\Core\backButtonSet;
@@ -59,7 +60,6 @@ use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
 use const ougc\Feedback\Core\POST_VISIBILITY_APPROVED;
 use const ougc\Feedback\Core\POST_VISIBILITY_SOFT_DELETED;
 use const ougc\Feedback\Core\POST_VISIBILITY_UNAPPROVED;
-use const ougc\Feedback\Core\RATING_TYPES;
 
 const IN_MYBB = 1;
 
@@ -110,7 +110,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         'feedbackValue'
     ];
 
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+    foreach (ratingGet() as $ratingID => $ratingData) {
         $feedbackFields[] = 'ratingID' . $ratingID;
     }
 
@@ -150,7 +150,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
             'feedbackCode' => $feedbackCode
         ];
 
-        foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        foreach (ratingGet() as $ratingID => $ratingData) {
             $feedbackData['ratingID' . $ratingID] = 0;
         }
 
@@ -177,7 +177,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
         $feedbackComment = $mybb->get_input('feedbackComment');
 
-        foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+        foreach (ratingGet() as $ratingID => $ratingData) {
             $feedbackData['ratingID' . $ratingID] = $mybb->get_input('ratingID' . $ratingID, MyBB::INPUT_INT);
         }
     }
@@ -444,9 +444,14 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
                 'feedbackValue' => $feedbackValue
             ];
 
-            foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-                if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
-                    !is_member($ratingTypeData['allowedGroups'])) {
+            foreach (
+                ratingGet(
+                    [],
+                    ['feedbackCode', 'allowedGroups']
+                ) as $ratingID => $ratingData
+            ) {
+                if ((int)$ratingData['feedbackCode'] !== $feedbackCode ||
+                    !is_member($ratingData['allowedGroups'])) {
                     continue;
                 }
 
@@ -537,22 +542,22 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     $rating_rows = '';
 
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-        if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode ||
-            !is_member($ratingTypeData['allowedGroups'])) {
+    foreach (ratingGet() as $ratingID => $ratingData) {
+        if ((int)$ratingData['feedbackCode'] !== $feedbackCode ||
+            !is_member($ratingData['allowedGroups'])) {
             continue;
         }
 
         $ratingName = $lang->sprintf(
             $lang->ougc_feedback_modal_rating,
-            htmlspecialchars_uni($ratingTypeData['ratingName'])
+            htmlspecialchars_uni($ratingData['ratingName'])
         );
 
-        $ratingDescription = htmlspecialchars_uni($ratingTypeData['ratingDescription']);
+        $ratingDescription = htmlspecialchars_uni($ratingData['ratingDescription']);
 
-        $ratingClass = htmlspecialchars_uni($ratingTypeData['ratingClass']);
+        $ratingClass = htmlspecialchars_uni($ratingData['ratingClass']);
 
-        $ratingMaximumValue = max(1, min(5, (int)$ratingTypeData['ratingMaximumValue']));
+        $ratingMaximumValue = max(1, min(5, (int)$ratingData['ratingMaximumValue']));
 
         $ratingValue = (int)$feedbackData['ratingID' . $ratingID];
 
@@ -1147,18 +1152,23 @@ foreach ($feedback_cache as $feedbackData) {
 
     $rating_rows = '';
 
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-        if ((int)$ratingTypeData['feedbackCode'] !== $feedbackCode) {
+    foreach (
+        ratingGet(
+            [],
+            ['ratingName', 'ratingDescription', 'ratingClass', 'ratingMaximumValue', 'feedbackCode']
+        ) as $ratingID => $ratingData
+    ) {
+        if ((int)$ratingData['feedbackCode'] !== $feedbackCode) {
             continue;
         }
 
-        $ratingName = htmlspecialchars_uni($ratingTypeData['ratingName']);
+        $ratingName = htmlspecialchars_uni($ratingData['ratingName']);
 
-        $ratingDescription = htmlspecialchars_uni($ratingTypeData['ratingDescription']);
+        $ratingDescription = htmlspecialchars_uni($ratingData['ratingDescription']);
 
-        $ratingClass = htmlspecialchars_uni($ratingTypeData['ratingClass']);
+        $ratingClass = htmlspecialchars_uni($ratingData['ratingClass']);
 
-        $ratingMaximumValue = max(1, min(5, (int)$ratingTypeData['ratingMaximumValue']));
+        $ratingMaximumValue = max(1, min(5, (int)$ratingData['ratingMaximumValue']));
 
         $ratingValue = (int)$feedbackData['ratingID' . $ratingID];
 

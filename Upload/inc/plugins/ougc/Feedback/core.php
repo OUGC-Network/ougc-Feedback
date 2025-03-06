@@ -313,7 +313,7 @@ function feedbackInsert(array $feedbackData, bool $isUpdate = false, int $feedba
         $insert_data['createStamp'] = TIME_NOW;
     }
 
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
+    foreach (ratingGet() as $ratingID => $ratingData) {
         if (isset($feedbackData['ratingID' . $ratingID])) {
             $insert_data['ratingID' . $ratingID] = (int)$feedbackData['ratingID' . $ratingID];
         }
@@ -344,6 +344,69 @@ function feedbackDelete(int $feedbackID): bool
     $db->delete_query('ougc_feedback', "feedbackID='{$feedbackID}'");
 
     return true;
+}
+
+function ratingGet(array $whereClauses = [], array $queryFields = [], array $queryOptions = []): array
+{
+    global $db;
+
+    $query = $db->simple_select(
+        'ougcFeedbackRatings',
+        implode(',', array_merge(['ratingID'], $queryFields)),
+        implode(' AND ', $whereClauses),
+        $queryOptions
+    );
+
+    if (isset($queryOptions['limit']) && $queryOptions['limit'] === 1) {
+        return (array)$db->fetch_array($query);
+    }
+
+    $feedbackObjects = [];
+
+    while ($ratingData = $db->fetch_array($query)) {
+        $feedbackObjects[(int)$ratingData['ratingID']] = $ratingData;
+    }
+
+    return $feedbackObjects;
+}
+
+function ratingInsert(array $ratingData, bool $isUpdate = false, int $ratingID = 0): int
+{
+    global $db;
+
+    $insertData = [];
+
+    if (isset($ratingData['ratingName'])) {
+        $insertData['ratingName'] = $db->escape_string($ratingData['ratingName']);
+    }
+
+    if (isset($ratingData['ratingDescription'])) {
+        $insertData['ratingDescription'] = $db->escape_string($ratingData['ratingDescription']);
+    }
+
+    if (isset($ratingData['ratingClass'])) {
+        $insertData['ratingClass'] = $db->escape_string($ratingData['ratingClass']);
+    }
+
+    if (isset($ratingData['ratingMaximumValue'])) {
+        $insertData['ratingMaximumValue'] = (int)$ratingData['ratingMaximumValue'];
+    }
+
+    if (isset($ratingData['feedbackCode'])) {
+        $insertData['feedbackCode'] = (int)$ratingData['feedbackCode'];
+    }
+
+    if (isset($ratingData['allowedGroups'])) {
+        $insertData['allowedGroups'] = $db->escape_string($ratingData['allowedGroups']);
+    }
+
+    if ($isUpdate) {
+        $db->update_query('ougcFeedbackRatings', $insertData, "feedbackID='{$ratingID}'");
+    } else {
+        $ratingID = (int)$db->insert_query('ougcFeedbackRatings', $insertData);
+    }
+
+    return $ratingID;
 }
 
 function sendPrivateMessage(array $privateMessageData, int $fromUserID = 0, bool $adminOverride = false): bool
@@ -443,8 +506,13 @@ function feedbackUserSync(int $userID): bool
 
     $db->update_query('users', ['ougc_feedback' => $feedbackData], "uid='{$userID}'");
 
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-        $feedbackCode = (int)$ratingTypeData['feedbackCode'];
+    foreach (
+        ratingGet(
+            [],
+            ['feedbackCode']
+        ) as $ratingID => $ratingData
+    ) {
+        $feedbackCode = (int)$ratingData['feedbackCode'];
 
         $query = $db->simple_select(
             'ougc_feedback',

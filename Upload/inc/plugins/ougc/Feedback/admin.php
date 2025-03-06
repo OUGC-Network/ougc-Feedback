@@ -36,6 +36,10 @@ use stdClass;
 
 use function ougc\Feedback\Core\loadLanguage;
 
+use function ougc\Feedback\Core\ratingGet;
+use function ougc\Feedback\Core\ratingInsert;
+
+use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\URL;
 use const ougc\Feedback\ROOT;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
@@ -43,8 +47,42 @@ use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FIELDS_DATA;
 use const ougc\Feedback\Core\PLUGIN_VERSION;
 use const ougc\Feedback\Core\PLUGIN_VERSION_CODE;
-use const ougc\Feedback\Core\RATING_TYPES;
 use const ougc\Feedback\Core\TABLES_DATA;
+
+const DEFAULT_RATING_TYPES = [
+    1 => [
+        'ratingName' => 'Content Quality',
+        'ratingDescription' => 'Are you satisfied with the quality of the posts?',
+        'ratingClass' => 'yellow',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_POST,
+        'allowedGroups' => -1
+    ],
+    2 => [
+        'ratingName' => 'Trusted User',
+        'ratingDescription' => 'How trusted is the user perceived in the forums?',
+        'ratingClass' => 'blue',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_PROFILE,
+        'allowedGroups' => -1
+    ],
+    3 => [
+        'ratingName' => 'Communication',
+        'ratingDescription' => 'How well did the user communicate with you regarding support?',
+        'ratingClass' => 'orange',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
+        'allowedGroups' => -1
+    ],
+    4 => [
+        'ratingName' => 'Value',
+        'ratingDescription' => 'Are you satisfied with the quality of the product or service?',
+        'ratingClass' => 'green',
+        'ratingMaximumValue' => 5,
+        'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
+        'allowedGroups' => -1
+    ],
+];
 
 function pluginInformation(): array
 {
@@ -208,21 +246,6 @@ function pluginActivation(): bool
         ]
     ];
 
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-        $tableRatingFields['users']['ougcFeedbackRatingAverage' . $ratingID] = [
-            'type' => 'DECIMAL',
-            'unsigned' => true,
-            'size' => '16,4',
-            'default' => 0,
-        ];
-
-        $tableRatingFields['ougc_feedback']['ratingID' . $ratingID] = [
-            'type' => 'TINYINT',
-            'unsigned' => true,
-            'default' => 0
-        ];
-    }
-
     dbVerifyColumns($tableRatingFields);
 
     if ($plugins['feedback'] <= 1823) {
@@ -243,6 +266,40 @@ function pluginActivation(): bool
     /*~*~* RUN UPDATES END *~*~*/
 
     dbVerifyTables();
+
+    $query = $db->query(
+        "SHOW TABLE STATUS FROM `{$db->database}` WHERE `name` LIKE '{$db->table_prefix}ougcFeedbackRatings' ;"
+    );
+
+    $freshTableInsert = (int)$db->fetch_array($query)['Auto_increment'] === 1;
+
+    if ($freshTableInsert) {
+        foreach (DEFAULT_RATING_TYPES as $ratingData) {
+            ratingInsert([
+                'ratingName' => $ratingData['ratingName'],
+                'ratingDescription' => $ratingData['ratingDescription'],
+                'ratingClass' => $ratingData['ratingClass'],
+                'ratingMaximumValue' => $ratingData['ratingMaximumValue'],
+                'feedbackCode' => $ratingData['feedbackCode'],
+                'allowedGroups' => $ratingData['allowedGroups']
+            ]);
+        }
+    }
+
+    foreach (ratingGet() as $ratingID => $ratingData) {
+        $tableRatingFields['users']['ougcFeedbackRatingAverage' . $ratingID] = [
+            'type' => 'DECIMAL',
+            'unsigned' => true,
+            'size' => '16,4',
+            'default' => 0,
+        ];
+
+        $tableRatingFields['ougc_feedback']['ratingID' . $ratingID] = [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
+        ];
+    }
 
     dbVerifyColumns();
 
@@ -323,6 +380,12 @@ function pluginUninstallation(): bool
 
     loadPluginLibrary();
 
+    foreach (ratingGet() as $ratingID => $ratingData) {
+        if ($db->field_exists('ougcFeedbackRatingAverage' . $ratingID, 'users')) {
+            $db->drop_column('users', 'ougcFeedbackRatingAverage' . $ratingID);
+        }
+    }
+
     foreach (TABLES_DATA as $tableName => $tableData) {
         if ($db->table_exists($tableName)) {
             $db->drop_table($tableName);
@@ -336,12 +399,6 @@ function pluginUninstallation(): bool
                     $db->drop_column($tableName, $fieldName);
                 }
             }
-        }
-    }
-
-    foreach (RATING_TYPES as $ratingID => $ratingTypeData) {
-        if ($db->field_exists('ougcFeedbackRatingAverage' . $ratingID, 'users')) {
-            $db->drop_column('users', 'ougcFeedbackRatingAverage' . $ratingID);
         }
     }
 
