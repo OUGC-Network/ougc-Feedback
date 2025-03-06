@@ -121,7 +121,7 @@ Follow the next steps in order to update your copy of this plugin.
 The following template edits are required for this plugin to work.
 
 1. Insert `{$ougc_feedback}` after `{$profilefields}` inside the `member_profile` template.
-2. Insert `{$ougc_feedback}` after `{$profilefields}` inside the `memberlist_user` template.
+2. Insert `{$ougc_feedback}` before `{$usergroup['groupimage']}` inside the `memberlist_user` template.
 3. Insert `{$post['ougc_feedback_button']}` after `{$post['button_rep']}` inside the `postbit` template.
 4. Insert `{$post['ougc_feedback_button']}` after `{$post['button_rep']}` inside the `postbit_classic` template.
 5. Insert `<!--OUGC_FEEDBACK-->` after `{$post['warninglevel']}` inside the `postbit_author_user` template.
@@ -130,7 +130,7 @@ The following template edits are required for this plugin to work.
 8. Insert `{$ougc_feedback_sort}` after `{$lang->sort_by_referrals}</option>` inside the `memberlist` template.
 9. Insert `{$ougc_feedback_js}` after `{$stylesheets}` inside the `headerinclude` template.
 10. Insert `{$feedbackLatest}` inside the `member_profile` template.
-11. Insert `{$user['feedback']}` inside the `memberlist_user` template.
+11. Insert `{$userData['feedback']}` inside the `memberlist_user` template.
 
 [Go up to Table of Contents](#table_of_contents)
 
