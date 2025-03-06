@@ -57,23 +57,11 @@
   },
   "pm_user_id": {
     "optionscode": "numeric",
-    "value": -1
+    "value": 0
   },
   "perpage": {
     "optionscode": "numeric",
     "value": 20
-  },
-  "enableRateCommunication": {
-    "optionscode": "yesno",
-    "value": 1
-  },
-  "enableRateValue": {
-    "optionscode": "yesno",
-    "value": 1
-  },
-  "enableRateRecommendation": {
-    "optionscode": "yesno",
-    "value": 1
   },
   "enableContractSystemIntegration": {
     "optionscode": "yesno",
