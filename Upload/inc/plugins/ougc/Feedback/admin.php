@@ -116,7 +116,7 @@ function pluginActivation(): bool
     'memberlist_sort'	=> '<option value="positive_feedback"{$sort_selected[\'positive_feedback\']}>{$lang->ougc_feedback_memberlist_sort_positive}</option>
 <option value="neutral_feedback"{$sort_selected[\'neutral_feedback\']}>{$lang->ougc_feedback_memberlist_sort_neutral}</option>
 <option value="negative_feedback"{$sort_selected[\'negative_feedback\']}>{$lang->ougc_feedback_memberlist_sort_negative}</option>',
-    'memberlist_user'	=> '<td class="{$alt_bg}" align="center">{$user[\'uid\']}{$user[\'feedbackValue\']}</td>',*/
+    'memberlist_user'	=> '<td class="{$alt_bg}" align="center">{$userData[\'uid\']}{$userData[\'feedbackValue\']}</td>',*/
 
     if (file_exists(ROOT . '/templates')) {
         $templatesDirIterator = new DirectoryIterator(ROOT . '/templates');

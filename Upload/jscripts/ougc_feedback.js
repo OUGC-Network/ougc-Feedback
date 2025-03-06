@@ -33,8 +33,8 @@ let OUGC_Feedback = {
         });
     },
 
-    Add: function (uid, uniqueID, feedbackType, feedback, reload, feedbackComment, back_button, feedbackCode) {
-        let postData = 'action=add&uid=' + parseInt(uid) + '&uniqueID=' + parseInt(uniqueID) + '&feedbackType=' + parseInt(feedbackType) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&feedbackComment=' + String(feedbackComment) + '&back_button=' + parseInt(back_button) + '&feedbackCode=' + String(feedbackCode);
+    Add: function (userID, uniqueID, feedbackType, feedback, reload, feedbackComment, back_button, feedbackCode) {
+        let postData = 'action=add&userID=' + parseInt(userID) + '&uniqueID=' + parseInt(uniqueID) + '&feedbackType=' + parseInt(feedbackType) + '&feedback=' + parseInt(feedback) + '&reload=' + parseInt(reload) + '&feedbackComment=' + String(feedbackComment) + '&back_button=' + parseInt(back_button) + '&feedbackCode=' + String(feedbackCode);
 
         MyBB.popupWindow('/feedback.php?' + postData);
     },
@@ -45,9 +45,9 @@ let OUGC_Feedback = {
         MyBB.popupWindow('/feedback.php?' + postData);
     },
 
-    DoAdd: function (uid, uniqueID) {
+    DoAdd: function (userID, uniqueID) {
         // Get form, serialize it and send it
-        let postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(uniqueID)).serialize();
+        let postData = $('.feedback_' + parseInt(userID) + '_' + parseInt(uniqueID)).serialize();
 
         $.ajax(
             {
@@ -72,10 +72,10 @@ let OUGC_Feedback = {
                                 }
                             });*/
                         } else {
-                            $('.ougcfeedback_info_' + parseInt(uid)).html(request.replacement);
+                            $('.ougcfeedback_info_' + parseInt(userID)).html(request.replacement);
 
                             if (request.hide_add) {
-                                $('.ougcfeedback_add_' + parseInt(uid)).fadeOut('slow');
+                                $('.ougcfeedback_add_' + parseInt(userID)).fadeOut('slow');
                             }
                         }
                     }
@@ -87,9 +87,9 @@ let OUGC_Feedback = {
             });
     },
 
-    DoEdit: function (uid, uniqueID, feedbackID) {
+    DoEdit: function (userID, uniqueID, feedbackID) {
         // Get form, serialize it and send it
-        let postData = $('.feedback_' + parseInt(uid) + '_' + parseInt(uniqueID)).serialize();
+        let postData = $('.feedback_' + parseInt(userID) + '_' + parseInt(uniqueID)).serialize();
 
         $.ajax(
             {
@@ -115,10 +115,10 @@ let OUGC_Feedback = {
                                 }
                             });*/
                         } else {
-                            $('.ougcfeedback_info_' + parseInt(uid)).html(request.replacement);
+                            $('.ougcfeedback_info_' + parseInt(userID)).html(request.replacement);
 
                             if (request.hide_add) {
-                                $('.ougcfeedback_add_' + parseInt(uid)).fadeOut('slow');
+                                $('.ougcfeedback_add_' + parseInt(userID)).fadeOut('slow');
                             }
                         }
                     }

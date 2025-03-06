@@ -1,6 +1,6 @@
-<span class="ougcfeedback_info_{$post['uid']}" title="{$lang->ougc_feedback_profile_positive} {$lang->ougc_feedback_profile_title}: {$stats['positive']} ({$stats['positive_percent']}% - {$stats['positive_users']} {$lang->ougc_feedback_profile_users})
-{$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: {$stats['neutral']} ({$stats['neutral_percent']}% - {$stats['neutral_users']} {$lang->ougc_feedback_profile_users})
-{$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: {$stats['negative']} ({$stats['negative_percent']}% - {$stats['negative_users']} {$lang->ougc_feedback_profile_users})">
+<span class="ougcfeedback_info_{$userID}" title="{$lang->ougc_feedback_profile_positive} {$lang->ougc_feedback_profile_title}: {$statsData['positive']} ({$statsData['positive_percent']}% - {$statsData['positive_users']} {$lang->ougc_feedback_profile_users})
+{$lang->ougc_feedback_profile_neutral} {$lang->ougc_feedback_profile_title}: {$statsData['neutral']} ({$statsData['neutral_percent']}% - {$statsData['neutral_users']} {$lang->ougc_feedback_profile_users})
+{$lang->ougc_feedback_profile_negative} {$lang->ougc_feedback_profile_title}: {$statsData['negative']} ({$statsData['negative_percent']}% - {$statsData['negative_users']} {$lang->ougc_feedback_profile_users})">
 	<br/>{$lang->ougc_feedback_profile_total} {$lang->ougc_feedback_profile_title}: <a
-        href="{$mybb->settings['bburl']}/feedback.php?uid={$post['uid']}"><strong
-        class="{$class}">{$average}</strong></a></span>
+        href="{$mybb->settings['bburl']}/feedback.php?userID={$userID}"><strong
+        class="{$stylingClasses}">{$average}</strong></a></span>

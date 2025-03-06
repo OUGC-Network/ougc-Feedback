@@ -47,7 +47,7 @@ define('ougc\Feedback\Core\SETTINGS', [
     //'key' => '',
 ]);
 
-define('ougc\Feedback\Core\DEBUG', false);
+define('ougc\Feedback\Core\DEBUG', true);
 
 define('ougc\Feedback\ROOT', constant('MYBB_ROOT') . 'inc/plugins/ougc/Feedback');
 

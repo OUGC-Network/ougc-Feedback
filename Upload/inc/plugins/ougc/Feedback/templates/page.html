@@ -31,9 +31,9 @@
 					({$usertitle})<br/>
 					<br/>
 					<strong>{$lang->ougc_feedback_page_stats_total}:</strong> <span
-                                class="ougc_feedback_repbox {$total_class}">{$user['ougc_feedback']}</span><br/><br/>
-					<strong>{$lang->ougc_feedback_page_stats_members}: {$stats['members']}</strong><br/>
-					<strong>{$lang->ougc_feedback_page_stats_posts}: {$stats['posts']}</strong>
+                                class="ougc_feedback_repbox {$total_class}">{$userData['ougc_feedback']}</span><br/><br/>
+					<strong>{$lang->ougc_feedback_page_stats_members}: {$statsData['members']}</strong><br/>
+					<strong>{$lang->ougc_feedback_page_stats_posts}: {$statsData['posts']}</strong>
 				</span>
                     </td>
                     <td align="right" style="width: 300px;">
@@ -82,7 +82,7 @@
     <tr>
         <td class="tfoot" align="right">
             <form action="{$mybb->settings['bburl']}/feedback.php" method="get">
-                <input type="hidden" name="uid" value="{$user['uid']}"/>
+                <input type="hidden" name="userID" value="{$userID}"/>
                 <select name="show">
                     <option value="all" {$show_selected_all}>{$lang->show_all}</option>
                     <option value="positive" {$show_selected_positive}>{$lang->show_positive}</option>
