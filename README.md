@@ -1,4 +1,8 @@
-![[logo.png]]
+<p align="center">
+    <a href="" rel="noopener">
+        <img width="700" height="400" src="https://github.com/user-attachments/assets/1c07cf59-d844-4fd6-bbb1-4349f1432f71" alt="Project logo">
+    </a>
+</p>
 
 <h3 align="center">ougc Feedback</h3>
 
