@@ -223,8 +223,11 @@ function backButtonGet(): string
     }
 
     global $mybb, $templates, $lang;
+    global $feedbackData;
 
     loadLanguage();
+
+    $feedbackID = $mybb->get_input('feedbackID', MyBB::INPUT_INT);
 
     $feedbackType = $mybb->get_input('feedbackType', MyBB::INPUT_INT);
 
@@ -234,15 +237,19 @@ function backButtonGet(): string
 
     $feedbackComment = $mybb->get_input('feedbackComment');
 
-    global $feedbackData;
+    $userID = $feedbackData['userID'];
 
-    $uid = $feedbackData['userID'];
-
-    $unique_id = $feedbackData['uniqueID'];
+    $uniqueID = $feedbackData['uniqueID'];
 
     $feedbackPluginCode = $mybb->get_input('feedbackCode', MyBB::INPUT_INT);
 
-    return eval(getTemplate('modal_tfoot'));
+    if ($mybb->get_input('action') === 'edit') {
+        $buttonCode = eval(getTemplate('modalFooterEdit'));
+    } else {
+        $buttonCode = eval(getTemplate('modalFooterAdd'));
+    }
+
+    return eval(getTemplate('modalFooter'));
 }
 
 function feedbackGet(array $whereClauses, array $queryFields = [], array $queryOptions = []): array
@@ -350,9 +357,11 @@ function ratingGet(array $whereClauses = [], array $queryFields = [], array $que
 {
     global $db;
 
+    $queryFields[] = 'ratingID';
+
     $query = $db->simple_select(
         'ougcFeedbackRatings',
-        implode(',', array_merge(['ratingID'], $queryFields)),
+        implode(',', $queryFields),
         implode(' AND ', $whereClauses),
         $queryOptions
     );
@@ -400,13 +409,35 @@ function ratingInsert(array $ratingData, bool $isUpdate = false, int $ratingID =
         $insertData['allowedGroups'] = $db->escape_string($ratingData['allowedGroups']);
     }
 
+    if (isset($ratingData['displayOrder'])) {
+        $insertData['displayOrder'] = (int)$ratingData['displayOrder'];
+    }
+
     if ($isUpdate) {
-        $db->update_query('ougcFeedbackRatings', $insertData, "feedbackID='{$ratingID}'");
+        $db->update_query('ougcFeedbackRatings', $insertData, "ratingID='{$ratingID}'");
     } else {
         $ratingID = (int)$db->insert_query('ougcFeedbackRatings', $insertData);
     }
 
     return $ratingID;
+}
+
+function ratingUpdate(array $ratingData, int $ratingID = 0): int
+{
+    return ratingInsert($ratingData, true, $ratingID);
+}
+
+function ratingDelete(int $ratingID): bool
+{
+    global $db;
+
+    if ($db->field_exists('ougcFeedbackRatingAverage' . $ratingID, 'users')) {
+        $db->drop_column('users', 'ougcFeedbackRatingAverage' . $ratingID);
+    }
+
+    $db->delete_query('ougcFeedbackRatings', "ratingID='{$ratingID}'");
+
+    return true;
 }
 
 function sendPrivateMessage(array $privateMessageData, int $fromUserID = 0, bool $adminOverride = false): bool

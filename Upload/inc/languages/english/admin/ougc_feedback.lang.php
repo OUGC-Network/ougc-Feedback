@@ -90,3 +90,35 @@ $l['report_content_feedback'] = 'ougc Feedback';
 
 $l['ougc_feedback_permission_allow_threads'] = 'Yes, allow feedback for threads';
 $l['ougc_feedback_permission_allow_posts'] = 'Yes, allow feedback for posts';
+
+$l = array_merge($l, [
+    'ougc_feedback_ratings_module' => 'Feedback System',
+    'ougc_feedback_ratings_module_tab_view' => 'View Ratings',
+    'ougc_feedback_ratings_module_tab_view_description' => 'View a list of rating types for the feedback system.',
+    'ougc_feedback_ratings_module_tab_add' => 'Add Rating',
+    'ougc_feedback_ratings_module_tab_add_description' => 'Add new rating types to for the feedback system.',
+
+    'ougc_feedback_rating_modules_header_id' => 'ID',
+    'ougc_feedback_rating_modules_header_name' => 'Name',
+    'ougc_feedback_rating_modules_header_description' => 'Description',
+    'ougc_feedback_rating_modules_header_class' => 'Style Class',
+    'ougc_feedback_rating_modules_header_maximum_value' => 'Maximum Value',
+    'ougc_feedback_rating_modules_header_code' => 'Feedback Code',
+    'ougc_feedback_rating_modules_header_allowed_groups' => 'Allowed Groups',
+    'ougc_feedback_rating_modules_header_display_order' => 'Display Order',
+
+    'ougc_feedback_rating_modules_form_title' => 'Create Rating Type',
+    'ougc_feedback_rating_modules_form_name' => 'Name',
+    'ougc_feedback_rating_modules_form_button_create' => 'Create',
+    'ougc_feedback_rating_modules_form_button_update' => 'Update',
+
+    'ougc_feedback_rating_modules_empty' => 'There are no rating types to display.',
+
+    'ougc_feedback_rating_modules_feedback_type_post' => 'Post',
+    'ougc_feedback_rating_modules_feedback_type_profile' => 'Profile',
+    'ougc_feedback_rating_modules_feedback_type_contract' => 'Contract',
+    'ougc_feedback_rating_modules_feedback_type_showcase' => 'Showcase',
+
+    'ougc_feedback_rating_modules_success_updated' => 'The rating types were updated successfully.',
+    'ougc_feedback_rating_modules_success_deleted' => 'The rating type was deleted successfully.',
+]);

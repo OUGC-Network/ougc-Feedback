@@ -35,6 +35,7 @@ use MyBB;
 use function ougc\Feedback\Core\loadLanguage;
 
 use const ougc\Feedback\Core\FIELDS_DATA;
+use const ougc\Feedback\ROOT;
 
 function admin_config_plugins_deactivate(): bool
 {
@@ -192,4 +193,40 @@ function admin_forum_management_edit_commit(): bool
     $mybb->cache->update_forums();
 
     return true;
+}
+
+function admin_load(): bool
+{
+    global $run_module;
+    global $page;
+
+    if ($run_module !== 'config' || $page->active_action !== 'feedback') {
+        return false;
+    }
+
+    require_once ROOT . '/admin/module.php';
+
+    return true;
+}
+
+function admin_config_menu(array &$sub_menu): array
+{
+    global $lang;
+
+    loadLanguage(true);
+
+    $sub_menu[] = [
+        'id' => 'feedback',
+        'title' => $lang->ougc_feedback_ratings_module,
+        'link' => 'index.php?module=config-feedback'
+    ];
+
+    return $sub_menu;
+}
+
+function admin_config_action_handler(array &$actions): array
+{
+    $actions['feedback'] = ['active' => 'feedback', 'file' => 'module.php'];
+
+    return $actions;
 }

@@ -1,10 +1,11 @@
 <tr>
-    <td class="{$alternativeBackground}" width="40%"><strong>{$ratingName}</strong></td>
+    <td class="{$alternativeBackground}" width="40%"><strong>{$ratingNameText}</strong></td>
     <td class="{$alternativeBackground}">
         <div class="ui large {$ratingClass} rating" data-icon="star" data-rating="{$ratingValue}"
-             data-max-rating="{$ratingMaximumValue}" id="feedbackRatingForm_{$userID}_{$ratingID}"></div>
+             data-max-rating="{$ratingMaximumValue}"
+             id="feedbackRatingForm_{$userID}_{$ratingID}_{$uniqueID}_{$feedbackID}"></div>
         <script type="text/javascript">
-            $('#feedbackRatingForm_{$userID}_{$ratingID}').rating({
+            $('#feedbackRatingForm_{$userID}_{$ratingID}_{$uniqueID}_{$feedbackID}').rating({
                 clearable: false,
                 onRate: function (value) {
                     $('<input>').attr({

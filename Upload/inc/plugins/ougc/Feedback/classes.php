@@ -58,6 +58,8 @@ const FEEDBACK_TYPE_PROFILE = 2;
 
 const FEEDBACK_TYPE_CONTRACTS_SYSTEM = 21;
 
+const FEEDBACK_TYPE_SHOWCASE_SYSTEM = 31;
+
 const POST_VISIBILITY_SOFT_DELETED = -1;
 
 const POST_VISIBILITY_UNAPPROVED = 0;
@@ -151,6 +153,11 @@ const TABLES_DATA = [
         'allowedGroups' => [
             'type' => 'TEXT',
             'null' => true
+        ],
+        'displayOrder' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
         ],
     ],
 ];

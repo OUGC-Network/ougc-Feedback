@@ -301,6 +301,8 @@ function pluginActivation(): bool
         ];
     }
 
+    dbVerifyColumns($tableRatingFields);
+
     dbVerifyColumns();
 
     $cache->update_forums();

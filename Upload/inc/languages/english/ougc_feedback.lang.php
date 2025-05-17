@@ -77,6 +77,8 @@ $l['ougc_feedback_page_delete_hard'] = 'Permanently Delete';
 $l['ougc_feedback_page_last_updated'] = 'Last updated {1}';
 $l['ougc_feedback_page_post_given'] = 'Feedback given for <a href="{4}/{1}">{2}\'s post</a> {3}<br />';
 $l['ougc_feedback_page_post_nolink'] = 'Feedback given for {1}\'s post<br />';
+$l['ougc_feedback_page_given_profile'] = 'Feedback given from profile.';
+$l['ougc_feedback_page_given_contract'] = 'Feedback given for a contract.';
 $l['ougc_feedback_page_post_given_thread'] = 'in <a href="{3}/{1}">{2}</a>';
 $l['ougc_feedback_no_comment'] = '[No comment]';
 $l['ougc_feedback_no_allowed_to_view_comment'] = '<i>You are no allowed to see comments.</i>';
@@ -152,6 +154,8 @@ $l = array_merge($l, [
 
     'ougcContractSystemErrorsFeedbackDisabled' => 'Contracts feedback is disabled.',
     'ougcContractSystemErrorsFeedbackInvalidType' => 'The selected transaction type is invalid.',
+    'ougcContractSystemErrorsFeedbackInvalidUser' => 'The selected user is invalid.',
+    'ougcContractSystemErrorsInvalidContract' => 'The selected contract is invalid.',
     'ougcContractSystemErrorsFeedbackDuplicated' => 'It is possible to leave feedback only once per contract.',
 
     'ougcFeedbackModalTitleProfileAdd' => 'Add Feedback for {1}',
