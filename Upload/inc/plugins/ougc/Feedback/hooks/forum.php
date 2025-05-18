@@ -35,6 +35,9 @@ use MyBB;
 use postParser;
 
 use function ougc\Feedback\Core\enableContractSystemIntegration;
+use function ougc\Feedback\Core\feedBackCodeGetContract;
+use function ougc\Feedback\Core\feedBackCodeGetPost;
+use function ougc\Feedback\Core\feedBackCodeIsContract;
 use function ougc\Feedback\Core\feedbackGet;
 use function ougc\Feedback\Core\getSetting;
 use function ougc\Feedback\Core\getTemplate;
@@ -50,10 +53,10 @@ use function NewPoints\Core\language_load;
 use function Newpoints\Core\post_parser_parse_message;
 use function NewPoints\ContractsSystem\Core\get_contract;
 
-use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\DEBUG;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_SHOWCASE_SYSTEM;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
 use const ougc\Feedback\Core\FEEDBACK_VALUE_NEGATIVE;
 use const ougc\Feedback\Core\FEEDBACK_VALUE_NEUTRAL;
@@ -465,23 +468,40 @@ function member_profile_end10(): bool
     return true;
 }
 
-function postbit(array &$postData): array
-{
+function postbit(
+    array &$postData,
+    int $postType = FEEDBACK_TYPE_POST,
+    array $showcaseConfig = [],
+    bool $isEntry = true
+): array {
     global $db, $templates, $theme, $lang, $mybb, $postIDs;
 
     loadLanguage();
 
     $userID = (int)$postData['uid'];
 
-    $postID = (int)$postData['pid'];
+    $postID = (int)($postData['pid'] ?? 0);
 
     $postData['ougc_feedback'] = $postData['ougc_feedback_button'] = $postData['ougc_feedback_average'] = '';
 
-    $show = (bool)is_member(getSetting('showin_forums'), ['usergroup' => $postData['fid'], 'additionalgroups' => '']);
+    if ($postType === FEEDBACK_TYPE_POST) {
+        $show = (bool)is_member(
+            getSetting('showin_forums'),
+            ['usergroup' => $postData['fid'], 'additionalgroups' => '']
+        );
+    } elseif ($isEntry) {
+        $show = (bool)$showcaseConfig['display_feedback_entries'];
+    } else {
+        $show = (bool)$showcaseConfig['display_feedback_comments'];
+    }
 
     $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
 
-    if ($show && getSetting('showin_postbit')) {
+    if ($show &&
+        (
+            $postType === FEEDBACK_TYPE_POST && getSetting('showin_postbit') ||
+            $postType !== FEEDBACK_TYPE_POST
+        )) {
         static $query_cache;
 
         if (!isset($query_cache)) {
@@ -497,11 +517,11 @@ function postbit(array &$postData): array
                 $where[] = "feedbackStatus='1'";
             }*/
 
-            if ($plugins->current_hook == 'postbit' &&
+            if ($plugins->current_hook === 'postbit' &&
                 $mybb->get_input('mode') != 'threaded' &&
                 !empty($postIDs) &&
                 THIS_SCRIPT != 'newreply.php') {
-                $uids = [];
+                $userIDs = [];
 
                 $query = $db->simple_select(
                     'users u LEFT JOIN ' . TABLE_PREFIX . 'posts p ON (p.uid=u.uid)',
@@ -510,10 +530,23 @@ function postbit(array &$postData): array
                 );
 
                 while ($userID = $db->fetch_field($query, 'uid')) {
-                    $uids[$userID] = (int)$userID;
+                    $userIDs[$userID] = (int)$userID;
                 }
 
-                $where[] = "userID IN ('" . implode("','", $uids) . "')";
+                $where[] = "userID IN ('" . implode("','", $userIDs) . "')";
+            } elseif ($plugins->current_hook === 'myshowcase_system_render_build_entry_comment_end') {
+                global $showcaseObject;
+
+                $userIDs = [];
+
+                if ($commentsObjects = \MyShowcase\Core\commentsGet(
+                    ["showcase_id='{$showcaseObject->showcase_id}'", "entry_id='{$showcaseObject->entryUserID}'"],
+                    ['user_id']
+                )) {
+                    $userIDs = array_column($commentsObjects, 'user_id');
+                }
+
+                $where[] = "userID IN ('" . implode("','", $userIDs) . "')";
             } else {
                 $where[] = "userID='{$postData['uid']}'";
             }
@@ -523,6 +556,7 @@ function postbit(array &$postData): array
                 'feedbackValue,userID,feedbackUserID',
                 implode(' AND ', $where)
             );
+
             while ($feedbackData = $db->fetch_array($query)) {
                 $userID = (int)$feedbackData['userID'];
 
@@ -611,21 +645,21 @@ function postbit(array &$postData): array
         $postData['user_details'] = str_replace(
             '<!--OUGC_FEEDBACK-->',
             $postData['ougc_feedback'],
-            $postData['user_details']
+            $postData['user_details'] ?? ''
         );
     }
 
     global $plugins, $thread, $forum;
 
-    if (empty($forum) || !$forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts']) {
+    if (empty($forum) && $postType === FEEDBACK_TYPE_POST) {
         return $postData;
     }
 
-    if ($forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'] && $thread['firstpost'] != $postData['pid']) {
+    if ($postType === FEEDBACK_TYPE_POST && $forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'] && $thread['firstpost'] != $postID) {
         return $postData;
     }
 
-    if (!$forum['ougc_feedback_allow_threads'] && $forum['ougc_feedback_allow_posts'] && $thread['firstpost'] == $postData['pid']) {
+    if ($postType === FEEDBACK_TYPE_POST && !$forum['ougc_feedback_allow_threads'] && $forum['ougc_feedback_allow_posts'] && $thread['firstpost'] == $postID) {
         return $postData;
     }
 
@@ -653,7 +687,7 @@ function postbit(array &$postData): array
 
                 $join = ' LEFT JOIN ' . TABLE_PREFIX . 'posts p ON (p.pid=f.uniqueID)';
             } else {
-                $where[] = "f.uniqueID='{$postData['pid']}'";
+                $where[] = "f.uniqueID='{$postID}'";
 
                 $join = '';
             }
@@ -666,7 +700,8 @@ function postbit(array &$postData): array
         }
 
         if (!isset($button_query_cache[$postData['pid']])) {
-            $feedbackCode = FEEDBACK_TYPE_POST;
+            $feedbackCode = feedBackCodeGetPost();
+
             $postData['ougc_feedback_button'] = eval(getTemplate('postbit_button'));
         }
     }
@@ -969,7 +1004,7 @@ function newpoints_contracts_system_parse_end(array &$hookArguments): array
         }
     }
 
-    $feedbackPluginCode = FEEDBACK_TYPE_CONTRACTS_SYSTEM;
+    $feedbackPluginCode = feedBackCodeGetContract();
 
     $whereClauses = [
         "userID='{$feedbackUserID}'",
@@ -1020,7 +1055,7 @@ function newpoints_contracts_system_page_table_start(array &$hookArguments): arr
 
 function ougc_feedback_add_edit_intermediate(array &$hookArguments): array
 {
-    $feedbackPluginCode = FEEDBACK_TYPE_CONTRACTS_SYSTEM;
+    $feedbackPluginCode = feedBackCodeGetContract();
 
     if (
         $hookArguments['feedbackProcessed'] !== false ||
@@ -1138,7 +1173,7 @@ function ougc_feedback_add_edit_do_start(array &$hookArguments): array
 {
     if (
         $hookArguments['feedbackProcessed'] === false &&
-        $hookArguments['feedbackCode'] === FEEDBACK_TYPE_CONTRACTS_SYSTEM
+        feedBackCodeIsContract($hookArguments['feedbackCode'])
     ) {
         $hookArguments['feedbackProcessed'] = false;
 
@@ -1154,10 +1189,24 @@ function ougc_feedback_page_feedback_start(): void
     global $feedbackCode;
     global $uniqueID, $feedbackGivenDescription;
 
-
-    if (empty($uniqueID) || $feedbackCode !== FEEDBACK_TYPE_CONTRACTS_SYSTEM) {
+    if (empty($uniqueID) || feedBackCodeIsContract($feedbackCode)) {
         return;
     }
 
     $feedbackGivenDescription = $lang->ougc_feedback_page_given_contract;
+}
+
+function myshowcase_system_render_build_entry_comment_end(array &$hookArguments): array
+{
+    if ($hookArguments['postType'] === $hookArguments['renderObject']::POST_TYPE_ENTRY && $hookArguments['renderObject']->showcaseObject->config['display_user_details_entries'] ||
+        $hookArguments['postType'] === $hookArguments['renderObject']::POST_TYPE_COMMENT && $hookArguments['renderObject']->showcaseObject->config['display_user_details_comments']) {
+        $hookArguments['userData'] = postbit(
+            $hookArguments['userData'],
+            FEEDBACK_TYPE_SHOWCASE_SYSTEM,
+            $hookArguments['renderObject']->showcaseObject->config,
+            $hookArguments['postType'] === $hookArguments['renderObject']::POST_TYPE_ENTRY
+        );
+    }
+
+    return $hookArguments;
 }

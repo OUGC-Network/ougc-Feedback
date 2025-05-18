@@ -34,14 +34,14 @@ use DirectoryIterator;
 use PluginLibrary;
 use stdClass;
 
+use function ougc\Feedback\Core\codeInsert;
 use function ougc\Feedback\Core\loadLanguage;
-
 use function ougc\Feedback\Core\ratingGet;
 use function ougc\Feedback\Core\ratingInsert;
 
-use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
-use const ougc\Feedback\Core\URL;
 use const ougc\Feedback\ROOT;
+use const ougc\Feedback\Core\URL;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FIELDS_DATA;
@@ -82,6 +82,18 @@ const DEFAULT_RATING_TYPES = [
         'feedbackCode' => FEEDBACK_TYPE_CONTRACTS_SYSTEM,
         'allowedGroups' => -1
     ],
+];
+
+const DEFAULT_FEEDBACK_CODES = [
+    FEEDBACK_TYPE_POST => [
+        'codeType' => FEEDBACK_TYPE_POST
+    ],
+    FEEDBACK_TYPE_PROFILE => [
+        'codeType' => FEEDBACK_TYPE_PROFILE
+    ],
+    FEEDBACK_TYPE_CONTRACTS_SYSTEM => [
+        'codeType' => FEEDBACK_TYPE_CONTRACTS_SYSTEM
+    ]
 ];
 
 function pluginInformation(): array
@@ -282,6 +294,21 @@ function pluginActivation(): bool
                 'ratingMaximumValue' => $ratingData['ratingMaximumValue'],
                 'feedbackCode' => $ratingData['feedbackCode'],
                 'allowedGroups' => $ratingData['allowedGroups']
+            ]);
+        }
+    }
+
+    $query = $db->query(
+        "SHOW TABLE STATUS FROM `{$db->database}` WHERE `name` LIKE '{$db->table_prefix}ougcFeedbackCodes' ;"
+    );
+
+    $freshTableInsert = (int)$db->fetch_array($query)['Auto_increment'] === 1;
+
+    if ($freshTableInsert) {
+        foreach (DEFAULT_FEEDBACK_CODES as $legacyCode => $codeData) {
+            codeInsert([
+                'codeID' => $legacyCode,
+                'codeType' => $codeData['codeType']
             ]);
         }
     }

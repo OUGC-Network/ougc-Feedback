@@ -30,6 +30,8 @@ declare(strict_types=1);
 
 namespace ougc\Feedback\Core;
 
+use const MyShowcase\Core\FORM_TYPE_CHECK_BOX;
+
 const PLUGIN_VERSION = '1.8.24';
 
 const PLUGIN_VERSION_CODE = 1824;
@@ -58,7 +60,7 @@ const FEEDBACK_TYPE_PROFILE = 2;
 
 const FEEDBACK_TYPE_CONTRACTS_SYSTEM = 21;
 
-const FEEDBACK_TYPE_SHOWCASE_SYSTEM = 31;
+const FEEDBACK_TYPE_SHOWCASE_SYSTEM = 22;
 
 const POST_VISIBILITY_SOFT_DELETED = -1;
 
@@ -106,7 +108,7 @@ const TABLES_DATA = [
             'type' => 'TINYINT',
             'default' => 1
         ],
-        'feedbackCode' => [
+        'feedbackCode' => [//codeID
             'type' => 'TINYINT',
             'unsigned' => true,
             'default' => 0
@@ -117,6 +119,25 @@ const TABLES_DATA = [
             'default' => 0
         ],
         // todo, legacy KEY uid (uid) skipped
+    ],
+    'ougcFeedbackCodes' => [
+        'codeID' => [ //feedbackCode
+            'type' => 'INT',
+            'unsigned' => true,
+            'auto_increment' => true,
+            'primary_key' => true
+        ],
+        'codeType' => [//post,profile,contract,showcase
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'showcaseID' => [
+            'type' => 'INT',
+            'unsigned' => true,
+            'default' => 0
+        ],
+        'unique_key' => ['code_type_showcase_id' => 'codeType,showcaseID'],
     ],
     'ougcFeedbackRatings' => [
         'ratingID' => [
@@ -241,6 +262,35 @@ const FIELDS_DATA = [
         'ougc_feedback' => [
             'type' => 'INT',
             'default' => 0
+        ]
+    ]
+];
+
+const FIELDS_DATA_SHOWCASE = [
+    'myshowcase_config' => [
+        'display_feedback_entries' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0,
+            'formCategory' => 'other',
+            'formSection' => 'display',
+            'formType' => FORM_TYPE_CHECK_BOX,
+        ],
+        'display_feedback_comments' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0,
+            'formCategory' => 'other',
+            'formSection' => 'display',
+            'formType' => FORM_TYPE_CHECK_BOX,
+        ],
+        'ougc_feedback_allow_entries' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 0,
+            'formCategory' => 'other',
+            'formSection' => 'feedback',
+            'formType' => 'checkBox',
         ]
     ]
 ];

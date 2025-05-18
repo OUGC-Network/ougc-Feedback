@@ -379,6 +379,64 @@ function ratingGet(array $whereClauses = [], array $queryFields = [], array $que
     return $feedbackObjects;
 }
 
+function codeInsert(array $codeData, bool $isUpdate = false, int $codeID = 0): int
+{
+    global $db;
+
+    $insertData = [];
+
+    if (isset($codeData['codeID'])) {
+        $insertData['codeID'] = (int)$codeData['codeID'];
+    }
+
+    if (isset($codeData['codeType'])) {
+        $insertData['codeType'] = (int)$codeData['codeType'];
+    }
+
+    if (isset($codeData['showcaseID'])) {
+        $insertData['showcaseID'] = (int)$codeData['showcaseID'];
+    }
+
+    if ($isUpdate) {
+        $db->update_query('ougcFeedbackCodes', $insertData, "codeID='{$codeID}'");
+    } else {
+        $codeID = (int)$db->insert_query('ougcFeedbackCodes', $insertData);
+    }
+
+    return $codeID;
+}
+
+function codeUpdate(array $codeData, int $codeID = 0): int
+{
+    return codeInsert($codeData, true, $codeID);
+}
+
+function codeGet(array $whereClauses = [], array $queryFields = [], array $queryOptions = []): array
+{
+    global $db;
+
+    $queryFields[] = 'codeID';
+
+    $query = $db->simple_select(
+        'ougcFeedbackCodes',
+        implode(',', $queryFields),
+        implode(' AND ', $whereClauses),
+        $queryOptions
+    );
+
+    if (isset($queryOptions['limit']) && $queryOptions['limit'] === 1) {
+        return (array)$db->fetch_array($query);
+    }
+
+    $codeObjects = [];
+
+    while ($codeData = $db->fetch_array($query)) {
+        $codeObjects[(int)$codeData['codeID']] = $codeData;
+    }
+
+    return $codeObjects;
+}
+
 function ratingInsert(array $ratingData, bool $isUpdate = false, int $ratingID = 0): int
 {
     global $db;
@@ -656,4 +714,34 @@ function isModerator(): bool
     global $mybb;
 
     return !empty($mybb->usergroup['ougc_feedback_ismod']);
+}
+
+function feedBackCodeIsPost(int $feedbackCode): bool
+{
+    return $feedbackCode === FEEDBACK_TYPE_POST;
+}
+
+function feedBackCodeIsProfile(int $feedbackCode): bool
+{
+    return $feedbackCode === FEEDBACK_TYPE_PROFILE;
+}
+
+function feedBackCodeIsContract(int $feedbackCode): bool
+{
+    return $feedbackCode === FEEDBACK_TYPE_CONTRACTS_SYSTEM;
+}
+
+function feedBackCodeGetPost(): int
+{
+    return FEEDBACK_TYPE_POST;
+}
+
+function feedBackCodeGetProfile(): int
+{
+    return FEEDBACK_TYPE_PROFILE;
+}
+
+function feedBackCodeGetContract(): int
+{
+    return FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 }

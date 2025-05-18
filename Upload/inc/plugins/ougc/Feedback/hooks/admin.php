@@ -34,8 +34,9 @@ use MyBB;
 
 use function ougc\Feedback\Core\loadLanguage;
 
-use const ougc\Feedback\Core\FIELDS_DATA;
 use const ougc\Feedback\ROOT;
+use const ougc\Feedback\Core\FIELDS_DATA;
+use const ougc\Feedback\Core\FIELDS_DATA_SHOWCASE;
 
 function admin_config_plugins_deactivate(): bool
 {
@@ -229,4 +230,33 @@ function admin_config_action_handler(array &$actions): array
     $actions['feedback'] = ['active' => 'feedback', 'file' => 'module.php'];
 
     return $actions;
+}
+
+function myshowcase_system_admin_summary_start(): void
+{
+    global $tablesData;
+
+    $tablesData = array_merge_recursive($tablesData, FIELDS_DATA_SHOWCASE);
+}
+
+function myshowcase_system_admin_is_installed_start(array &$hookArguments): array
+{
+    $hookArguments['tablesData'] = array_merge_recursive($hookArguments['tablesData'], FIELDS_DATA_SHOWCASE);
+
+    return $hookArguments;
+}
+
+function myshowcase_system_admin_activate_intermediate(array &$hookArguments): array
+{
+    $hookArguments['tablesData'] = array_merge_recursive($hookArguments['tablesData'], FIELDS_DATA_SHOWCASE);
+
+    return $hookArguments;
+}
+
+function myshowcase_system_admin_summary_add_edit_post_main_other(): void
+{
+    global $mybb;
+    global $insertData;
+
+    $insertData['ougc_feedback_allow_entries'] = $mybb->get_input('ougc_feedback_allow_entries', MyBB::INPUT_INT);
 }

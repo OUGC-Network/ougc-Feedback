@@ -26,6 +26,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
+use function ougc\Feedback\Core\feedBackCodeGetPost;
+use function ougc\Feedback\Core\feedBackCodeGetProfile;
+use function ougc\Feedback\Core\feedBackCodeIsPost;
+use function ougc\Feedback\Core\feedBackCodeIsProfile;
 use function ougc\Feedback\Core\feedbackDelete;
 use function ougc\Feedback\Core\feedbackGet;
 use function ougc\Feedback\Core\getTemplate;
@@ -53,8 +57,6 @@ use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_VALUE_NEGATIVE;
 use const ougc\Feedback\Core\FEEDBACK_VALUE_NEUTRAL;
 use const ougc\Feedback\Core\FEEDBACK_VALUE_POSITIVE;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
-use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SELLER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
 use const ougc\Feedback\Core\POST_VISIBILITY_APPROVED;
@@ -184,13 +186,8 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         $feedbackData['feedbackType'] = $feedbackType = $mybb->get_input('feedbackType', MyBB::INPUT_INT);
     }
 
-    switch ($feedbackCode) {
-        case FEEDBACK_TYPE_PROFILE:
-            $uniqueID = 0;
-            break;
-        case FEEDBACK_TYPE_POST:
-            //$uniqueID = 1; // todo, seems like a placeholder
-            break;
+    if (feedBackCodeIsProfile($feedbackCode)) {
+        $uniqueID = 0;
     }
 
     $feedbackComment = $feedbackData['feedbackComment'];
@@ -308,7 +305,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
 
     $hookArguments = runHooks('add_edit_intermediate', $hookArguments);
 
-    if (!$feedbackProcessed && $feedbackCode === FEEDBACK_TYPE_POST) {
+    if (!$feedbackProcessed && feedBackCodeIsPost($feedbackCode)) {
         if (!($post = get_post($uniqueID))) {
             backButtonSet(false);
 
@@ -406,7 +403,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         }
 
         $feedbackProcessed = true;
-    } elseif (!$feedbackProcessed && $feedbackCode === FEEDBACK_TYPE_PROFILE) {
+    } elseif (!$feedbackProcessed && feedBackCodeIsProfile($feedbackCode)) {
         if (empty($mybb->settings['ougc_feedback_allow_profile'])) {
             backButtonSet(false);
 
@@ -540,7 +537,7 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
                     \ougc\Feedback\Core\send_alert(array());
                 }*/
 
-                if ($uniqueID && $feedbackCode === FEEDBACK_TYPE_POST) {
+                if ($uniqueID && feedBackCodeIsPost($feedbackCode)) {
                     postbit($post);
                     $replacement = $post['ougc_feedback'];
                 } else {
@@ -858,7 +855,7 @@ $query = $db->simple_select(
 
 $statsData['total'] = $db->fetch_field($query, 'totalFeedbackCount');
 
-$feedbackPostCode = FEEDBACK_TYPE_POST;
+$feedbackPostCode = feedBackCodeGetPost();
 
 $query = $db->simple_select(
     'ougc_feedback f',
@@ -1059,44 +1056,40 @@ foreach ($feedback_cache as $feedbackData) {
 
     $feedbackCode = (int)$feedbackData['feedbackCode'];
 
-    switch ($feedbackCode) {
-        case FEEDBACK_TYPE_POST:
-            if (!empty($uniqueID)) {
-                $feedbackGivenDescription = $lang->sprintf(
-                    $lang->ougc_feedback_page_post_nolink,
-                    $userName
+    if (feedBackCodeIsPost($feedbackCode)) {
+        if (!empty($uniqueID)) {
+            $feedbackGivenDescription = $lang->sprintf(
+                $lang->ougc_feedback_page_post_nolink,
+                $userName
+            );
+
+            if (isset($post_reputation[$uniqueID])) {
+                $post = $post_reputation[$uniqueID];
+
+                $thread_link = get_thread_link($post['tid']);
+
+                $subject = htmlspecialchars_uni($parser->parse_badwords($post['subject']));
+
+                $thread_link = $lang->sprintf(
+                    $lang->ougc_feedback_page_post_given_thread,
+                    $thread_link,
+                    $subject,
+                    $mybb->settings['bburl']
                 );
 
-                if (isset($post_reputation[$uniqueID])) {
-                    $post = $post_reputation[$uniqueID];
+                $link = get_post_link($uniqueID) . '#pid' . $uniqueID;
 
-                    $thread_link = get_thread_link($post['tid']);
-
-                    $subject = htmlspecialchars_uni($parser->parse_badwords($post['subject']));
-
-                    $thread_link = $lang->sprintf(
-                        $lang->ougc_feedback_page_post_given_thread,
-                        $thread_link,
-                        $subject,
-                        $mybb->settings['bburl']
-                    );
-
-                    $link = get_post_link($uniqueID) . '#pid' . $uniqueID;
-
-                    $feedbackGivenDescription = $lang->sprintf(
-                        $lang->ougc_feedback_page_post_given,
-                        $link,
-                        $userName,
-                        $thread_link,
-                        $mybb->settings['bburl']
-                    );
-                }
+                $feedbackGivenDescription = $lang->sprintf(
+                    $lang->ougc_feedback_page_post_given,
+                    $link,
+                    $userName,
+                    $thread_link,
+                    $mybb->settings['bburl']
+                );
             }
-
-            break;
-        case FEEDBACK_TYPE_PROFILE:
-            $feedbackGivenDescription = $lang->ougc_feedback_page_given_profile;
-            break;
+        }
+    } elseif (feedBackCodeIsProfile($feedbackCode)) {
+        $feedbackGivenDescription = $lang->ougc_feedback_page_given_profile;
     }
 
     runHooks('page_feedback_start');
@@ -1263,7 +1256,7 @@ if ($mybb->settings['ougc_feedback_allow_profile'] && $mybb->usergroup['ougc_fee
         }
     }
 
-    $feedbackCode = FEEDBACK_TYPE_PROFILE;
+    $feedbackCode = feedBackCodeGetProfile();
 
     if ($show) {
         $add_feedback = eval(getTemplate('page_addlink'));

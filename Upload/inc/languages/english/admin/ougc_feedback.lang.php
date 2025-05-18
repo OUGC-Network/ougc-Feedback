@@ -93,10 +93,10 @@ $l['ougc_feedback_permission_allow_posts'] = 'Yes, allow feedback for posts';
 
 $l = array_merge($l, [
     'ougc_feedback_ratings_module' => 'Feedback System',
-    'ougc_feedback_ratings_module_tab_view' => 'View Ratings',
-    'ougc_feedback_ratings_module_tab_view_description' => 'View a list of rating types for the feedback system.',
-    'ougc_feedback_ratings_module_tab_add' => 'Add Rating',
-    'ougc_feedback_ratings_module_tab_add_description' => 'Add new rating types to for the feedback system.',
+    'ougc_feedback_ratings_module_tab_ratings' => 'Manage Ratings',
+    'ougc_feedback_ratings_module_tab_ratings_description' => 'View a list of rating types for the feedback system.',
+    'ougc_feedback_ratings_module_tab_codes' => 'Manage Codes',
+    'ougc_feedback_ratings_module_tab_codes_description' => 'View a list of feedback codes for the feedback system.',
 
     'ougc_feedback_rating_modules_header_id' => 'ID',
     'ougc_feedback_rating_modules_header_name' => 'Name',
@@ -114,6 +114,18 @@ $l = array_merge($l, [
 
     'ougc_feedback_rating_modules_empty' => 'There are no rating types to display.',
 
+    'ougc_feedback_rating_modules_code_header_id' => 'ID',
+    'ougc_feedback_rating_modules_code_header_type' => 'Type',
+    'ougc_feedback_rating_modules_code_header_showcase' => 'Showcase',
+
+    'ougc_feedback_rating_modules_form_code_title' => 'Create Feedback Code',
+    'ougc_feedback_rating_modules_form_code_name' => 'Code Type',
+    'ougc_feedback_rating_modules_form_code_showcase' => 'Showcase',
+    'ougc_feedback_rating_modules_form_code_button_create' => 'Create',
+    'ougc_feedback_rating_modules_form_code_button_update' => 'Update',
+
+    'ougc_feedback_rating_modules_code_empty' => 'There are no code types to display.',
+
     'ougc_feedback_rating_modules_feedback_type_post' => 'Post',
     'ougc_feedback_rating_modules_feedback_type_profile' => 'Profile',
     'ougc_feedback_rating_modules_feedback_type_contract' => 'Contract',
@@ -121,4 +133,13 @@ $l = array_merge($l, [
 
     'ougc_feedback_rating_modules_success_updated' => 'The rating types were updated successfully.',
     'ougc_feedback_rating_modules_success_deleted' => 'The rating type was deleted successfully.',
+
+    'ougc_feedback_rating_modules_code_success_created' => 'The feedback code was created successfully.',
+
+    'ougc_feedback_rating_modules_error_code_duplicated' => 'The code type already exists.',
+
+    'myShowcaseAdminSummaryAddEditDisplayDisplayFeedbackEntries' => 'Display feedback in entries',
+    'myShowcaseAdminSummaryAddEditDisplayDisplayFeedbackComments' => 'Display feedback in comments',
+    'myShowcaseAdminSummaryAddEditFeedback' => 'Feedback System',
+    'myShowcaseAdminSummaryAddEditFeedbackOugcFeedbackAllowEntries' => 'Yes, allow feedback for entries',
 ]);
