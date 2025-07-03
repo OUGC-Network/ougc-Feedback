@@ -52,10 +52,12 @@ use function ougc\Feedback\Core\urlHandlerGet;
 use function NewPoints\Core\language_load;
 use function Newpoints\Core\post_parser_parse_message;
 use function NewPoints\ContractsSystem\Core\get_contract;
+use function MyShowcase\Plugin\Functions\commentsGet;
 
 use const ougc\Feedback\Core\DEBUG;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_BUYER;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
+use const ougc\Feedback\Core\FEEDBACK_TYPE_PROFILE;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_SHOWCASE_SYSTEM;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_TRADER;
 use const ougc\Feedback\Core\FEEDBACK_VALUE_NEGATIVE;
@@ -261,6 +263,8 @@ function member_profile_end(): string
                 'feedbackValue',
                 MyBB::INPUT_INT
             ) : 1;
+
+            $feedbackCode = FEEDBACK_TYPE_PROFILE;
 
             $add_row = eval(getTemplate('profile_add'));
 
@@ -474,7 +478,7 @@ function postbit(
     array $showcaseConfig = [],
     bool $isEntry = true
 ): array {
-    global $db, $templates, $theme, $lang, $mybb, $postIDs;
+    global $db, $theme, $lang, $mybb, $postIDs;
 
     loadLanguage();
 
@@ -539,7 +543,7 @@ function postbit(
 
                 $userIDs = [];
 
-                if ($commentsObjects = \MyShowcase\Core\commentsGet(
+                if ($commentsObjects = commentsGet(
                     ["showcase_id='{$showcaseObject->showcase_id}'", "entry_id='{$showcaseObject->entryUserID}'"],
                     ['user_id']
                 )) {

@@ -26,7 +26,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  ****************************************************************************/
 
-use function MyShowcase\Core\showcaseGet;
 use function ougc\Feedback\Core\codeGet;
 use function ougc\Feedback\Core\codeInsert;
 use function ougc\Feedback\Core\loadLanguage;
@@ -36,6 +35,7 @@ use function ougc\Feedback\Core\ratingInsert;
 use function ougc\Feedback\Core\ratingUpdate;
 use function ougc\Feedback\Core\urlHandlerBuild;
 use function ougc\Feedback\Core\urlHandlerSet;
+use function MyShowcase\Plugin\Functions\showcaseGet;
 
 use const ougc\Feedback\Core\FEEDBACK_TYPE_CONTRACTS_SYSTEM;
 use const ougc\Feedback\Core\FEEDBACK_TYPE_POST;
@@ -213,7 +213,8 @@ if ($mybb->get_input('action') == 'deleteRating') {
 
             $table->construct_cell(
                 (function () use ($codeData): string {
-                    if (!function_exists('\MyShowcase\Core\showcaseGet') || empty($codeData['showcaseID'])) {
+                    if (!function_exists('\MyShowcase\Plugin\Functions\showcaseGet') ||
+                        empty($codeData['showcaseID'])) {
                         return '';
                     }
 
@@ -285,7 +286,7 @@ if ($mybb->get_input('action') == 'deleteRating') {
         $form->generate_select_box(
             'showcaseID',
             (function (): array {
-                if (!function_exists('\MyShowcase\Core\showcaseGet')) {
+                if (!function_exists('\MyShowcase\Plugin\Functions\showcaseGet')) {
                     return [];
                 }
 
@@ -562,9 +563,8 @@ if ($mybb->get_input('action') == 'deleteRating') {
                             }
 
                             $showcaseName = (function () use ($showcaseData): string {
-                                if (!function_exists(
-                                        '\MyShowcase\Core\showcaseGet'
-                                    ) || empty($showcaseData['showcaseID'])) {
+                                if (!function_exists('\MyShowcase\Plugin\Functions\showcaseGet') ||
+                                    empty($showcaseData['showcaseID'])) {
                                     return '';
                                 }
 

@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace ougc\Feedback\Core;
 
-use const MyShowcase\Core\FORM_TYPE_CHECK_BOX;
+use MyShowcase\Plugin\FormTypes;
 
 const PLUGIN_VERSION = '1.8.24';
 
@@ -266,7 +266,7 @@ const FIELDS_DATA = [
     ]
 ];
 
-const FIELDS_DATA_SHOWCASE = [
+define('ougc\Feedback\Core\FIELDS_DATA_SHOWCASE', [
     'myshowcase_config' => [
         'display_feedback_entries' => [
             'type' => 'TINYINT',
@@ -274,7 +274,7 @@ const FIELDS_DATA_SHOWCASE = [
             'default' => 0,
             'formCategory' => 'other',
             'formSection' => 'display',
-            'formType' => FORM_TYPE_CHECK_BOX,
+            'formType' => class_exists('\MyShowcase\Plugin\FormTypes') ? FormTypes::CheckBox : '',
         ],
         'display_feedback_comments' => [
             'type' => 'TINYINT',
@@ -282,7 +282,7 @@ const FIELDS_DATA_SHOWCASE = [
             'default' => 0,
             'formCategory' => 'other',
             'formSection' => 'display',
-            'formType' => FORM_TYPE_CHECK_BOX,
+            'formType' => class_exists('\MyShowcase\Plugin\FormTypes') ? FormTypes::CheckBox : '',
         ],
         'ougc_feedback_allow_entries' => [
             'type' => 'TINYINT',
@@ -290,10 +290,10 @@ const FIELDS_DATA_SHOWCASE = [
             'default' => 0,
             'formCategory' => 'other',
             'formSection' => 'feedback',
-            'formType' => 'checkBox',
+            'formType' => class_exists('\MyShowcase\Plugin\FormTypes') ? FormTypes::CheckBox : '',
         ]
     ]
-];
+]);
 
 class enums
 {

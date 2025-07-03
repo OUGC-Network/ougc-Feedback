@@ -131,7 +131,7 @@ The following template edits are required for this plugin to work.
 5. Insert `<!--OUGC_FEEDBACK-->` after `{$post['warninglevel']}` inside the `postbit_author_user` template.
 6. Insert `{$ougc_feedback_bit}` after `{$referral_bit}` inside the `memberlist_user` template.
 7. Insert `{$ougc_feedback_header}` after `{$referral_header}` inside the `memberlist` template.
-8. Insert `{$ougc_feedback_sort}` after `{$lang->sort_by_referrals}</option>` inside the `memberlist` template.
+8. Insert `{$ougc_feedback_sort}` after `{$referrals_option}` inside the `memberlist` template.
 9. Insert `{$ougc_feedback_js}` after `{$stylesheets}` inside the `headerinclude` template.
 10. Insert `{$feedbackLatest}` inside the `member_profile` template.
 11. Insert `{$userData['feedback']}` inside the `memberlist_user` template.

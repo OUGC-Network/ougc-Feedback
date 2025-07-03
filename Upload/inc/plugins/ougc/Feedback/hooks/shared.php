@@ -32,7 +32,7 @@ namespace ougc\Feedback\Hooks\Shared;
 
 use MyBB;
 
-use function MyShowcase\Core\sanitizeTableFieldValue;
+use function MyShowcase\Plugin\Core\sanitizeTableFieldValue;
 
 use const ougc\Feedback\Core\FIELDS_DATA_SHOWCASE;
 

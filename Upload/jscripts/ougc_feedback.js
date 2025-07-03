@@ -34,7 +34,7 @@ let OUGC_Feedback = {
     },
 
     Add: function (userID, uniqueID, feedbackType, feedbackValue, reload, feedbackComment, back_button, feedbackCode) {
-        let postData = 'action=add&userID=' + parseInt(userID) + '&uniqueID=' + parseInt(uniqueID) + '&feedbackType=' + parseInt(feedbackType) + '&feedbackValue=' + parseInt(feedbackValue) + '&reload=' + parseInt(reload) + '&feedbackComment=' + String(feedbackComment) + '&back_button=' + parseInt(back_button) + '&feedbackCode=' + String(feedbackCode);
+        let postData = 'action=add&userID=' + parseInt(userID) + '&uniqueID=' + parseInt(uniqueID) + '&feedbackType=' + parseInt(feedbackType) + '&feedbackValue=' + parseInt(feedbackValue) + '&reload=' + parseInt(reload) + '&feedbackComment=' + String(feedbackComment) + '&back_button=' + parseInt(back_button) + '&feedbackCode=' + parseInt(feedbackCode);
 
         MyBB.popupWindow('/' + feedbackSystemUrl + '?' + postData);
     },
