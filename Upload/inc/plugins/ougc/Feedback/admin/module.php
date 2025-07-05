@@ -403,7 +403,7 @@ if ($mybb->get_input('action') == 'deleteRating') {
                         'displayOrder' => (ratingGet(
                                 [],
                                 ['MAX(displayOrder) AS max_display_order'],
-                                ['limit' => 1, 'order_by' => 'displayOrder']
+                                ['limit' => 1]
                             )['max_display_order'] ?? 0) + 1
                     ]);
                 }
