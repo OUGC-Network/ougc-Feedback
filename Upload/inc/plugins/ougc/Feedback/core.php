@@ -359,6 +359,10 @@ function ratingGet(array $whereClauses = [], array $queryFields = [], array $que
 
     $queryFields[] = 'ratingID';
 
+    if (!empty($queryOptions['group_by'])) {
+        $queryOptions['group_by'] .= ', ratingID';
+    }
+
     $query = $db->simple_select(
         'ougcFeedbackRatings',
         implode(',', $queryFields),
