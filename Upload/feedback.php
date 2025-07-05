@@ -285,13 +285,11 @@ if ($mybb->get_input('action') === 'add' || $mybb->get_input('action') === 'edit
         if ($mybb->usergroup['ougc_feedback_maxperday']) {
             $timesearch = TIME_NOW - (60 * 60 * 24);
 
-            $query = $db->simple_select(
-                'ougc_feedback',
-                'COUNT(feedbackID) AS feedbacks',
-                "feedbackUserID='{$currentUserID}' AND createStamp>'{$timesearch}'"
-            );
-
-            $numtoday = $db->fetch_field($query, 'feedbacks');
+            $numtoday = feedbackGet(
+                ["feedbackUserID='{$currentUserID}'", "createStamp>'{$timesearch}'"],
+                ['COUNT(feedbackID) AS total_given_feedback'],
+                ['limit' => 1, 'group_by' => 'feedbackID']
+            )['total_given_feedback'] ?? 0;
 
             if ($numtoday >= $mybb->usergroup['ougc_feedback_maxperday']) {
                 backButtonSet(false);
@@ -827,17 +825,15 @@ switch ($mybb->get_input('sort')) {
         break;
 }
 
-$query = $db->simple_select(
-    'ougc_feedback',
-    'SUM(feedbackValue) AS totalFeedback, COUNT(feedbackID) AS totalFeedbackCount',
-    "userID='{$userID}' AND feedbackStatus='1'"
+$feedbackData = feedbackGet(
+    ["userID='{$userID}'", "feedbackStatus='1'"],
+    ['SUM(feedbackValue) AS total_feedback, COUNT(feedbackID) AS total_user_feedback'],
+    ['limit' => 1, 'group_by' => 'feedbackStatus, feedbackID']
 );
 
-$feedbackData = $db->fetch_array($query);
+$sync_feedback = (int)$feedbackData['total_feedback'];
 
-$sync_feedback = (int)$feedbackData['totalFeedback'];
-
-$total_feedback = (int)$feedbackData['totalFeedbackCount'];
+$total_feedback = (int)$feedbackData['total_user_feedback'];
 
 if ($sync_feedback != $userData['ougc_feedback']) {
     feedbackUserSync($userID);
@@ -849,18 +845,20 @@ $where_stats = array_merge($where, ["f.feedbackStatus='1'"]);
 
 $query = $db->simple_select(
     'ougc_feedback f',
-    'COUNT(f.feedbackID) AS totalFeedbackCount',
-    implode(' AND ', $where_stats)
+    'COUNT(f.feedbackID) AS total_user_feedback',
+    implode(' AND ', $where_stats),
+    ['group_by' => 'f.feedbackID']
 );
 
-$statsData['total'] = $db->fetch_field($query, 'totalFeedbackCount');
+$statsData['total'] = $db->fetch_field($query, 'total_user_feedback');
 
 $feedbackPostCode = feedBackCodeGetPost();
 
 $query = $db->simple_select(
     'ougc_feedback f',
     'COUNT(f.feedbackID) AS total_posts_feedback',
-    implode(' AND ', array_merge($where_stats, ["feedbackCode='{$feedbackPostCode}'"]))
+    implode(' AND ', array_merge($where_stats, ["feedbackCode='{$feedbackPostCode}'"])),
+    ['group_by' => 'f.feedbackID']
 );
 
 $statsData['posts'] = $db->fetch_field($query, 'total_posts_feedback');
@@ -942,7 +940,7 @@ $feedback_count = feedbackGet(
         return str_replace('f.', '', $whereClause);
     }, $where),
     ['COUNT(feedbackID) AS feedback_count'],
-    ['limit' => 1]
+    ['limit' => 1, 'group_by' => 'feedbackID']
 )['feedback_count'] ?? 0;
 
 $perpage = (int)$mybb->settings['ougc_feedback_perpage'];

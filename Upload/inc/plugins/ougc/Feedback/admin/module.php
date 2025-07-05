@@ -131,7 +131,7 @@ if ($mybb->get_input('action') == 'deleteRating') {
     $totalCodeIDs = ratingGet(
         [],
         ['COUNT(ratingID) AS total_code_ids'],
-        ['limit' => 1]
+        ['limit' => 1, 'group_by' => 'ratingID']
     )['total_code_ids'] ?? 0;
 
     if ($totalCodeIDs < 1) {
@@ -379,7 +379,7 @@ if ($mybb->get_input('action') == 'deleteRating') {
     $totalRatingTypes = ratingGet(
         [],
         ['COUNT(ratingID) AS total_rating_types'],
-        ['limit' => 1]
+        ['limit' => 1, 'group_by' => 'ratingID']
     )['total_rating_types'] ?? 0;
 
     if ($totalRatingTypes < 1) {

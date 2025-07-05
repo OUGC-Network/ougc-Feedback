@@ -588,7 +588,8 @@ function feedbackUserSync(int $userID): bool
     $query = $db->simple_select(
         'ougc_feedback',
         'SUM(feedbackValue) AS totalFeedback',
-        "userID='{$userID}' AND feedbackStatus='1'"
+        "userID='{$userID}' AND feedbackStatus='1'",
+        ['group_by' => 'userID']
     );
 
     $feedbackData = (int)$db->fetch_field($query, 'totalFeedback');
