@@ -479,7 +479,7 @@ function postbit(
     bool $isEntry = true
 ): array {
     global $db, $theme, $lang, $mybb;
-    global $postIDs, $forum;
+    global $postIDs, $forum, $thread;
 
     loadLanguage();
 
@@ -489,21 +489,13 @@ function postbit(
 
     $postData['ougc_feedback'] = $postData['ougc_feedback_button'] = $postData['ougc_feedback_average'] = '';
 
-    if ($postType === FEEDBACK_TYPE_POST) {
-        $isEnabled = !empty($forum['ougc_feedback_display_in_posts']);
-    } elseif ($isEntry) {
-        $isEnabled = !empty($showcaseConfig['display_feedback_entries']);
-    } else {
-        $isEnabled = !empty($showcaseConfig['display_feedback_comments']);
-    }
-
     $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
 
-    if ($isEnabled &&
-        (
-            $postType === FEEDBACK_TYPE_POST && getSetting('showin_postbit') ||
-            $postType !== FEEDBACK_TYPE_POST
-        )) {
+    if (
+        $postType === FEEDBACK_TYPE_POST && !empty($forum['ougc_feedback_display_in_posts']) ||
+        $postType == FEEDBACK_TYPE_SHOWCASE_SYSTEM && $isEntry && !empty($showcaseConfig['display_feedback_entries']) ||
+        $postType == FEEDBACK_TYPE_SHOWCASE_SYSTEM && !$isEntry && !empty($showcaseConfig['display_feedback_comments'])
+    ) {
         static $query_cache;
 
         if (!isset($query_cache)) {
@@ -640,9 +632,11 @@ function postbit(
 
         $average = my_number_format($average);
 
-        $postData['ougc_feedback_average'] = eval(getTemplate('postbit_average'));
+        if (!empty($forum['ougc_feedback_display_in_posts'])) {
+            $postData['ougc_feedback_average'] = eval(getTemplate('postbit_average'));
 
-        $postData['ougc_feedback'] = eval(getTemplate('postbit'));
+            $postData['ougc_feedback'] = eval(getTemplate('postbit'));
+        }
 
         $postData['user_details'] = str_replace(
             '<!--OUGC_FEEDBACK-->',
@@ -651,17 +645,19 @@ function postbit(
         );
     }
 
-    global $thread, $forum;
+    global $forum;
 
     if (empty($forum) && $postType === FEEDBACK_TYPE_POST) {
         return $postData;
     }
 
-    if ($postType === FEEDBACK_TYPE_POST && $forum['ougc_feedback_allow_threads'] && !$forum['ougc_feedback_allow_posts'] && $thread['firstpost'] != $postID) {
-        return $postData;
-    }
+    $firstPostID = (int)$thread['firstpost'];
 
-    if ($postType === FEEDBACK_TYPE_POST && !$forum['ougc_feedback_allow_threads'] && $forum['ougc_feedback_allow_posts'] && $thread['firstpost'] == $postID) {
+    if ($postType === FEEDBACK_TYPE_POST &&
+        (
+            (empty($forum['ougc_feedback_allow_threads']) && $firstPostID === $postID) ||
+            (empty($forum['ougc_feedback_allow_posts']) && $firstPostID !== $postID)
+        )) {
         return $postData;
     }
 

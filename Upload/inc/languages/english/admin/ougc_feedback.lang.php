@@ -56,8 +56,6 @@ $l['setting_ougc_feedback_latest_profile_feedback'] = 'Latest Feedback Count';
 $l['setting_ougc_feedback_latest_profile_feedback_desc'] = 'Set amount of latest feedback to show in user profiles.';
 $l['setting_ougc_feedback_latest_profile_comment_groups'] = 'Latest Feedback Comments Permission';
 $l['setting_ougc_feedback_latest_profile_comment_groups_desc'] = 'Select which groups are allowed to see the latest feedback comment in user profiles.';
-$l['setting_ougc_feedback_showin_postbit'] = 'Show In Posts';
-$l['setting_ougc_feedback_showin_postbit_desc'] = 'Show feedback status in posts.';
 $l['setting_ougc_feedback_postbit_hide_button'] = 'Hide Post-bit Button';
 $l['setting_ougc_feedback_postbit_hide_button_desc'] = 'Turn this on to hide the post-bit feedback button if not allowed to use it. Save one query turning this off.';
 $l['setting_ougc_feedback_profile_hide_add'] = 'Hide Profile Add Link';
@@ -68,7 +66,6 @@ $l['setting_ougc_feedback_perpage'] = 'Pagination Per-Page Setting';
 $l['setting_ougc_feedback_perpage_desc'] = 'Maximum number of items to show per page in pagination enabled features.';
 $l['setting_ougc_feedback_enableContractSystemIntegration'] = 'Enable Contracts System Integration';
 $l['setting_ougc_feedback_enableContractSystemIntegration_desc'] = 'Set to yes to enable the NewPoints Contract System integration.';
-$l['setting_ougc_feedback_showin_postbit_thread'] = 'Show In Threads';
 $l['setting_newpoints_contracts_system_enableContractSystemIntegration'] = 'Enable Contract System Integration';
 $l['setting_newpoints_contracts_system_enableContractSystemIntegration_desc'] = 'If you enable this, users will be able to rate or review their contracts using the NewPoints Contract System plugin after fulfilling their contracts.';
 

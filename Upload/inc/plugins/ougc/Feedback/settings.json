@@ -19,10 +19,6 @@
     "optionscode": "groupselect",
     "value": -1
   },
-  "showin_postbit": {
-    "optionscode": "yesno",
-    "value": 1
-  },
   "postbit_hide_button": {
     "optionscode": "yesno",
     "value": 0
