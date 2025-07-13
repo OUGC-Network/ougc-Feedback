@@ -181,7 +181,7 @@ function admin_forum_management_add_commit(): bool
 
 function admin_forum_management_edit_commit(): bool
 {
-    global $db, $mybb, $fid, $plugins;
+    global $db, $mybb, $fid;
 
     $array_data = [];
 

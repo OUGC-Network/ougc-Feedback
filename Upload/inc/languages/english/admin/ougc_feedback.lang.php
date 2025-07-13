@@ -58,8 +58,6 @@ $l['setting_ougc_feedback_latest_profile_comment_groups'] = 'Latest Feedback Com
 $l['setting_ougc_feedback_latest_profile_comment_groups_desc'] = 'Select which groups are allowed to see the latest feedback comment in user profiles.';
 $l['setting_ougc_feedback_showin_postbit'] = 'Show In Posts';
 $l['setting_ougc_feedback_showin_postbit_desc'] = 'Show feedback status in posts.';
-$l['setting_ougc_feedback_showin_forums'] = 'Show In Forums';
-$l['setting_ougc_feedback_showin_forums_desc'] = 'Show feedback user information within posts.';
 $l['setting_ougc_feedback_postbit_hide_button'] = 'Hide Post-bit Button';
 $l['setting_ougc_feedback_postbit_hide_button_desc'] = 'Turn this on to hide the post-bit feedback button if not allowed to use it. Save one query turning this off.';
 $l['setting_ougc_feedback_profile_hide_add'] = 'Hide Profile Add Link';
@@ -90,6 +88,7 @@ $l['report_content_feedback'] = 'ougc Feedback';
 
 $l['ougc_feedback_permission_allow_threads'] = 'Yes, allow feedback for threads';
 $l['ougc_feedback_permission_allow_posts'] = 'Yes, allow feedback for posts';
+$l['ougc_feedback_permission_display_in_posts'] = 'Yes, display feedback data in posts';
 
 $l = array_merge($l, [
     'ougc_feedback_ratings_module' => 'Feedback System',

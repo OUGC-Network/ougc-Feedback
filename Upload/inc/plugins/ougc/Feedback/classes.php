@@ -251,6 +251,11 @@ const FIELDS_DATA = [
             'type' => 'TINYINT',
             'unsigned' => true,
             'default' => 1,
+        ],
+        'ougc_feedback_display_in_posts' => [
+            'type' => 'TINYINT',
+            'unsigned' => true,
+            'default' => 1,
         ]
     ],
     'users' => [

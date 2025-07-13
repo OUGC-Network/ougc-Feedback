@@ -23,10 +23,6 @@
     "optionscode": "yesno",
     "value": 1
   },
-  "showin_forums": {
-    "optionscode": "forumselect",
-    "value": -1
-  },
   "postbit_hide_button": {
     "optionscode": "yesno",
     "value": 0

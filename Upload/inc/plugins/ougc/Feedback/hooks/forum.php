@@ -478,7 +478,8 @@ function postbit(
     array $showcaseConfig = [],
     bool $isEntry = true
 ): array {
-    global $db, $theme, $lang, $mybb, $postIDs;
+    global $db, $theme, $lang, $mybb;
+    global $postIDs, $forum;
 
     loadLanguage();
 
@@ -489,19 +490,16 @@ function postbit(
     $postData['ougc_feedback'] = $postData['ougc_feedback_button'] = $postData['ougc_feedback_average'] = '';
 
     if ($postType === FEEDBACK_TYPE_POST) {
-        $show = (bool)is_member(
-            getSetting('showin_forums'),
-            ['usergroup' => $postData['fid'], 'additionalgroups' => '']
-        );
+        $isEnabled = !empty($forum['ougc_feedback_display_in_posts']);
     } elseif ($isEntry) {
-        $show = (bool)$showcaseConfig['display_feedback_entries'];
+        $isEnabled = !empty($showcaseConfig['display_feedback_entries']);
     } else {
-        $show = (bool)$showcaseConfig['display_feedback_comments'];
+        $isEnabled = !empty($showcaseConfig['display_feedback_comments']);
     }
 
     $feedbackUserLink = urlHandlerBuild(['userID' => $userID]);
 
-    if ($show &&
+    if ($isEnabled &&
         (
             $postType === FEEDBACK_TYPE_POST && getSetting('showin_postbit') ||
             $postType !== FEEDBACK_TYPE_POST
@@ -653,7 +651,7 @@ function postbit(
         );
     }
 
-    global $plugins, $thread, $forum;
+    global $thread, $forum;
 
     if (empty($forum) && $postType === FEEDBACK_TYPE_POST) {
         return $postData;
